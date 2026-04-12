@@ -1,0 +1,18 @@
+#!/bin/sh
+
+remote_name="$1"
+remote_url="$2"
+
+if [ -z "$remote_url" ] && [ -n "$remote_name" ]; then
+  remote_url="$(git remote get-url "$remote_name" 2>/dev/null || true)"
+fi
+
+case "$remote_url" in
+  *github.com:BlueWallet/BlueWallet.git|*github.com/BlueWallet/BlueWallet.git)
+    echo "ERROR: pushes to BlueWallet/BlueWallet are blocked in this repository." >&2
+    echo "Use origin (HashCash fork) for pushes and PRs." >&2
+    exit 1
+    ;;
+esac
+
+exit 0

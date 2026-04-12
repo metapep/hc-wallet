@@ -12,6 +12,7 @@ import { HDSegwitBech32Wallet } from '..';
 import { randomBytes } from '../rng';
 import { AbstractWallet } from './abstract-wallet';
 import { CreateTransactionResult, CreateTransactionTarget, CreateTransactionUtxo, Transaction, Utxo } from './types';
+import { HASHCASH_ADDRESS_PREFIX, HASHCASH_NETWORK } from '../../blue_modules/hashcash';
 const ECPair: ECPairAPI = ECPairFactory(ecc);
 bitcoin.initEccLib(ecc);
 
@@ -77,6 +78,7 @@ export class LegacyWallet extends AbstractWallet {
       const keyPair = ECPair.fromWIF(this.secret);
       address = bitcoin.payments.p2pkh({
         pubkey: keyPair.publicKey,
+        network: HASHCASH_NETWORK,
       }).address;
     } catch (err) {
       return false;
@@ -404,9 +406,9 @@ export class LegacyWallet extends AbstractWallet {
     }
 
     for (const t of _targets) {
-      if (t.address?.startsWith('bc1')) {
+      if (t.address?.startsWith(HASHCASH_ADDRESS_PREFIX)) {
         // in case address is non-typical and takes more bytes than coinselect library anticipates by default
-        t.script = { length: bitcoin.address.toOutputScript(t.address).length + 3 };
+        t.script = { length: bitcoin.address.toOutputScript(t.address, HASHCASH_NETWORK).length + 3 };
       }
 
       if (t.script?.hex) {
@@ -448,7 +450,7 @@ export class LegacyWallet extends AbstractWallet {
     if (targets.length === 0) throw new Error('No destination provided');
     const { inputs, outputs, fee } = this.coinselect(utxos, targets, feeRate);
     sequence = sequence || 0xffffffff; // disable RBF by default
-    const psbt = new bitcoin.Psbt();
+    const psbt = new bitcoin.Psbt({ network: HASHCASH_NETWORK });
     let c = 0;
     const values: Record<number, number> = {};
     let keyPair: Signer | null = null;
@@ -526,9 +528,9 @@ export class LegacyWallet extends AbstractWallet {
    */
   isAddressValid(address: string): boolean {
     try {
-      bitcoin.address.toOutputScript(address); // throws, no?
+      if (!address.toLowerCase().startsWith(HASHCASH_ADDRESS_PREFIX)) return false;
+      bitcoin.address.toOutputScript(address, HASHCASH_NETWORK); // throws, no?
 
-      if (!address.toLowerCase().startsWith('bc1')) return true;
       const decoded = bitcoin.address.fromBech32(address);
       if (decoded.version === 0) return true;
       if (decoded.version === 1 && decoded.data.length !== 32) return false;
@@ -553,7 +555,7 @@ export class LegacyWallet extends AbstractWallet {
       return (
         bitcoin.payments.p2pkh({
           output: scriptPubKey2,
-          network: bitcoin.networks.bitcoin,
+          network: HASHCASH_NETWORK,
         }).address ?? false
       );
     } catch (_) {

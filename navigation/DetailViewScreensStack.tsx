@@ -52,6 +52,7 @@ import PromptPasswordConfirmationSheet from '../screen/PromptPasswordConfirmatio
 import { useSizeClass, SizeClass } from '../blue_modules/sizeClass';
 import getWalletTransactionsOptions from './helpers/getWalletTransactionsOptions';
 import { isDesktop } from '../blue_modules/environment';
+import { LIGHTNING_ENABLED } from '../blue_modules/hashcash';
 import ManageWallets from '../screen/wallets/ManageWallets';
 import ReceiveDetails from '../screen/receive/ReceiveDetails';
 import ReceiveCustomAmountSheet from '../screen/receive/ReceiveCustomAmountSheet';
@@ -185,21 +186,25 @@ const DetailViewStackScreensStack = () => {
         component={SelectWallet}
         options={navigationStyle({ title: loc.wallets.select_wallet })(theme)}
       />
-      <DetailViewStack.Screen
-        name="LNDViewInvoice"
-        component={LNDViewInvoice}
-        options={navigationStyle({
-          headerTitle: loc.lndViewInvoice.lightning_invoice,
-          headerStyle: {
-            backgroundColor: theme.colors.customHeader,
-          },
-        })(theme)}
-      />
-      <DetailViewStack.Screen
-        name="LNDViewAdditionalInvoicePreImage"
-        component={LNDViewAdditionalInvoicePreImage}
-        options={navigationStyle({ title: loc.lndViewInvoice.additional_info })(theme)}
-      />
+      {LIGHTNING_ENABLED && (
+        <DetailViewStack.Screen
+          name="LNDViewInvoice"
+          component={LNDViewInvoice}
+          options={navigationStyle({
+            headerTitle: loc.lndViewInvoice.lightning_invoice,
+            headerStyle: {
+              backgroundColor: theme.colors.customHeader,
+            },
+          })(theme)}
+        />
+      )}
+      {LIGHTNING_ENABLED && (
+        <DetailViewStack.Screen
+          name="LNDViewAdditionalInvoicePreImage"
+          component={LNDViewAdditionalInvoicePreImage}
+          options={navigationStyle({ title: loc.lndViewInvoice.additional_info })(theme)}
+        />
+      )}
 
       <DetailViewStack.Screen
         name="Broadcast"
@@ -217,31 +222,35 @@ const DetailViewStackScreensStack = () => {
         component={GenerateWord}
         options={navigationStyle(getSettingsHeaderOptions(loc.autofill_word.title))(theme)}
       />
-      <DetailViewStack.Screen
-        name="LnurlPay"
-        component={LnurlPay}
-        options={navigationStyle({
-          title: '',
-          closeButtonPosition: CloseButtonPosition.Right,
-        })(theme)}
-      />
+      {LIGHTNING_ENABLED && (
+        <DetailViewStack.Screen
+          name="LnurlPay"
+          component={LnurlPay}
+          options={navigationStyle({
+            title: '',
+            closeButtonPosition: CloseButtonPosition.Right,
+          })(theme)}
+        />
+      )}
       <DetailViewStack.Screen
         name="PaymentCodeList"
         component={PaymentCodesListComponent}
         options={navigationStyle({ title: loc.bip47.contacts })(theme)}
       />
 
-      <DetailViewStack.Screen
-        name="LnurlPaySuccess"
-        component={LnurlPaySuccess}
-        options={navigationStyle({
-          title: '',
-          closeButtonPosition: CloseButtonPosition.Right,
-          headerBackVisible: false,
-          gestureEnabled: false,
-        })(theme)}
-      />
-      <DetailViewStack.Screen name="LnurlAuth" component={LnurlAuth} options={navigationStyle({ title: '' })(theme)} />
+      {LIGHTNING_ENABLED && (
+        <DetailViewStack.Screen
+          name="LnurlPaySuccess"
+          component={LnurlPaySuccess}
+          options={navigationStyle({
+            title: '',
+            closeButtonPosition: CloseButtonPosition.Right,
+            headerBackVisible: false,
+            gestureEnabled: false,
+          })(theme)}
+        />
+      )}
+      {LIGHTNING_ENABLED && <DetailViewStack.Screen name="LnurlAuth" component={LnurlAuth} options={navigationStyle({ title: '' })(theme)} />}
       <DetailViewStack.Screen
         name="Success"
         component={Success}
@@ -341,11 +350,13 @@ const DetailViewStackScreensStack = () => {
         component={Language}
         options={navigationStyle(getSettingsHeaderOptions(loc.settings.language))(theme)}
       />
-      <DetailViewStack.Screen
-        name="LightningSettings"
-        component={LightningSettings}
-        options={navigationStyle(getSettingsHeaderOptions(loc.settings.lightning_settings))(theme)}
-      />
+      {LIGHTNING_ENABLED && (
+        <DetailViewStack.Screen
+          name="LightningSettings"
+          component={LightningSettings}
+          options={navigationStyle(getSettingsHeaderOptions(loc.settings.lightning_settings))(theme)}
+        />
+      )}
       <DetailViewStack.Screen
         name="NotificationSettings"
         component={NotificationSettings}

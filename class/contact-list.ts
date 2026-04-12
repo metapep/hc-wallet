@@ -5,6 +5,7 @@ import { SilentPayment } from 'silent-payments';
 import ecc from '../blue_modules/noble_ecc';
 import { concatUint8Arrays } from '../blue_modules/uint8array-extras';
 import * as bitcoin from 'bitcoinjs-lib';
+import { HASHCASH_ADDRESS_PREFIX, HASHCASH_NETWORK } from '../blue_modules/hashcash';
 
 export class ContactList {
   isBip47PaymentCodeValid(pc: string) {
@@ -26,9 +27,9 @@ export class ContactList {
 
   isAddressValid(address: string): boolean {
     try {
-      bitcoin.address.toOutputScript(address); // throws, no?
+      if (!address.toLowerCase().startsWith(HASHCASH_ADDRESS_PREFIX)) return false;
+      bitcoin.address.toOutputScript(address, HASHCASH_NETWORK); // throws, no?
 
-      if (!address.toLowerCase().startsWith('bc1')) return true;
       const decoded = bitcoin.address.fromBech32(address);
       if (decoded.version === 0) return true;
       if (decoded.version === 1 && decoded.data.length !== 32) return false;

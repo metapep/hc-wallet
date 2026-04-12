@@ -5,6 +5,7 @@ import { Animated, StyleSheet, TouchableOpacity, View, Text } from 'react-native
 import triggerHapticFeedback, { HapticFeedbackTypes } from '../blue_modules/hapticFeedback';
 import loc from '../loc';
 import { useTheme } from './themes';
+import { HASHCASH_URI_SCHEME } from '../blue_modules/hashcash';
 
 type CopyTextToClipboardProps = {
   text: string;
@@ -54,9 +55,10 @@ const CopyTextToClipboard = forwardRef<React.ElementRef<typeof TouchableOpacity>
           </Animated.Text>
         );
       }
-      if (address.toLocaleLowerCase().startsWith('bitcoin:')) {
-        const prefix = address.slice(0, 8); // "bitcoin:"
-        const afterPrefix = address.slice(8);
+      if (address.toLocaleLowerCase().startsWith(`${HASHCASH_URI_SCHEME}:`)) {
+        const prefixLength = HASHCASH_URI_SCHEME.length + 1;
+        const prefix = address.slice(0, prefixLength);
+        const afterPrefix = address.slice(prefixLength);
 
         const qIndex = afterPrefix.indexOf('?');
 

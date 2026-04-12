@@ -5,6 +5,7 @@ import wif from 'wif';
 import { BitcoinUnit, Chain } from '../../models/bitcoinUnits';
 import { CreateTransactionResult, CreateTransactionUtxo, Transaction, Utxo } from './types';
 import { hexToUint8Array, concatUint8Arrays, uint8ArrayToHex } from '../../blue_modules/uint8array-extras';
+import { HASHCASH_URI_SCHEME, HASHCASH_ADDRESS_PREFIX } from '../../blue_modules/hashcash';
 
 type WalletWithPassphrase = AbstractWallet & { getPassphrase: () => string };
 type UtxoMetadata = {
@@ -232,9 +233,13 @@ export class AbstractWallet {
       }
     }
 
-    this.secret = newSecret.trim().replace('bitcoin:', '').replace('BITCOIN:', '');
+    this.secret = newSecret
+      .trim()
+      .replace(new RegExp(`^${HASHCASH_URI_SCHEME}:`, 'i'), '')
+      .replace('bitcoin:', '')
+      .replace('BITCOIN:', '');
 
-    if (this.secret.startsWith('BC1')) this.secret = this.secret.toLowerCase();
+    if (this.secret.toLowerCase().startsWith(HASHCASH_ADDRESS_PREFIX)) this.secret = this.secret.toLowerCase();
 
     // is it output descriptor?
     if (

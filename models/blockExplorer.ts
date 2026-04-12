@@ -1,5 +1,6 @@
 // blockExplorer.ts
 import DefaultPreference from 'react-native-default-preference';
+import { BLOCK_EXPLORER_PROFILES, DEFAULT_BLOCK_EXPLORER_URL } from '../blue_modules/hashcash';
 
 export interface BlockExplorer {
   key: string;
@@ -8,9 +9,9 @@ export interface BlockExplorer {
 }
 
 export const BLOCK_EXPLORERS: { [key: string]: BlockExplorer } = {
-  default: { key: 'default', name: 'Mempool.space', url: 'https://mempool.space' },
-  blockchair: { key: 'blockchair', name: 'Blockchair', url: 'https://blockchair.com/bitcoin' },
-  blockstream: { key: 'blockstream', name: 'Blockstream.info', url: 'https://blockstream.info' },
+  default: { key: 'default', name: 'HashCash Explorer (Dev)', url: DEFAULT_BLOCK_EXPLORER_URL },
+  hcashDev: { key: 'hcashDev', name: 'HashCash Explorer (Dev)', url: BLOCK_EXPLORER_PROFILES.dev },
+  hcashLocal: { key: 'hcashLocal', name: 'HashCash Explorer (Local)', url: BLOCK_EXPLORER_PROFILES.local },
   custom: { key: 'custom', name: 'Custom', url: '' }, // Custom URL will be handled separately
 };
 

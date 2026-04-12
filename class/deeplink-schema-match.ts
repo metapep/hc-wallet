@@ -7,6 +7,7 @@ import { WatchOnlyWallet } from './';
 import Azteco from './azteco';
 import Lnurl from './lnurl';
 import type { TWallet } from './wallets/types';
+import { HASHCASH_ADDRESS_PREFIX, HASHCASH_NETWORK, HASHCASH_URI_SCHEME, LIGHTNING_ENABLED } from '../blue_modules/hashcash';
 
 type TCompletionHandlerParams = [string, object];
 type TContext = {
@@ -23,8 +24,7 @@ class DeeplinkSchemaMatch {
     if (typeof schemaString !== 'string' || schemaString.length <= 0) return false;
     const lowercaseString = schemaString.trim().toLowerCase();
     return (
-      lowercaseString.startsWith('bitcoin:') ||
-      lowercaseString.startsWith('lightning:') ||
+      lowercaseString.startsWith(`${HASHCASH_URI_SCHEME}:`) ||
       lowercaseString.startsWith('blue:') ||
       lowercaseString.startsWith('bluewallet:') ||
       lowercaseString.startsWith('lapp:')
@@ -51,7 +51,7 @@ class DeeplinkSchemaMatch {
       return;
     }
 
-    if (event.url.toLowerCase().startsWith('bluewallet:bitcoin:') || event.url.toLowerCase().startsWith('bluewallet:lightning:')) {
+    if (event.url.toLowerCase().startsWith(`bluewallet:${HASHCASH_URI_SCHEME}:`)) {
       event.url = event.url.substring(11);
     } else if (event.url.toLocaleLowerCase().startsWith('bluewallet://widget?action=')) {
       event.url = event.url.substring('bluewallet://'.length);
@@ -83,7 +83,7 @@ class DeeplinkSchemaMatch {
               },
             ]);
           }
-        } else if (wallet.chain === Chain.OFFCHAIN) {
+        } else if (wallet.chain === Chain.OFFCHAIN && LIGHTNING_ENABLED) {
           if (action === 'openSend') {
             completionHandler([
               'ScanLNDInvoiceRoot',
@@ -134,7 +134,7 @@ class DeeplinkSchemaMatch {
     } catch (e) {
       console.log(e);
     }
-    if (isBothBitcoinAndLightning) {
+    if (isBothBitcoinAndLightning && LIGHTNING_ENABLED) {
       completionHandler([
         'SelectWallet',
         {
@@ -155,6 +155,7 @@ class DeeplinkSchemaMatch {
         },
       ]);
     } else if (DeeplinkSchemaMatch.isLightningInvoice(event.url)) {
+      if (!LIGHTNING_ENABLED) return;
       completionHandler([
         'ScanLNDInvoiceRoot',
         {
@@ -165,6 +166,7 @@ class DeeplinkSchemaMatch {
         },
       ]);
     } else if (DeeplinkSchemaMatch.isLnUrl(event.url)) {
+      if (!LIGHTNING_ENABLED) return;
       // at this point we can not tell if it is lnurl-pay or lnurl-withdraw since it needs additional async call
       // to the server, which is undesirable here, so LNDCreateInvoice screen will handle it for us and will
       // redirect user to LnurlPay screen if necessary
@@ -178,6 +180,7 @@ class DeeplinkSchemaMatch {
         },
       ]);
     } else if (Lnurl.isLightningAddress(event.url)) {
+      if (!LIGHTNING_ENABLED) return;
       // this might be not just an email but a lightning address
       // @see https://lightningaddress.com
       completionHandler([
@@ -222,6 +225,7 @@ class DeeplinkSchemaMatch {
               ]);
               break;
             case 'setlndhuburl':
+              if (!LIGHTNING_ENABLED) break;
               completionHandler([
                 'LightningSettings',
                 {
@@ -276,7 +280,7 @@ class DeeplinkSchemaMatch {
   }
 
   static isBothBitcoinAndLightningOnWalletSelect(wallet: TWallet, uri: any): TCompletionHandlerParams {
-    if (wallet.chain === Chain.ONCHAIN) {
+    if (wallet.chain === Chain.ONCHAIN || !LIGHTNING_ENABLED) {
       return [
         'SendDetailsRoot',
         {
@@ -302,10 +306,11 @@ class DeeplinkSchemaMatch {
   }
 
   static isBitcoinAddress(address: string): boolean {
-    address = address.replace('://', ':').replace('bitcoin:', '').replace('BITCOIN:', '').replace('bitcoin=', '').split('?')[0];
+    address = address.replace('://', ':').replace(/^hcash:/i, '').replace(/^hcash=/i, '').split('?')[0];
     let isValidBitcoinAddress = false;
     try {
-      bitcoin.address.toOutputScript(address);
+      if (!address.toLowerCase().startsWith(HASHCASH_ADDRESS_PREFIX)) return false;
+      bitcoin.address.toOutputScript(address, HASHCASH_NETWORK);
       isValidBitcoinAddress = true;
     } catch (err) {
       isValidBitcoinAddress = false;
@@ -314,6 +319,7 @@ class DeeplinkSchemaMatch {
   }
 
   static isLightningInvoice(invoice: string): boolean {
+    if (!LIGHTNING_ENABLED) return false;
     let isValidLightningInvoice = false;
     if (
       invoice.toLowerCase().startsWith('lightning:lnb') ||
@@ -326,6 +332,7 @@ class DeeplinkSchemaMatch {
   }
 
   static isLnUrl(text: string): boolean {
+    if (!LIGHTNING_ENABLED) return false;
     return Lnurl.isLnurl(text);
   }
 
@@ -348,15 +355,16 @@ class DeeplinkSchemaMatch {
   }
 
   static isBothBitcoinAndLightning(url: string): TBothBitcoinAndLightning {
-    if (url.includes('lightning') && (url.includes('bitcoin') || url.includes('BITCOIN'))) {
-      const txInfo = url.split(/(bitcoin:\/\/|BITCOIN:\/\/|bitcoin:|BITCOIN:|lightning:|lightning=|bitcoin=)+/);
+    if (!LIGHTNING_ENABLED) return undefined;
+    if (url.includes('lightning') && (url.includes('hcash') || url.includes('HCASH'))) {
+      const txInfo = url.split(/(hcash:\/\/|HCASH:\/\/|hcash:|HCASH:|lightning:|lightning=|hcash=)+/);
       let btc: string | false = false;
       let lndInvoice: string | false = false;
       for (const [index, value] of txInfo.entries()) {
         try {
           // Inside try-catch. We dont wan't to  crash in case of an out-of-bounds error.
-          if (value.startsWith('bitcoin') || value.startsWith('BITCOIN')) {
-            btc = `bitcoin:${txInfo[index + 1]}`;
+          if (value.startsWith('hcash') || value.startsWith('HCASH')) {
+            btc = `${HASHCASH_URI_SCHEME}:${txInfo[index + 1]}`;
             if (!DeeplinkSchemaMatch.isBitcoinAddress(btc)) {
               btc = false;
               break;
@@ -388,8 +396,8 @@ class DeeplinkSchemaMatch {
       throw new Error('No URI provided');
     }
     let replacedUri = uri;
-    for (const replaceMe of ['BITCOIN://', 'bitcoin://', 'BITCOIN:']) {
-      replacedUri = replacedUri.replace(replaceMe, 'bitcoin:');
+    for (const replaceMe of ['HCASH://', 'hcash://', 'HCASH:']) {
+      replacedUri = replacedUri.replace(replaceMe, `${HASHCASH_URI_SCHEME}:`);
     }
 
     return bip21.decode(replacedUri);
@@ -397,7 +405,7 @@ class DeeplinkSchemaMatch {
 
   static bip21encode(address: string, options?: TOptions): string {
     // uppercase address if bech32 to satisfy BIP_0173
-    const isBech32 = address.startsWith('bc1');
+    const isBech32 = address.startsWith(HASHCASH_ADDRESS_PREFIX);
     if (isBech32) {
       address = address.toUpperCase();
     }

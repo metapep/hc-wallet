@@ -46,6 +46,7 @@ import { getClipboardContent } from '../../blue_modules/clipboard';
 import HandOffComponent from '../../components/HandOffComponent';
 import { HandOffActivityType } from '../../components/types';
 import WalletGradient from '../../class/wallet-gradient';
+import { LIGHTNING_ENABLED } from '../../blue_modules/hashcash';
 
 const buttonFontSize =
   PixelRatio.roundToNearestPixel(Dimensions.get('window').width / 26) > 22
@@ -122,6 +123,11 @@ const WalletTransactions: React.FC<WalletTransactionsProps> = ({ route }: { rout
         if (wallet.chain === Chain.ONCHAIN) {
           navigate('SendDetailsRoot', { screen: 'SendDetails', params: parameters });
         } else {
+          if (!LIGHTNING_ENABLED) {
+            setIsLoading(false);
+            presentAlert({ message: 'Lightning is disabled for HashCash.' });
+            return;
+          }
           navigate('ScanLNDInvoiceRoot', { screen: 'ScanLNDInvoice', params: parameters });
         }
         setIsLoading(false);
@@ -234,7 +240,7 @@ const WalletTransactions: React.FC<WalletTransactionsProps> = ({ route }: { rout
     }
   }, [wallet, isElectrumDisabled, isLoading, refreshTransactions, lastFetchTimestamp]);
 
-  const isLightning = useCallback((): boolean => wallet.chain === Chain.OFFCHAIN || false, [wallet]);
+  const isLightning = useCallback((): boolean => (LIGHTNING_ENABLED && wallet.chain === Chain.OFFCHAIN) || false, [wallet]);
   const renderListFooterComponent = () => {
     // if not all txs rendered - display indicator
     return wallet.getTransactions().length > limit ? (
@@ -294,6 +300,10 @@ const WalletTransactions: React.FC<WalletTransactionsProps> = ({ route }: { rout
 
   const onManageFundsPressed = useCallback(
     (id?: string) => {
+      if (!LIGHTNING_ENABLED) {
+        presentAlert({ message: 'Lightning is disabled for HashCash.' });
+        return;
+      }
       if (id === actionKeys.Refill) {
         const availableWallets = wallets.filter(item => item.chain === Chain.ONCHAIN && item.allowSend());
         if (availableWallets.length === 0) {
@@ -344,6 +354,9 @@ const WalletTransactions: React.FC<WalletTransactionsProps> = ({ route }: { rout
 
   const sendButtonPress = () => {
     if (wallet.chain === Chain.OFFCHAIN) {
+      if (!LIGHTNING_ENABLED) {
+        return presentAlert({ message: 'Lightning is disabled for HashCash.' });
+      }
       return navigate('ScanLNDInvoiceRoot', { screen: 'ScanLNDInvoice', params: { walletID } });
     }
 
@@ -628,6 +641,10 @@ const WalletTransactions: React.FC<WalletTransactionsProps> = ({ route }: { rout
             text={loc.receive.header}
             onPress={() => {
               if (wallet.chain === Chain.OFFCHAIN) {
+                if (!LIGHTNING_ENABLED) {
+                  presentAlert({ message: 'Lightning is disabled for HashCash.' });
+                  return;
+                }
                 navigate('LNDCreateInvoiceRoot', { screen: 'LNDCreateInvoice', params: { walletID } });
               } else {
                 navigate('ReceiveDetails', { walletID });

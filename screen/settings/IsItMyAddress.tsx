@@ -15,6 +15,7 @@ import { useExtendedNavigation } from '../../hooks/useExtendedNavigation';
 import { platformSizing, platformLayout, getSettingsRowBackgroundColor, SettingsScrollView } from '../../components/platform';
 import { useTheme } from '../../components/themes';
 import { BlueButtonLink } from '../../BlueComponents';
+import { HASHCASH_URI_SCHEME } from '../../blue_modules/hashcash';
 
 const IsItMyAddress: React.FC = () => {
   const { navigate } = useExtendedNavigation();
@@ -35,7 +36,10 @@ const IsItMyAddress: React.FC = () => {
 
   const checkAddress = () => {
     Keyboard.dismiss();
-    const cleanAddress = address.replace('bitcoin:', '').replace('BITCOIN:', '').replace('bitcoin=', '').split('?')[0];
+    const cleanAddress = address
+      .replace(new RegExp(`^${HASHCASH_URI_SCHEME}:`, 'i'), '')
+      .replace(new RegExp(`^${HASHCASH_URI_SCHEME}=`, 'i'), '')
+      .split('?')[0];
     const matching: TWallet[] = [];
 
     for (const w of wallets) {
@@ -75,7 +79,7 @@ const IsItMyAddress: React.FC = () => {
 
   const importScan = async () => {
     const value = await scanQrHelper();
-    const cleanAddress = value.replace(/^bitcoin(:|=)/i, '').split('?')[0];
+    const cleanAddress = value.replace(new RegExp(`^${HASHCASH_URI_SCHEME}(:|=)`, 'i'), '').split('?')[0];
     setAddress(value);
     setResultCleanAddress(cleanAddress);
   };

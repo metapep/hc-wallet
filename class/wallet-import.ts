@@ -26,6 +26,7 @@ import {
 import bip39WalletFormatsElectrum from './bip39_wallet_formats.json'; // https://github.com/spesmilo/electrum/blob/master/electrum/bip39_wallet_formats.json
 import bip39WalletFormatsBlueWallet from './bip39_wallet_formats_bluewallet.json';
 import type { TWallet } from './wallets/types';
+import { LIGHTNING_ENABLED } from '../blue_modules/hashcash';
 
 // https://github.com/bitcoinjs/bip32/blob/master/ts-src/bip32.ts#L43
 export const validateBip32 = (path: string) => path.match(/^(m\/)?(\d+'?\/)*\d+'?$/) !== null;
@@ -197,7 +198,7 @@ const startImport = (
 
     // is it lightning custodian?
     yield { progress: 'lightning custodian' };
-    if (text.startsWith('blitzhub://') || text.startsWith('lndhub://')) {
+    if (LIGHTNING_ENABLED && (text.startsWith('blitzhub://') || text.startsWith('lndhub://'))) {
       const lnd = new LightningCustodianWallet();
       if (text.includes('@')) {
         const split = text.split('@');
@@ -217,7 +218,7 @@ const startImport = (
 
     // is it lightning ark wallet?
     yield { progress: 'lightning ark' };
-    if (text.startsWith('arkade://')) {
+    if (LIGHTNING_ENABLED && text.startsWith('arkade://')) {
       const ark = new LightningArkWallet();
       ark.setSecret(text);
       await ark.init();

@@ -13,6 +13,7 @@ import WalletExport from '../screen/wallets/WalletExport';
 import ViewEditMultisigCosignerViewSheet from '../screen/wallets/ViewEditMultisigCosignerViewSheet';
 import ViewEditMultisigProvideMnemonicsSheet from '../screen/wallets/ViewEditMultisigProvideMnemonicsSheet';
 import ViewEditMultisigShareCosignerSheet from '../screen/wallets/ViewEditMultisigShareCosignerSheet';
+import { LIGHTNING_ENABLED } from '../blue_modules/hashcash';
 
 // Lazy load all components except UnlockWith
 const DrawerRoot = lazy(() => import('./DrawerRoot'));
@@ -75,8 +76,12 @@ const MainRoot = () => {
           {/* Modal stacks */}
           <DetailViewStack.Screen name="AddWalletRoot" component={LazyAddWalletStack} options={NavigationDefaultOptions} />
           <DetailViewStack.Screen name="SendDetailsRoot" component={LazySendDetailsStack} options={NavigationFormNoSwipeDefaultOptions} />
-          <DetailViewStack.Screen name="LNDCreateInvoiceRoot" component={LazyLNDCreateInvoiceRoot} options={NavigationDefaultOptions} />
-          <DetailViewStack.Screen name="ScanLNDInvoiceRoot" component={LazyScanLNDInvoiceRoot} options={NavigationDefaultOptions} />
+          {LIGHTNING_ENABLED && (
+            <DetailViewStack.Screen name="LNDCreateInvoiceRoot" component={LazyLNDCreateInvoiceRoot} options={NavigationDefaultOptions} />
+          )}
+          {LIGHTNING_ENABLED && (
+            <DetailViewStack.Screen name="ScanLNDInvoiceRoot" component={LazyScanLNDInvoiceRoot} options={NavigationDefaultOptions} />
+          )}
           <DetailViewStack.Screen name="AztecoRedeemRoot" component={LazyAztecoRedeemStackRoot} options={NavigationDefaultOptions} />
 
           <DetailViewStack.Screen

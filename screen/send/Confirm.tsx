@@ -26,6 +26,7 @@ import { HDSegwitBech32Wallet } from '../../class';
 import { useSettings } from '../../hooks/context/useSettings';
 import { majorTomToGroundControl } from '../../blue_modules/notifications';
 import { uint8ArrayToHex } from '../../blue_modules/uint8array-extras';
+import { HASHCASH_NETWORK } from '../../blue_modules/hashcash';
 
 enum ActionType {
   SET_LOADING = 'SET_LOADING',
@@ -170,7 +171,7 @@ const Confirm: React.FC = () => {
     if (!(recipients.length > 0) || !recipients[0].address) {
       return undefined;
     }
-    return bitcoin.address.toOutputScript(recipients[0].address, bitcoin.networks.bitcoin);
+    return bitcoin.address.toOutputScript(recipients[0].address, HASHCASH_NETWORK);
   };
 
   const handleSendTransaction = async () => {

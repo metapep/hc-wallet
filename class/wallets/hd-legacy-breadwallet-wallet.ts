@@ -5,6 +5,7 @@ import { CoinSelectReturnInput } from 'coinselect';
 
 import * as BlueElectrum from '../../blue_modules/BlueElectrum';
 import { ElectrumHistory } from '../../blue_modules/BlueElectrum';
+import { HASHCASH_ADDRESS_PREFIX, HASHCASH_NETWORK } from '../../blue_modules/hashcash';
 import ecc from '../../blue_modules/noble_ecc';
 import { AbstractHDElectrumWallet } from './abstract-hd-electrum-wallet';
 import { HDLegacyP2PKHWallet } from './hd-legacy-p2pkh-wallet';
@@ -43,7 +44,9 @@ export class HDLegacyBreadwalletWallet extends HDLegacyP2PKHWallet {
     }
 
     const pubkey = _node.derive(index).publicKey;
-    const address = p2wpkh ? bitcoinjs.payments.p2wpkh({ pubkey }).address : bitcoinjs.payments.p2pkh({ pubkey }).address;
+    const address = p2wpkh
+      ? bitcoinjs.payments.p2wpkh({ pubkey, network: HASHCASH_NETWORK }).address
+      : bitcoinjs.payments.p2pkh({ pubkey, network: HASHCASH_NETWORK }).address;
 
     if (!address) {
       throw new Error('Internal error: no address in _calcNodeAddressByIndex');
@@ -162,7 +165,7 @@ export class HDLegacyBreadwalletWallet extends HDLegacyP2PKHWallet {
     // hack to use
     // AbstractHDElectrumWallet._addPsbtInput for bech32 address
     // HDLegacyP2PKHWallet._addPsbtInput for legacy address
-    const ProxyClass = input?.address?.startsWith('bc1') ? AbstractHDElectrumWallet : HDLegacyP2PKHWallet;
+    const ProxyClass = input?.address?.startsWith(HASHCASH_ADDRESS_PREFIX) ? AbstractHDElectrumWallet : HDLegacyP2PKHWallet;
     const proxy = new ProxyClass();
     return proxy._addPsbtInput.apply(this, [psbt, input, sequence, masterFingerprintBuffer]);
   }

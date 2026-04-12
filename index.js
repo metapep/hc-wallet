@@ -2,6 +2,7 @@ import './bugsnag';
 import './gesture-handler';
 import 'react-native-get-random-values';
 import './shim.js';
+import './blue_modules/hashcash';
 
 import React, { useEffect } from 'react';
 import { AppRegistry, LogBox } from 'react-native';

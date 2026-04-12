@@ -26,6 +26,8 @@ import { pop } from '../NavigationService';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { uint8ArrayToHex } from '../blue_modules/uint8array-extras';
 import ListItem from './ListItem';
+import { LIGHTNING_ENABLED } from '../blue_modules/hashcash';
+import presentAlert from './Alert';
 
 const styles = StyleSheet.create({
   pressable: {
@@ -291,6 +293,10 @@ export const TransactionListItem: React.FC<TransactionListItemProps> = memo(
         }
         navigate('TransactionStatus', { hash: item.hash, walletID });
       } else if (item.type === 'user_invoice' || item.type === 'payment_request' || item.type === 'paid_invoice') {
+        if (!LIGHTNING_ENABLED) {
+          presentAlert({ message: 'Lightning is disabled for HashCash.' });
+          return;
+        }
         const lightningWallet = wallets.filter(wallet => wallet?.getID() === item.walletID);
         if (lightningWallet.length === 1) {
           try {
@@ -330,6 +336,10 @@ export const TransactionListItem: React.FC<TransactionListItemProps> = memo(
       if (walletID && item && item.hash) {
         navigate('TransactionDetails', { tx: item, hash: item.hash, walletID });
       } else {
+        if (!LIGHTNING_ENABLED) {
+          presentAlert({ message: 'Lightning is disabled for HashCash.' });
+          return;
+        }
         const lightningWallet = wallets.find(wallet => wallet?.getID() === item.walletID);
         if (lightningWallet) {
           navigate('LNDViewInvoice', {

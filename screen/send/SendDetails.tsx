@@ -56,6 +56,7 @@ import { CommonToolTipActions, ToolTipAction } from '../../typings/CommonToolTip
 import ActionSheet from '../ActionSheet';
 import { isCancel, pickTransaction } from '../../blue_modules/fs';
 import { Measure } from '../../class/measure';
+import { HASHCASH_ADDRESS_PREFIX, HASHCASH_URI_SCHEME, isHcashAddress } from '../../blue_modules/hashcash';
 
 interface IPaymentDestinations {
   address: string; // btc address or payment code
@@ -321,7 +322,7 @@ const SendDetails = () => {
         const addr =
           transaction.address && wallet.isAddressValid(transaction.address)
             ? transaction.address
-            : 'bc1p0xlxvlhemja6c4dqv22uapctqupfhlxm9h8z3k2e72q4k9hcz7vqzk5jj0';
+            : wallet.getAddress() || '36JxaUrpDzkEerkTf1FzwHNE1Hb7cCjgJV';
         targets = [{ address: addr }];
         break;
       }
@@ -337,13 +338,15 @@ const SendDetails = () => {
 
     // if targets is empty, insert dust
     if (targets.length === 0) {
-      targets.push({ address: '36JxaUrpDzkEerkTf1FzwHNE1Hb7cCjgJV', value: 546 });
+      const fallbackAddress = wallet.getAddress() || '36JxaUrpDzkEerkTf1FzwHNE1Hb7cCjgJV';
+      targets.push({ address: fallbackAddress, value: 546 });
     }
 
     // replace wrong addresses with dump
     targets = targets.map(t => {
       if (!wallet.isAddressValid(t.address)) {
-        return { ...t, address: '36JxaUrpDzkEerkTf1FzwHNE1Hb7cCjgJV' };
+        const fallbackAddress = wallet.getAddress() || '36JxaUrpDzkEerkTf1FzwHNE1Hb7cCjgJV';
+        return { ...t, address: fallbackAddress };
       } else {
         return t;
       }
@@ -449,8 +452,8 @@ const SendDetails = () => {
 
       const cl = new ContactList();
 
-      const dataWithoutSchema = data.replace('bitcoin:', '').replace('BITCOIN:', '');
-      if (wallet.isAddressValid(dataWithoutSchema) || cl.isPaymentCodeValid(dataWithoutSchema)) {
+      const dataWithoutSchema = data.replace(/^hcash:/i, '').replace(/^hcash=/i, '');
+      if ((isHcashAddress(dataWithoutSchema) && wallet.isAddressValid(dataWithoutSchema)) || cl.isPaymentCodeValid(dataWithoutSchema)) {
         setAddresses(addrs => {
           addrs[scrollIndex.current].address = dataWithoutSchema;
           return [...addrs];
@@ -463,7 +466,7 @@ const SendDetails = () => {
       let address = '';
       let options: TOptions;
       try {
-        if (!data.toLowerCase().startsWith('bitcoin:')) data = `bitcoin:${data}`;
+        if (!data.toLowerCase().startsWith(`${HASHCASH_URI_SCHEME}:`)) data = `${HASHCASH_URI_SCHEME}:${data}`;
         const decoded = DeeplinkSchemaMatch.bip21decode(data);
         address = decoded.address;
         options = decoded.options;
@@ -476,7 +479,7 @@ const SendDetails = () => {
       }
 
       console.log('options', options);
-      if (wallet.isAddressValid(address)) {
+      if (isHcashAddress(address) && wallet.isAddressValid(address)) {
         setAddresses(addrs => {
           addrs[scrollIndex.current].address = address;
           addrs[scrollIndex.current].amount = options?.amount ?? 0;
@@ -530,7 +533,12 @@ const SendDetails = () => {
 
       if (!error) {
         const cl = new ContactList();
-        if (!wallet.isAddressValid(transaction.address) && !cl.isPaymentCodeValid(transaction.address)) {
+        const lowerAddress = transaction.address.trim().toLowerCase();
+        const isPaymentCode = cl.isPaymentCodeValid(transaction.address);
+        if (!isPaymentCode && !lowerAddress.startsWith(HASHCASH_ADDRESS_PREFIX)) {
+          console.log('validation error');
+          error = loc.send.details_address_field_is_not_valid;
+        } else if (!wallet.isAddressValid(transaction.address) && !isPaymentCode) {
           console.log('validation error');
           error = loc.send.details_address_field_is_not_valid;
         }

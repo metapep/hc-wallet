@@ -26,6 +26,7 @@ import { BlueSpacing20, BlueSpacing40 } from '../../components/BlueSpacing';
 import { hexToUint8Array, uint8ArrayToHex } from '../../blue_modules/uint8array-extras';
 import { LightningArkWallet } from '../../class/wallets/lightning-ark-wallet.ts';
 import { resetScanWasBBQR } from '../../helpers/scan-qr.ts';
+import { LIGHTNING_ENABLED } from '../../blue_modules/hashcash';
 
 enum ButtonSelected {
   // @ts-ignore: Return later to update
@@ -197,12 +198,16 @@ const WalletsAdd: React.FC = () => {
         subtitle: index2walletType[2].subtitle,
         menuState: selectedIndex === 2 && selectedWalletType === ButtonSelected.ONCHAIN,
       },
-      {
-        id: index2walletType[3].walletType,
-        text: index2walletType[3].text,
-        subtitle: index2walletType[3].subtitle,
-        menuState: selectedWalletType === ButtonSelected.OFFCHAIN,
-      },
+      ...(LIGHTNING_ENABLED
+        ? [
+            {
+              id: index2walletType[3].walletType,
+              text: index2walletType[3].text,
+              subtitle: index2walletType[3].subtitle,
+              menuState: selectedWalletType === ButtonSelected.OFFCHAIN,
+            } as Action,
+          ]
+        : []),
     ];
 
     const walletAction: Action = {
@@ -242,6 +247,10 @@ const WalletsAdd: React.FC = () => {
   }, [confirmResetEntropy]);
 
   const handleOnLightningButtonPressed = useCallback(() => {
+    if (!LIGHTNING_ENABLED) {
+      presentAlert({ message: 'Lightning is disabled for HashCash.' });
+      return;
+    }
     confirmResetEntropy(ButtonSelected.OFFCHAIN);
   }, [confirmResetEntropy]);
 
@@ -315,8 +324,18 @@ const WalletsAdd: React.FC = () => {
     setIsLoading(true);
 
     if (selectedWalletType === ButtonSelected.OFFCHAIN) {
+      if (!LIGHTNING_ENABLED) {
+        setIsLoading(false);
+        presentAlert({ message: 'Lightning is disabled for HashCash.' });
+        return;
+      }
       createLightningWallet();
     } else if (selectedWalletType === ButtonSelected.ARK) {
+      if (!LIGHTNING_ENABLED) {
+        setIsLoading(false);
+        presentAlert({ message: 'Lightning is disabled for HashCash.' });
+        return;
+      }
       createLightningArkWallet();
     } else if (selectedWalletType === ButtonSelected.ONCHAIN) {
       let w: HDSegwitBech32Wallet | HDLegacyP2PKHWallet | HDTaprootWallet;
