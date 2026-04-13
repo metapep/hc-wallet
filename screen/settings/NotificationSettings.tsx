@@ -207,9 +207,9 @@ const NotificationSettings: React.FC = () => {
         </SettingsCard>
 
         <SettingsListItem
-          title="github.com/BlueWallet/GroundControl"
+          title="hashcash.club"
           iconName="github"
-          onPress={() => Linking.openURL('https://github.com/BlueWallet/GroundControl')}
+          onPress={() => Linking.openURL('https://hashcash.club')}
           chevron
           position="single"
           spacingTop

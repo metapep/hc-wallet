@@ -125,6 +125,18 @@ const TransactionsNavigationHeader: React.FC<TransactionsNavigationHeaderProps> 
       ? formatBalance(currentBalance, unit, true)
       : formatBalanceWithoutSuffix(currentBalance, unit, true);
   }, [unit, currentBalance]);
+  const displayedUnitLabel = useMemo(() => {
+    if (unit === BitcoinUnit.LOCAL_CURRENCY) {
+      return preferredFiatCurrency?.endPointKey ?? FiatUnit.USD;
+    }
+    if (unit === BitcoinUnit.BTC) {
+      return loc.units[BitcoinUnit.BTC];
+    }
+    if (unit === BitcoinUnit.SATS) {
+      return loc.units[BitcoinUnit.SATS];
+    }
+    return unit;
+  }, [unit, preferredFiatCurrency?.endPointKey]);
 
   const balance = !wallet.hideBalance && formattedBalance;
   const safeBalance = balance ? String(balance) : undefined;
@@ -195,7 +207,7 @@ const TransactionsNavigationHeader: React.FC<TransactionsNavigationHeaderProps> 
       case MultisigHDWallet.type:
         return direction === 'rtl' ? require('../img/vault-shape-rtl.png') : require('../img/vault-shape.png');
       default:
-        return direction === 'rtl' ? require('../img/btc-shape-rtl.png') : require('../img/btc-shape.png');
+        return require('../img/icon.png');
     }
   }, [direction, wallet.type]);
 
@@ -246,9 +258,7 @@ const TransactionsNavigationHeader: React.FC<TransactionsNavigationHeaderProps> 
             </View>
           </ToolTipMenu>
           <TouchableOpacity style={styles.walletPreferredUnitView} onPress={changeWalletBalanceUnit} disabled={unitSwitching}>
-            <Text style={styles.walletPreferredUnitText}>
-              {unit === BitcoinUnit.LOCAL_CURRENCY ? (preferredFiatCurrency?.endPointKey ?? FiatUnit.USD) : unit}
-            </Text>
+            <Text style={styles.walletPreferredUnitText}>{displayedUnitLabel}</Text>
           </TouchableOpacity>
         </Animated.View>
         {(wallet.type === LightningCustodianWallet.type || wallet.type === LightningArkWallet.type) && allowOnchainAddress && (

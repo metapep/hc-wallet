@@ -16,7 +16,25 @@ export const BLOCK_EXPLORERS: { [key: string]: BlockExplorer } = {
 };
 
 export const getBlockExplorersList = (): BlockExplorer[] => {
-  return Object.values(BLOCK_EXPLORERS);
+  const uniqueByUrl = new Set<string>();
+  const explorers: BlockExplorer[] = [];
+
+  for (const explorer of Object.values(BLOCK_EXPLORERS)) {
+    if (explorer.key === 'custom') {
+      explorers.push(explorer);
+      continue;
+    }
+
+    const normalizedUrl = normalizeUrl(explorer.url);
+    if (uniqueByUrl.has(normalizedUrl)) {
+      continue;
+    }
+
+    uniqueByUrl.add(normalizedUrl);
+    explorers.push(explorer);
+  }
+
+  return explorers;
 };
 
 export const normalizeUrl = (url: string): string => {

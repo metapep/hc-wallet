@@ -338,12 +338,14 @@ export const StorageProvider = ({ children }: { children: React.ReactNode }) => 
           setWalletTransactionUpdateStatus(WalletTransactionsStatus.ALL);
         }
         console.debug('[refreshAllWalletTransactions] Waiting for connectivity...');
+        await BlueElectrum.connectMain();
         await BlueElectrum.waitTillConnected();
         if (!(await BlueElectrum.ping())) {
           // above `waitTillConnected` is not reliable, as app might have returned from long sleep, so it thinks its
           // connected but actually socket is closed. thus, we ping, and if it fails - we wait again (reconnection code
           // should pick up)
           console.log('[refreshAllWalletTransactions] ping failed, waiting for connection...');
+          await BlueElectrum.connectMain();
           await BlueElectrum.waitTillConnected();
         }
 
@@ -403,6 +405,7 @@ export const StorageProvider = ({ children }: { children: React.ReactNode }) => 
         }
         _lastTimeTriedToRefetchWallet[walletID] = Date.now();
 
+        await BlueElectrum.connectMain();
         await BlueElectrum.waitTillConnected();
         setWalletTransactionUpdateStatus(walletID);
 

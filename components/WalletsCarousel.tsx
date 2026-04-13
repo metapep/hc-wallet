@@ -24,7 +24,6 @@ import Animated, {
 } from 'react-native-reanimated';
 import LinearGradient from 'react-native-linear-gradient';
 import { LightningArkWallet, LightningCustodianWallet, MultisigHDWallet } from '../class';
-import WalletGradient from '../class/wallet-gradient';
 import { useSizeClass, SizeClass } from '../blue_modules/sizeClass';
 import loc, { formatBalance, transactionTimeToReadable } from '../loc';
 import { BlurredBalanceView } from './BlurredBalanceView';
@@ -59,7 +58,6 @@ const nStyles = StyleSheet.create({
   },
   button: {
     marginTop: 12,
-    backgroundColor: '#007AFF',
     paddingHorizontal: 32,
     paddingVertical: 12,
     borderRadius: 8,
@@ -123,8 +121,8 @@ const NewWalletPanel: React.FC<NewWalletPanelProps> = ({ onPress }) => {
       >
         <Text style={[nStyles.addAWAllet, { color: colors.foregroundColor }]}>{loc.wallets.list_create_a_wallet}</Text>
         <Text style={[nStyles.addLine, { color: colors.alternativeTextColor }]}>{loc.wallets.list_create_a_wallet_text}</Text>
-        <View style={nStyles.button}>
-          <Text style={[nStyles.buttonText, { color: colors.brandingColor }]}>{loc.wallets.list_create_a_button}</Text>
+        <View style={[nStyles.button, { backgroundColor: colors.buttonBackgroundColor }]}>
+          <Text style={[nStyles.buttonText, { color: colors.foregroundColor }]}>{loc.wallets.list_create_a_button}</Text>
         </View>
       </Animated.View>
     </Pressable>
@@ -200,11 +198,11 @@ const iStyles = StyleSheet.create({
   balance: {
     backgroundColor: 'transparent',
     fontWeight: 'bold',
-    fontSize: 36,
+    fontSize: 32,
   },
   balanceCompact: {
-    fontSize: 28,
-    lineHeight: 34,
+    fontSize: 25,
+    lineHeight: 30,
   },
   latestTx: {
     backgroundColor: 'transparent',
@@ -234,6 +232,7 @@ const iStyles = StyleSheet.create({
         borderRadius: 12,
       },
     }),
+    borderWidth: 1.5,
   },
   shadowContainerCompact: {
     ...Platform.select({
@@ -248,6 +247,7 @@ const iStyles = StyleSheet.create({
         borderRadius: 10,
       },
     }),
+    borderWidth: 1.5,
   },
 });
 
@@ -376,7 +376,7 @@ export const WalletCarouselItem: React.FC<WalletCarouselItemProps> = React.memo(
         image = direction === 'rtl' ? require('../img/vault-shape-rtl.png') : require('../img/vault-shape.png');
         break;
       default:
-        image = direction === 'rtl' ? require('../img/btc-shape-rtl.png') : require('../img/btc-shape.png');
+        image = require('../img/icon.png');
     }
 
     let latestTransactionText;
@@ -416,10 +416,14 @@ export const WalletCarouselItem: React.FC<WalletCarouselItemProps> = React.memo(
             style={[
               iStyles.shadowContainer,
               isCompact && iStyles.shadowContainerCompact,
-              { backgroundColor: colors.background, shadowColor: colors.shadowColor },
+              {
+                backgroundColor: colors.background,
+                shadowColor: colors.shadowColor,
+                borderColor: colors.buttonBackgroundColor,
+              },
             ]}
           >
-            <LinearGradient colors={WalletGradient.gradientsFor(item.type)} style={[iStyles.grad, isCompact && iStyles.gradCompact]}>
+            <LinearGradient colors={['#000000', '#000000']} style={[iStyles.grad, isCompact && iStyles.gradCompact]}>
               <View style={[iStyles.gradContent, isCompact && iStyles.gradContentCompact]}>
                 <ImageBackground source={image} style={[iStyles.image, isCompact && iStyles.imageCompact]} />
                 <Text style={iStyles.br} />

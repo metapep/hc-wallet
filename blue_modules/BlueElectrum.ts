@@ -13,7 +13,7 @@ import { ElectrumServerItem } from '../screen/settings/ElectrumSettings';
 import { triggerWarningHapticFeedback } from './hapticFeedback';
 import { AlertButton } from 'react-native';
 import { uint8ArrayToHex, stringToUint8Array, hexToUint8Array } from './uint8array-extras/index';
-import { DEFAULT_ELECTRUM_PEER, HCASH_ELECTRUM_PEERS, HASHCASH_NETWORK } from './hashcash';
+import { DEFAULT_ELECTRUM_PEER, HCASH_ELECTRUM_PEERS, HCASH_SUGGESTED_ELECTRUM_PEERS, HASHCASH_NETWORK } from './hashcash';
 
 const ElectrumClient = require('electrum-client');
 const net = require('net');
@@ -87,7 +87,7 @@ const storageKey = 'ELECTRUM_PEERS';
 const defaultPeer: Peer = DEFAULT_ELECTRUM_PEER;
 export const hardcodedPeers: Peer[] = HCASH_ELECTRUM_PEERS;
 
-export const suggestedServers: Peer[] = hardcodedPeers.map(peer => ({
+export const suggestedServers: Peer[] = HCASH_SUGGESTED_ELECTRUM_PEERS.map(peer => ({
   ...peer,
 }));
 
@@ -99,6 +99,8 @@ let disableBatching: boolean = false;
 let connectionAttempt: number = 0;
 let currentPeerIndex = hardcodedPeers.findIndex(peer => peer.host === defaultPeer.host && peer.ssl === defaultPeer.ssl);
 if (currentPeerIndex < 0) currentPeerIndex = 0;
+let preferredPeerFailureCount: number = 0;
+const MAX_PREFERRED_PEER_FAILURES = 2;
 let latestBlock: { height: number; time: number } | { height: undefined; time: undefined } = { height: undefined, time: undefined };
 const txhashHeightCache: Record<string, number> = {};
 let _realm: Realm | undefined;
@@ -246,10 +248,20 @@ export async function connectMain(): Promise<void> {
     console.log('Electrum connection disabled by user. Skipping connectMain call');
     return;
   }
+  if (mainConnected && mainClient) {
+    return;
+  }
+  if (mainClient && !mainConnected) {
+    console.log('Electrum connection attempt already in progress; skipping duplicate connectMain call');
+    return;
+  }
+
   let usingPeer = getNextPeer();
+  let usingPreferredPeer = false;
   const savedPeer = await getSavedPeer();
-  if (savedPeer && savedPeer.host && (savedPeer.tcp || savedPeer.ssl)) {
+  if (savedPeer && savedPeer.host && (savedPeer.tcp || savedPeer.ssl) && preferredPeerFailureCount < MAX_PREFERRED_PEER_FAILURES) {
     usingPeer = savedPeer;
+    usingPreferredPeer = true;
   }
 
   console.log('Using peer:', JSON.stringify(usingPeer));
@@ -279,6 +291,8 @@ export async function connectMain(): Promise<void> {
       serverName = ver[0];
       mainConnected = true;
       wasConnectedAtLeastOnce = true;
+      connectionAttempt = 0;
+      preferredPeerFailureCount = 0;
       if (ver[0].startsWith('ElectrumPersonalServer') || ver[0].startsWith('electrs') || ver[0].startsWith('Fulcrum')) {
         disableBatching = true;
 
@@ -318,6 +332,20 @@ export async function connectMain(): Promise<void> {
   }
 
   if (!mainConnected) {
+    if (usingPreferredPeer) {
+      preferredPeerFailureCount++;
+      console.warn('Preferred Electrum peer failed', preferredPeerFailureCount, 'time(s)');
+      if (preferredPeerFailureCount >= MAX_PREFERRED_PEER_FAILURES) {
+        console.warn('Preferred Electrum peer is unhealthy; clearing saved server and falling back to profile peers');
+        await removePreferredServer();
+        connectionAttempt = 0;
+        mainClient?.close();
+        mainClient = undefined;
+        await new Promise(resolve => setTimeout(resolve, 500));
+        return connectMain();
+      }
+    }
+
     console.log('retry');
     connectionAttempt = connectionAttempt + 1;
     mainClient?.close();
@@ -1006,22 +1034,36 @@ export async function multiGetTransactionByTxid<T extends boolean>(
 export const waitTillConnected = async function (): Promise<boolean> {
   let waitTillConnectedInterval: NodeJS.Timeout | undefined;
   let retriesCounter = 0;
+  const MAX_WAIT_RETRIES = 300; // 30 seconds
+  const RECONNECT_EVERY_N_TICKS = 20; // every 2 seconds
   if (await isDisabled()) {
     console.warn('Electrum connections disabled by user. waitTillConnected skipping...');
     return false;
   }
   return new Promise(function (resolve, reject) {
+    if (!mainConnected && !mainClient) {
+      connectMain().catch(error => {
+        console.warn('waitTillConnected initial connect attempt failed:', error);
+      });
+    }
+
     waitTillConnectedInterval = setInterval(() => {
       if (mainConnected) {
         clearInterval(waitTillConnectedInterval);
         return resolve(true);
       }
 
-      if (wasConnectedAtLeastOnce && retriesCounter++ >= 150) {
-        // `wasConnectedAtLeastOnce` needed otherwise theres gona be a race condition with the code that connects
-        // electrum during app startup
+      if (retriesCounter % RECONNECT_EVERY_N_TICKS === 0 && !mainClient) {
+        connectMain().catch(error => {
+          console.warn('waitTillConnected reconnect attempt failed:', error);
+        });
+      }
+
+      if (retriesCounter++ >= MAX_WAIT_RETRIES) {
         clearInterval(waitTillConnectedInterval);
-        presentNetworkErrorAlert();
+        if (wasConnectedAtLeastOnce) {
+          presentNetworkErrorAlert();
+        }
         reject(new Error('Waiting for Electrum connection timeout'));
       }
     }, 100);

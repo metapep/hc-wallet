@@ -117,7 +117,7 @@ const TransactionStatus: React.FC<TransactionStatusProps> = ({ transaction, txid
   const subscribedWallet = useWalletSubscribe(walletID!);
   const { navigate, setOptions, goBack } = useExtendedNavigation<NavigationProps>();
   const { colors } = useTheme();
-  const { selectedBlockExplorer } = useSettings();
+  const { selectedBlockExplorer, preferredFiatCurrency } = useSettings();
   const fetchTxInterval = useRef<NodeJS.Timeout | undefined>(undefined);
   const stylesHook = StyleSheet.create({
     value: {
@@ -162,6 +162,9 @@ const TransactionStatus: React.FC<TransactionStatusProps> = ({ transaction, txid
   const setIsRBFCancelPossible = (status: ButtonStatus) => {
     dispatch({ type: ActionType.SetRBFCancelPossible, payload: status });
   };
+  const preferredBalanceUnit = wallet?.preferredBalanceUnit ?? BitcoinUnit.BTC;
+  const preferredBalanceUnitLabel =
+    preferredBalanceUnit === BitcoinUnit.LOCAL_CURRENCY ? (preferredFiatCurrency?.endPointKey ?? '') : loc.units[preferredBalanceUnit];
 
   const navigateToTransactionDetails = useCallback(() => {
     if (walletID && tx && tx.hash) {
@@ -225,7 +228,7 @@ const TransactionStatus: React.FC<TransactionStatusProps> = ({ transaction, txid
         const transactions = await BlueElectrum.multiGetTransactionByTxid([hash], true, 10);
         const txFromElectrum = transactions[hash];
         if (!txFromElectrum) {
-          console.error(`Transaction from Electrum with hash ${hash} not found.`);
+          console.debug(`Transaction from Electrum with hash ${hash} not found.`);
           return;
         }
 
@@ -233,7 +236,7 @@ const TransactionStatus: React.FC<TransactionStatusProps> = ({ transaction, txid
 
         const address = txFromElectrum.vout?.[0]?.scriptPubKey?.addresses?.pop();
         if (!address) {
-          console.error('Address not found in txFromElectrum.');
+          console.debug('Address not found in txFromElectrum.');
           return;
         }
 
@@ -248,7 +251,7 @@ const TransactionStatus: React.FC<TransactionStatusProps> = ({ transaction, txid
             }
           }
           if (!txFromMempool) {
-            console.error(`Transaction from mempool with hash ${hash} not found.`);
+            console.debug(`Transaction from mempool with hash ${hash} not found.`);
             return;
           }
 
@@ -275,7 +278,7 @@ const TransactionStatus: React.FC<TransactionStatusProps> = ({ transaction, txid
               return Object.assign({}, prevState, { confirmations: txFromElectrum.confirmations });
             });
           } else {
-            console.error('Cannot set confirmations: tx is undefined.');
+            console.debug('Cannot set confirmations: tx is undefined.');
           }
           if (fetchTxInterval.current) {
             clearInterval(fetchTxInterval.current);
@@ -284,11 +287,16 @@ const TransactionStatus: React.FC<TransactionStatusProps> = ({ transaction, txid
           if (wallet?.getID()) {
             fetchAndSaveWalletTransactions(wallet.getID());
           } else {
-            console.error('Cannot fetch and save wallet transactions: wallet ID is undefined.');
+            console.debug('Cannot fetch and save wallet transactions: wallet ID is undefined.');
           }
         }
       } catch (error) {
-        console.error('Error in fetchTxInterval:', error);
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        if (/close connect/i.test(errorMessage)) {
+          console.debug('Electrum connection closed while polling tx status; retrying on next interval tick.');
+          return;
+        }
+        console.warn('Error in fetchTxInterval:', errorMessage);
       }
     }, intervalMs);
 
@@ -317,22 +325,28 @@ const TransactionStatus: React.FC<TransactionStatusProps> = ({ transaction, txid
   }, []);
 
   const initialButtonsState = async () => {
+    if (!wallet || !tx?.hash) {
+      setAllButtonStatus(ButtonStatus.NotPossible);
+      setIsLoading(false);
+      return;
+    }
+
     try {
       await checkPossibilityOfCPFP();
       await checkPossibilityOfRBFBumpFee();
       await checkPossibilityOfRBFCancel();
     } catch (e) {
-      console.error('Error in initialButtonsState:', e);
+      console.debug('Error in initialButtonsState:', e);
       setAllButtonStatus(ButtonStatus.NotPossible);
     }
     setIsLoading(false);
   };
 
   useEffect(() => {
-    initialButtonsState().catch(error => console.error('Unhandled error in initialButtonsState:', error));
+    initialButtonsState().catch(error => console.debug('Unhandled error in initialButtonsState:', error));
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tx, wallets]);
+  }, [tx, wallets, wallet]);
 
   useEffect(() => {}, [tx, wallets]);
 
@@ -341,23 +355,28 @@ const TransactionStatus: React.FC<TransactionStatusProps> = ({ transaction, txid
   }, []);
 
   const checkPossibilityOfCPFP = async () => {
-    if (!wallet?.allowRBF()) {
+    if (!wallet || !tx?.hash) {
       return setIsCPFPPossible(ButtonStatus.NotPossible);
     }
 
-    if (wallet) {
-      const cpfbTx = new HDSegwitBech32Transaction(null, tx.hash, wallet as HDSegwitBech32Wallet);
-      if ((await cpfbTx.isToUsTransaction()) && (await cpfbTx.getRemoteConfirmationsNum()) === 0) {
-        return setIsCPFPPossible(ButtonStatus.Possible);
-      } else {
-        return setIsCPFPPossible(ButtonStatus.NotPossible);
-      }
+    if (!wallet.allowRBF()) {
+      return setIsCPFPPossible(ButtonStatus.NotPossible);
     }
-    return setIsCPFPPossible(ButtonStatus.NotPossible);
+
+    const cpfbTx = new HDSegwitBech32Transaction(null, tx.hash, wallet as HDSegwitBech32Wallet);
+    if ((await cpfbTx.isToUsTransaction()) && (await cpfbTx.getRemoteConfirmationsNum()) === 0) {
+      return setIsCPFPPossible(ButtonStatus.Possible);
+    } else {
+      return setIsCPFPPossible(ButtonStatus.NotPossible);
+    }
   };
 
   const checkPossibilityOfRBFBumpFee = async () => {
-    if (!wallet?.allowRBF()) {
+    if (!wallet || !tx?.hash) {
+      return setIsRBFBumpFeePossible(ButtonStatus.NotPossible);
+    }
+
+    if (!wallet.allowRBF()) {
       return setIsRBFBumpFeePossible(ButtonStatus.NotPossible);
     }
 
@@ -375,7 +394,11 @@ const TransactionStatus: React.FC<TransactionStatusProps> = ({ transaction, txid
   };
 
   const checkPossibilityOfRBFCancel = async () => {
-    if (!wallet?.allowRBF()) {
+    if (!wallet || !tx?.hash) {
+      return setIsRBFCancelPossible(ButtonStatus.NotPossible);
+    }
+
+    if (!wallet.allowRBF()) {
       return setIsRBFCancelPossible(ButtonStatus.NotPossible);
     }
 
@@ -576,10 +599,10 @@ const TransactionStatus: React.FC<TransactionStatusProps> = ({ transaction, txid
             <BlueCard>
               <View style={styles.center}>
                 <Text style={[styles.value, stylesHook.value]} selectable>
-                  {wallet && formatBalanceWithoutSuffix(tx.value, wallet.preferredBalanceUnit, true)}
+                  {wallet && formatBalanceWithoutSuffix(tx.value, preferredBalanceUnit, true)}
                   {` `}
-                  {wallet?.preferredBalanceUnit !== BitcoinUnit.LOCAL_CURRENCY && wallet && (
-                    <Text style={[styles.valueUnit, stylesHook.valueUnit]}>{wallet.preferredBalanceUnit}</Text>
+                  {preferredBalanceUnit !== BitcoinUnit.LOCAL_CURRENCY && wallet && (
+                    <Text style={[styles.valueUnit, stylesHook.valueUnit]}>{preferredBalanceUnitLabel}</Text>
                   )}
                 </Text>
               </View>
@@ -620,8 +643,8 @@ const TransactionStatus: React.FC<TransactionStatusProps> = ({ transaction, txid
                 <View style={styles.fee}>
                   <BlueText style={styles.feeText}>
                     {`${loc.send.create_fee.toLowerCase()} `}
-                    {formatBalanceWithoutSuffix(tx.fee, wallet?.preferredBalanceUnit ?? BitcoinUnit.BTC, true)}
-                    {wallet?.preferredBalanceUnit !== BitcoinUnit.LOCAL_CURRENCY && wallet?.preferredBalanceUnit}
+                    {formatBalanceWithoutSuffix(tx.fee, preferredBalanceUnit, true)}
+                    {preferredBalanceUnit !== BitcoinUnit.LOCAL_CURRENCY ? ` ${preferredBalanceUnitLabel}` : ''}
                   </BlueText>
                 </View>
               )}

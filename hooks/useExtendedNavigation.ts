@@ -70,14 +70,16 @@ export const useExtendedNavigation = <T extends NavigationProp<ParamListBase>>()
                 params,
               },
             });
-          } else {
-            // Normal navigation
-            if (typeof screenOrOptions === 'string') {
-              originalNavigation.navigate({ name: screenOrOptions, params, merge: options?.merge });
-            } else {
-              originalNavigation.navigate({ ...screenOrOptions, params, merge: options?.merge });
-            }
+            return;
           }
+        }
+
+        // Fallback path: use local navigation object directly when navigationRef
+        // is unavailable/not ready, or when no special nested handling is needed.
+        if (typeof screenOrOptions === 'string') {
+          originalNavigation.navigate({ name: screenOrOptions, params, merge: options?.merge });
+        } else {
+          originalNavigation.navigate({ ...screenOrOptions, params, merge: options?.merge });
         }
       };
 

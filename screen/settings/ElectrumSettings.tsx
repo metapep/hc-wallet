@@ -33,6 +33,7 @@ import { useExtendedNavigation } from '../../hooks/useExtendedNavigation';
 import loc from '../../loc';
 import { DetailViewStackParamList } from '../../navigation/DetailViewStackParamList';
 import { CommonToolTipActions } from '../../typings/CommonToolTipActions';
+import { ACTIVE_HCASH_PROFILE, DEFAULT_ELECTRUM_PEER } from '../../blue_modules/hashcash';
 
 type RouteProps = RouteProp<DetailViewStackParamList, 'ElectrumSettings'>;
 
@@ -428,6 +429,82 @@ const ElectrumSettings: React.FC = () => {
     setIsLoading(false);
   };
 
+  const runDiagnostics = useCallback(async () => {
+    if (isElectrumDisabled) {
+      presentAlert({ message: loc.settings.about_selftest_electrum_disabled });
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const selectedHost = host?.trim() || DEFAULT_ELECTRUM_PEER.host;
+      const selectedPeer: ElectrumServerItem = {
+        host: selectedHost,
+        tcp: sslPort === undefined ? port : undefined,
+        ssl: sslPort !== undefined ? sslPort : undefined,
+      };
+
+      const selectedHasPort = Boolean(selectedPeer.ssl || selectedPeer.tcp);
+      const selectedReachable = selectedHasPort
+        ? await BlueElectrum.testConnection(selectedPeer.host, selectedPeer.tcp, selectedPeer.ssl)
+        : false;
+      const defaultReachable = await BlueElectrum.testConnection(
+        DEFAULT_ELECTRUM_PEER.host,
+        DEFAULT_ELECTRUM_PEER.tcp,
+        DEFAULT_ELECTRUM_PEER.ssl,
+      );
+
+      let appConnected = false;
+      let appConnectError = '';
+      try {
+        await BlueElectrum.connectMain();
+        await BlueElectrum.waitTillConnected();
+        appConnected = await BlueElectrum.ping();
+      } catch (error) {
+        appConnectError = (error as Error)?.message ?? 'unknown';
+        appConnected = false;
+      }
+
+      let diagnosis = 'Indeterminate. Check endpoint config and retry.';
+      if (!selectedReachable && defaultReachable) {
+        diagnosis = 'Likely app configuration issue (selected Electrum server is unreachable, default is reachable).';
+      } else if (!selectedReachable && !defaultReachable) {
+        diagnosis = 'Likely network/backend issue (both selected and default Electrum endpoints are unreachable).';
+      } else if (selectedReachable && !appConnected) {
+        diagnosis =
+          'Endpoint is reachable, but app session failed to stabilize. This points to app-side connection state/reconnect behavior.';
+      } else if (selectedReachable && appConnected) {
+        diagnosis = 'Endpoint and app session are healthy at this moment.';
+      }
+
+      const selectedPortLabel = selectedPeer.ssl ?? selectedPeer.tcp ?? 'none';
+      const defaultPortLabel = DEFAULT_ELECTRUM_PEER.ssl ?? DEFAULT_ELECTRUM_PEER.tcp ?? 'none';
+      const messageLines = [
+        `Profile: ${ACTIVE_HCASH_PROFILE}`,
+        `Selected endpoint: ${selectedPeer.host}:${selectedPortLabel} -> ${selectedReachable ? 'reachable' : 'unreachable'}`,
+        `Default endpoint: ${DEFAULT_ELECTRUM_PEER.host}:${defaultPortLabel} -> ${defaultReachable ? 'reachable' : 'unreachable'}`,
+        `App connect+ping: ${appConnected ? 'ok' : `failed${appConnectError ? ` (${appConnectError})` : ''}`}`,
+        '',
+        `Diagnosis: ${diagnosis}`,
+      ];
+
+      triggerHapticFeedback(HapticFeedbackTypes.NotificationSuccess);
+      presentAlert({
+        title: 'Electrum Diagnostics',
+        message: messageLines.join('\n'),
+      });
+    } catch (error) {
+      triggerHapticFeedback(HapticFeedbackTypes.NotificationError);
+      presentAlert({
+        title: 'Electrum Diagnostics',
+        message: (error as Error)?.message ?? 'Diagnostics failed',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [host, isElectrumDisabled, port, sslPort]);
+
   const onBarScanned = (value: string) => {
     let v = value;
     if (value && DeeplinkSchemaMatch.getServerFromSetElectrumServerAction(value)) {
@@ -566,6 +643,10 @@ const ElectrumSettings: React.FC = () => {
 
               <View style={styles.buttonContainer}>
                 <Button disabled={saveDisabled} testID="Save" onPress={save} title={loc.settings.save} />
+              </View>
+
+              <View style={styles.buttonContainer}>
+                <Button disabled={isLoading} testID="RunElectrumDiagnostics" onPress={runDiagnostics} title="Run diagnostics" />
               </View>
             </View>
           </SettingsCard>

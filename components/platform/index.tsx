@@ -352,122 +352,131 @@ const usePlatformStyles = () => {
 };
 
 const getIconConfig = (name: SettingsIconName, dark: boolean): IconProps => {
+  const neutral = dark ? '#F3F4F6' : '#5F6672';
+  const primary = dark ? '#FF8B8B' : '#C60001';
+  const secondary = '#47E86A';
+  const accent = dark ? '#2A93A2' : '#055B69';
+  const neutralBg = 'rgba(95, 102, 114, 0.12)';
+  const accentBg = dark ? 'rgba(42, 147, 162, 0.2)' : 'rgba(5, 91, 105, 0.12)';
+  const primaryBg = dark ? 'rgba(198, 0, 1, 0.2)' : 'rgba(198, 0, 1, 0.12)';
+  const secondaryBg = 'rgba(71, 232, 106, 0.12)';
+
   const configs: Record<SettingsIconName, { ios: IconProps; android: IconProps }> = {
     settings: {
-      ios: { name: 'settings-outline', type: 'ionicon', color: dark ? '#FFFFFF' : '#5F6368', backgroundColor: 'rgba(142, 142, 147, 0.12)' },
-      android: { name: 'settings', type: 'material', color: dark ? '#FFFFFF' : '#5F6368' },
+      ios: { name: 'settings-outline', type: 'ionicon', color: neutral, backgroundColor: neutralBg },
+      android: { name: 'settings', type: 'material', color: neutral },
     },
     currency: {
-      ios: { name: 'cash-outline', type: 'ionicon', color: dark ? '#7EE0A4' : '#0F9D58', backgroundColor: 'rgba(52, 199, 89, 0.12)' },
-      android: { name: 'attach-money', type: 'material', color: dark ? '#7EE0A4' : '#0F9D58' },
+      ios: { name: 'cash-outline', type: 'ionicon', color: secondary, backgroundColor: secondaryBg },
+      android: { name: 'attach-money', type: 'material', color: secondary },
     },
     language: {
-      ios: { name: 'language-outline', type: 'ionicon', color: dark ? '#FFD580' : '#F4B400', backgroundColor: 'rgba(255, 149, 0, 0.12)' },
-      android: { name: 'language', type: 'material', color: dark ? '#FFD580' : '#F4B400' },
+      ios: { name: 'language-outline', type: 'ionicon', color: accent, backgroundColor: accentBg },
+      android: { name: 'language', type: 'material', color: accent },
     },
     security: {
       ios: {
         name: 'shield-checkmark-outline',
         type: 'ionicon',
-        color: dark ? '#FF8E8E' : '#DB4437',
-        backgroundColor: 'rgba(255, 59, 48, 0.12)',
+        color: primary,
+        backgroundColor: primaryBg,
       },
-      android: { name: 'security', type: 'material', color: dark ? '#FF8E8E' : '#DB4437' },
+      android: { name: 'security', type: 'material', color: primary },
     },
     network: {
-      ios: { name: 'globe-outline', type: 'ionicon', color: dark ? '#82B1FF' : '#1A73E8', backgroundColor: 'rgba(0, 122, 255, 0.12)' },
-      android: { name: 'public', type: 'material', color: dark ? '#82B1FF' : '#1A73E8' },
+      ios: { name: 'globe-outline', type: 'ionicon', color: accent, backgroundColor: accentBg },
+      android: { name: 'public', type: 'material', color: accent },
     },
     tools: {
       ios: {
         name: 'construct-outline',
         type: 'ionicon',
-        color: dark ? '#D0BCFF' : '#673AB7',
-        backgroundColor: 'rgba(142, 142, 147, 0.12)',
+        color: accent,
+        backgroundColor: accentBg,
       },
-      android: { name: 'build', type: 'material', color: dark ? '#D0BCFF' : '#673AB7' },
+      android: { name: 'build', type: 'material', color: accent },
     },
     about: {
       ios: {
         name: 'information-circle-outline',
         type: 'ionicon',
-        color: dark ? '#FFFFFF' : '#5F6368',
-        backgroundColor: 'rgba(142, 142, 147, 0.12)',
+        color: neutral,
+        backgroundColor: neutralBg,
       },
-      android: { name: 'info', type: 'material', color: dark ? '#FFFFFF' : '#5F6368' },
+      android: { name: 'info', type: 'material', color: neutral },
     },
     notifications: {
       ios: {
         name: 'notifications-outline',
         type: 'ionicon',
-        color: dark ? '#82B1FF' : '#1A73E8',
-        backgroundColor: 'rgba(142, 142, 147, 0.12)',
+        color: accent,
+        backgroundColor: accentBg,
       },
-      android: { name: 'notifications', type: 'material', color: dark ? '#82B1FF' : '#1A73E8' },
+      android: { name: 'notifications', type: 'material', color: accent },
     },
     lightning: {
-      ios: { name: 'flash-outline', type: 'ionicon', color: dark ? '#FFD580' : '#F4B400', backgroundColor: 'rgba(255, 149, 0, 0.12)' },
-      android: { name: 'flash-on', type: 'material', color: dark ? '#FFD580' : '#F4B400' },
+      ios: { name: 'flash-outline', type: 'ionicon', color: accent, backgroundColor: accentBg },
+      android: { name: 'flash-on', type: 'material', color: accent },
     },
     blockExplorer: {
-      ios: { name: 'search-outline', type: 'ionicon', color: dark ? '#82B1FF' : '#1A73E8', backgroundColor: 'rgba(0, 122, 255, 0.12)' },
-      android: { name: 'search', type: 'material', color: dark ? '#82B1FF' : '#1A73E8' },
+      ios: { name: 'search-outline', type: 'ionicon', color: accent, backgroundColor: accentBg },
+      android: { name: 'search', type: 'material', color: accent },
     },
     electrum: {
-      ios: { name: 'server-outline', type: 'ionicon', color: dark ? '#69F0AE' : '#0F9D58', backgroundColor: 'rgba(52, 199, 89, 0.12)' },
-      android: { name: 'storage', type: 'material', color: dark ? '#69F0AE' : '#0F9D58' },
+      ios: { name: 'server-outline', type: 'ionicon', color: secondary, backgroundColor: secondaryBg },
+      android: { name: 'storage', type: 'material', color: secondary },
     },
     licensing: {
       ios: {
         name: 'shield-checkmark-outline',
         type: 'ionicon',
-        color: dark ? '#FFFFFF' : '#24292e',
-        backgroundColor: 'rgba(142, 142, 147, 0.12)',
+        color: neutral,
+        backgroundColor: neutralBg,
       },
-      android: { name: 'verified-user', type: 'material', color: dark ? '#FFFFFF' : '#24292e' },
+      android: { name: 'verified-user', type: 'material', color: neutral },
     },
     releaseNotes: {
       ios: {
         name: 'document-text-outline',
         type: 'ionicon',
-        color: dark ? '#FFFFFF' : '#9AA0AA',
-        backgroundColor: 'rgba(142, 142, 147, 0.12)',
+        color: neutral,
+        backgroundColor: neutralBg,
       },
-      android: { name: 'description', type: 'material', color: dark ? '#FFFFFF' : '#9AA0AA' },
+      android: { name: 'description', type: 'material', color: neutral },
     },
     selfTest: {
-      ios: { name: 'flask-outline', type: 'ionicon', color: dark ? '#FFFFFF' : '#FC0D44', backgroundColor: 'rgba(142, 142, 147, 0.12)' },
-      android: { name: 'flask-outline', type: 'material-community', color: dark ? '#FFFFFF' : '#FC0D44' },
+      ios: { name: 'flask-outline', type: 'ionicon', color: primary, backgroundColor: primaryBg },
+      android: { name: 'flask-outline', type: 'material-community', color: primary },
     },
     performance: {
       ios: {
         name: 'speedometer-outline',
         type: 'ionicon',
-        color: dark ? '#FFFFFF' : '#FC0D44',
-        backgroundColor: 'rgba(142, 142, 147, 0.12)',
+        color: primary,
+        backgroundColor: primaryBg,
       },
-      android: { name: 'speedometer', type: 'material-community', color: dark ? '#FFFFFF' : '#FC0D44' },
+      android: { name: 'speedometer', type: 'material-community', color: primary },
     },
     github: {
-      ios: { name: 'logo-github', type: 'ionicon', color: dark ? '#FFFFFF' : '#24292e', backgroundColor: 'rgba(24, 23, 23, 0.1)' },
-      android: { name: 'code', type: 'material', color: dark ? '#FFFFFF' : '#24292e' },
+      ios: { name: 'logo-github', type: 'ionicon', color: neutral, backgroundColor: neutralBg },
+      android: { name: 'code', type: 'material', color: neutral },
     },
     search: {
-      ios: { name: 'search-outline', type: 'ionicon', color: dark ? '#82B1FF' : '#1A73E8', backgroundColor: 'rgba(0, 122, 255, 0.12)' },
-      android: { name: 'search', type: 'material', color: dark ? '#82B1FF' : '#1A73E8' },
+      ios: { name: 'search-outline', type: 'ionicon', color: accent, backgroundColor: accentBg },
+      android: { name: 'search', type: 'material', color: accent },
     },
     paperPlane: {
       ios: {
         name: 'paper-plane-outline',
         type: 'ionicon',
-        color: dark ? '#82B1FF' : '#1A73E8',
-        backgroundColor: 'rgba(0, 122, 255, 0.12)',
+        color: accent,
+        backgroundColor: accentBg,
       },
-      android: { name: 'send', type: 'material', color: dark ? '#82B1FF' : '#1A73E8' },
+      android: { name: 'send', type: 'material', color: accent },
     },
     key: {
-      ios: { name: 'key-outline', type: 'ionicon', color: dark ? '#69F0AE' : '#0F9D58', backgroundColor: 'rgba(52, 199, 89, 0.12)' },
-      android: { name: 'vpn-key', type: 'material', color: dark ? '#69F0AE' : '#0F9D58' },
+      ios: { name: 'key-outline', type: 'ionicon', color: secondary, backgroundColor: secondaryBg },
+      android: { name: 'vpn-key', type: 'material', color: secondary },
     },
   };
 
@@ -706,7 +715,7 @@ export const SettingsListItem: React.FC<SettingsListItemProps> = ({
   if (isAndroid && platformLayout.rippleEffect && onPress) {
     return (
       <TouchableNativeFeedback
-        background={TouchableNativeFeedback.Ripple('#CCCCCC', false)}
+        background={TouchableNativeFeedback.Ripple(themeColors.androidRippleColor ?? '#2A2E36', false)}
         useForeground
         onPress={onPress}
         disabled={disabled}

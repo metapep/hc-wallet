@@ -15,18 +15,18 @@ import { TaprootWallet } from './wallets/taproot-wallet.ts';
 import { LightningArkWallet } from './wallets/lightning-ark-wallet.ts';
 
 export default class WalletGradient {
-  static hdSegwitP2SHWallet: string[] = ['#007AFF', '#0040FF'];
-  static hdSegwitBech32Wallet: string[] = ['#6CD9FC', '#44BEE5'];
-  static segwitBech32Wallet: string[] = ['#6CD9FC', '#44BEE5'];
-  static watchOnlyWallet: string[] = ['#474646', '#282828'];
-  static legacyWallet: string[] = ['#37E8C0', '#15BE98'];
-  static taprootWallet: string[] = ['#4DA337', '#326D28'];
-  static hdLegacyP2PKHWallet: string[] = ['#FD7478', '#E73B40'];
-  static hdLegacyBreadWallet: string[] = ['#fe6381', '#f99c42'];
-  static multisigHdWallet: string[] = ['#1ce6eb', '#296fc5', '#3500A2'];
-  static defaultGradients: string[] = ['#B770F6', '#9013FE'];
-  static lightningCustodianWallet: string[] = ['#F1AA07', '#FD7E37']; // Corrected property with missing colors
-  static aezeedWallet: string[] = ['#8584FF', '#5351FB'];
+  static hdSegwitP2SHWallet: string[] = ['#000000', '#000000'];
+  static hdSegwitBech32Wallet: string[] = ['#000000', '#000000'];
+  static segwitBech32Wallet: string[] = ['#000000', '#000000'];
+  static watchOnlyWallet: string[] = ['#000000', '#000000'];
+  static legacyWallet: string[] = ['#000000', '#000000'];
+  static taprootWallet: string[] = ['#000000', '#000000'];
+  static hdLegacyP2PKHWallet: string[] = ['#000000', '#000000'];
+  static hdLegacyBreadWallet: string[] = ['#000000', '#000000'];
+  static multisigHdWallet: string[] = ['#000000', '#000000', '#000000'];
+  static defaultGradients: string[] = ['#000000', '#000000'];
+  static lightningCustodianWallet: string[] = ['#000000', '#000000'];
+  static aezeedWallet: string[] = ['#000000', '#000000'];
 
   static createWallet = () => {
     return WalletGradient.defaultGradients[0];

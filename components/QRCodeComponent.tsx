@@ -21,6 +21,7 @@ interface QRCodeComponentProps {
 }
 
 const BORDER_WIDTH = 6;
+const QR_CENTER_LOGO = require('../img/icon.png');
 
 const actionIcons: { [key: string]: ActionIcons } = {
   Share: {
@@ -100,7 +101,7 @@ const QRCodeComponent: React.FC<QRCodeComponentProps> = ({
   const renderQRCode = (
     <QRCode
       value={value}
-      {...(isLogoRendered ? { logo: require('../img/qr-code.png') } : {})}
+      {...(isLogoRendered ? { logo: QR_CENTER_LOGO } : {})}
       size={newSize}
       logoSize={logoSize}
       color="#000000"

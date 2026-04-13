@@ -96,8 +96,6 @@
     "about": "دبار",
     "about_selftest": "ر ونن خوش آزمایی",
     "about_selftest_electrum_disabled": "خوش آزمایی د هالت آفلاین د دسرس نؽ. هالت آفلاینن قیر فعال بکو ۉ دۏورته تفره بکو.",
-    "about_sm_github": "گیت هاب",
-    "about_sm_telegram": "تورگه تلگرام",
     "biometrics": "بیومتریک",
     "biom_conf_identity": "هوویت خوتونه تایید بکؽت.",
     "currency": "واهد پیلٛ",
@@ -210,9 +208,9 @@
     "sort_by": "ترتیب و ری"
   },
   "units": {
-    "BTC": "بیت کوین",
+    "BTC": "HCASH",
     "MAX": "گرد مۉجۊدی",
-    "sat_vbyte": "ساتۊشی/بایت مجازی",
+    "sat_vbyte": "jat/vByte",
     "sats": "ساتۊشی"
   },
   "addresses": {

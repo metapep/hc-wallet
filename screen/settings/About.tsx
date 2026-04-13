@@ -2,7 +2,6 @@ import Clipboard from '@react-native-clipboard/clipboard';
 import React, { useCallback } from 'react';
 import { Alert, Image, Linking, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { getApplicationName, getBuildNumber, getBundleId, getUniqueIdSync, getVersion, hasGmsSync } from 'react-native-device-info';
-import Icon from '@react-native-vector-icons/fontawesome6';
 
 import A from '../../blue_modules/analytics';
 import { BlueTextCentered } from '../../BlueComponents';
@@ -34,7 +33,8 @@ interface AboutItem extends SettingsListItemProps {
 const About: React.FC = () => {
   const { navigate } = useExtendedNavigation();
   const { isElectrumDisabled } = useSettings();
-  const { colors } = useTheme();
+  const { colors, dark } = useTheme();
+  const aboutLogoSource = dark ? require('../../img/logo-word-dark.png') : require('../../img/logo-word-light.png');
 
   const handleOnReleaseNotesPress = useCallback(() => {
     navigate('ReleaseNotes');
@@ -52,24 +52,28 @@ const About: React.FC = () => {
     navigate('Licensing');
   }, [navigate]);
 
-  const handleOnXPress = useCallback(() => {
-    Linking.openURL('https://x.com/bluewalletio');
+  const handleOnWebsitePress = useCallback(() => {
+    Linking.openURL('https://hashcash.club');
   }, []);
 
-  const handleOnTelegramPress = useCallback(() => {
-    Linking.openURL('https://t.me/bluewallethat');
+  const handleOnSupportPress = useCallback(() => {
+    Linking.openURL('mailto:support@hashcash.club');
   }, []);
 
-  const handleOnGithubPress = useCallback(() => {
-    Linking.openURL('https://github.com/BlueWallet/BlueWallet');
+  const handleOnPrivacyPress = useCallback(() => {
+    Linking.openURL('https://hashcash.club/privacy');
+  }, []);
+
+  const handleOnTermsPress = useCallback(() => {
+    Linking.openURL('https://hashcash.club/terms');
   }, []);
 
   const handleOnRatePress = useCallback(async () => {
     try {
       if (Platform.OS === 'ios') {
-        await Linking.openURL('https://itunes.apple.com/app/bluewallet-bitcoin-wallet/id1376878040');
+        await Linking.openURL('https://hashcash.club');
       } else {
-        await Linking.openURL('https://play.google.com/store/apps/details?id=io.bluewallet.bluewallet');
+        await Linking.openURL('https://hashcash.club');
       }
     } catch (error: any) {
       console.error('Rate app failed:', error.message);
@@ -102,14 +106,14 @@ const About: React.FC = () => {
           <SettingsSection compact>
             <SettingsCard style={[styles.card, styles.headerCard]}>
               <View style={styles.center}>
-                <Image style={styles.logo} source={require('../../img/bluebeast.png')} />
+                <Image style={styles.logo} source={aboutLogoSource} />
                 <Text style={[styles.textFree, { color: colors.foregroundColor }]}>{loc.settings.about_free}</Text>
                 <Text style={[styles.textBackup, { color: colors.alternativeTextColor }]}>
                   {formatStringAddTwoWhiteSpaces(loc.settings.about_backup)}
                 </Text>
                 {((Platform.OS === 'android' && hasGmsSync()) || Platform.OS !== 'android') && (
                   <View style={styles.headerButton}>
-                    <Button onPress={handleOnRatePress} title={loc.settings.about_review + ' ⭐🙏'} />
+                    <Button onPress={handleOnRatePress} title={loc.settings.about_review} />
                   </View>
                 )}
               </View>
@@ -119,24 +123,31 @@ const About: React.FC = () => {
         section: 1,
       },
       {
-        id: 'x',
-        title: '@bluewalletio',
-        leftIcon: <Text style={[styles.xIcon, { color: colors.foregroundColor }]}>𝕏</Text>,
-        onPress: handleOnXPress,
+        id: 'website',
+        title: 'hashcash.club',
+        iconName: 'network',
+        onPress: handleOnWebsitePress,
         section: 2,
       },
       {
-        id: 'telegram',
-        title: loc.settings.about_sm_telegram,
-        leftIcon: <Icon name="telegram" size={24} color={colors.foregroundColor} iconStyle="brand" />,
-        onPress: handleOnTelegramPress,
+        id: 'support',
+        title: 'support@hashcash.club',
+        iconName: 'about',
+        onPress: handleOnSupportPress,
         section: 2,
       },
       {
-        id: 'github',
-        title: loc.settings.about_sm_github,
-        leftIcon: <Icon name="github" size={24} color={colors.foregroundColor} iconStyle="brand" />,
-        onPress: handleOnGithubPress,
+        id: 'privacy',
+        title: 'Privacy Policy',
+        iconName: 'licensing',
+        onPress: handleOnPrivacyPress,
+        section: 2,
+      },
+      {
+        id: 'terms',
+        title: 'Terms of Service',
+        iconName: 'releaseNotes',
+        onPress: handleOnTermsPress,
         section: 2,
       },
       {
@@ -145,7 +156,7 @@ const About: React.FC = () => {
         customContent: (
           <SettingsSection compact>
             <SettingsCard style={[styles.card, styles.builtWithCard]}>
-              <BlueTextCentered>{loc.settings.about_awesome} 👍</BlueTextCentered>
+              <BlueTextCentered>{loc.settings.about_awesome}</BlueTextCentered>
               <BlueSpacing20 />
               <BlueTextCentered>React Native</BlueTextCentered>
               <BlueTextCentered>bitcoinjs-lib</BlueTextCentered>
@@ -231,13 +242,15 @@ const About: React.FC = () => {
     colors.foregroundColor,
     colors.alternativeTextColor,
     handleOnRatePress,
-    handleOnXPress,
-    handleOnTelegramPress,
-    handleOnGithubPress,
+    handleOnWebsitePress,
+    handleOnSupportPress,
+    handleOnPrivacyPress,
+    handleOnTermsPress,
     handleOnReleaseNotesPress,
     handleOnLicensingPress,
     handleOnSelfTestPress,
     handlePerformanceTest,
+    aboutLogoSource,
   ]);
 
   const renderItem = useCallback(
@@ -299,10 +312,6 @@ const styles = StyleSheet.create({
       marginVertical: 0,
     }),
   },
-  xIcon: {
-    fontSize: 24,
-    fontWeight: 'bold',
-  },
   card: {
     marginVertical: 8,
   },
@@ -314,8 +323,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   logo: {
-    width: 120,
-    height: 120,
+    width: 240,
+    height: 48,
     marginBottom: 12,
     resizeMode: 'contain',
   },

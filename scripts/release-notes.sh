@@ -39,5 +39,6 @@ awk -F 'Snyk has created this PR' '{print $1;}' | \
 sed '/See this package in npm/I d; /https:\/\/www.npmjs.com\//I d; /See this project in Snyk/I d; /https:\/\/app.snyk.io/I d' | \
 awk '{$1=$1};1' | \
 awk 'length($0) > 5' | \
+sed '/lightning/I d' | \
 sed -E '/^\* (WIP|FIX|REF|ADD|DEL) *$/d' | \
 apply_filter

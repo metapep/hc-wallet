@@ -1,4 +1,5 @@
-import React, { createContext, useCallback, useEffect, useMemo, useState } from 'react';
+import React, { createContext, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { AppState, AppStateStatus } from 'react-native';
 import DefaultPreference from 'react-native-default-preference';
 import { isReadClipboardAllowed, setReadClipboardAllowed } from '../../blue_modules/clipboard';
 import { getPreferredCurrency, GROUP_IO_BLUEWALLET, initCurrencyDaemon, setPreferredCurrency } from '../../blue_modules/currency';
@@ -146,6 +147,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = React.m
   const [totalBalancePreferredUnit, setTotalBalancePreferredUnit] = useState<BitcoinUnit>(BitcoinUnit.BTC);
   const [selectedBlockExplorer, setSelectedBlockExplorer] = useState<BlockExplorer>(BLOCK_EXPLORERS.default);
   const [isElectrumDisabled, setIsElectrumDisabled] = useState<boolean>(true);
+  const appStateRef = useRef<AppStateStatus>(AppState.currentState);
 
   const { walletsInitialized } = useStorage();
 
@@ -222,6 +224,23 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = React.m
     if (walletsInitialized) {
       isElectrumDisabled ? BlueElectrum.forceDisconnect() : BlueElectrum.connectMain();
     }
+  }, [isElectrumDisabled, walletsInitialized]);
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', nextAppState => {
+      const resumedToActive = appStateRef.current.match(/inactive|background/) && nextAppState === 'active';
+      appStateRef.current = nextAppState;
+
+      if (resumedToActive && walletsInitialized && !isElectrumDisabled) {
+        BlueElectrum.connectMain().catch(error => {
+          console.warn('Failed to reconnect Electrum on app resume:', error);
+        });
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
   }, [isElectrumDisabled, walletsInitialized]);
 
   const setPreferredFiatCurrencyStorage = useCallback(async (currency: TFiatUnit): Promise<void> => {

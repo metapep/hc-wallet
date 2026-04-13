@@ -3,6 +3,9 @@ import * as bitcoin from 'bitcoinjs-lib';
 export const HASHCASH_URI_SCHEME = 'hcash';
 export const HASHCASH_ADDRESS_PREFIX = 'hcash1';
 export const LIGHTNING_ENABLED = false;
+export const DONATE_ENABLED = false;
+export const CURRENCY_SETTINGS_ENABLED = false;
+export const CLIPBOARD_AUTO_READ_ENABLED = false;
 
 export type HcashProfile = 'local' | 'dev';
 
@@ -43,14 +46,26 @@ export const BLOCK_EXPLORER_PROFILES = {
 
 export const DEFAULT_ELECTRUM_PEER: HcashElectrumPeer = PROFILE_ENDPOINTS[ACTIVE_HCASH_PROFILE].electrum;
 
-const electrumPeers: HcashElectrumPeer[] = [PROFILE_ENDPOINTS.dev.electrum, PROFILE_ENDPOINTS.local.electrum];
+const electrumPeersByProfile: Record<HcashProfile, HcashElectrumPeer[]> = {
+  local: [PROFILE_ENDPOINTS.local.electrum],
+  dev: [PROFILE_ENDPOINTS.dev.electrum],
+};
+
+const suggestedElectrumPeers: HcashElectrumPeer[] = [PROFILE_ENDPOINTS.dev.electrum, PROFILE_ENDPOINTS.local.electrum];
 
 // Keep unique peers while preserving deterministic order.
 const dedupePeerKey = (peer: HcashElectrumPeer): string => `${peer.host}:${peer.ssl ?? peer.tcp ?? ''}`;
-export const HCASH_ELECTRUM_PEERS: HcashElectrumPeer[] = [DEFAULT_ELECTRUM_PEER, ...electrumPeers].filter((peer, idx, arr) => {
+export const HCASH_ELECTRUM_PEERS: HcashElectrumPeer[] = electrumPeersByProfile[ACTIVE_HCASH_PROFILE].filter((peer, idx, arr) => {
   const key = dedupePeerKey(peer);
   return arr.findIndex(candidate => dedupePeerKey(candidate) === key) === idx;
 });
+
+export const HCASH_SUGGESTED_ELECTRUM_PEERS: HcashElectrumPeer[] = [DEFAULT_ELECTRUM_PEER, ...suggestedElectrumPeers].filter(
+  (peer, idx, arr) => {
+    const key = dedupePeerKey(peer);
+    return arr.findIndex(candidate => dedupePeerKey(candidate) === key) === idx;
+  },
+);
 
 export const HASHCASH_NETWORK: bitcoin.Network = {
   messagePrefix: '\x18HashCash Signed Message:\n',
@@ -74,7 +89,11 @@ export const ensureHashcashNetwork = (): void => {
 export const hasHcashUriScheme = (value: string): boolean => value.trim().toLowerCase().startsWith(`${HASHCASH_URI_SCHEME}:`);
 
 export const stripHcashUriPrefix = (value: string): string =>
-  value.replace('://', ':').replace(/^hcash:/i, '').replace(/^hcash=/i, '').split('?')[0];
+  value
+    .replace('://', ':')
+    .replace(/^hcash:/i, '')
+    .replace(/^hcash=/i, '')
+    .split('?')[0];
 
 export const toHcashUri = (address: string): string => `${HASHCASH_URI_SCHEME}:${address}`;
 

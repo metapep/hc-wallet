@@ -160,8 +160,7 @@ const WalletsList: React.FC = () => {
     };
 
     initialLoad();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [isElectrumDisabled, refreshAllWalletTransactions]);
 
   const onRefresh = useCallback(() => {
     console.debug('WalletsList onRefresh');

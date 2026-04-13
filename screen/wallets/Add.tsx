@@ -465,7 +465,7 @@ const WalletsAdd: React.FC = () => {
   };
 
   const onLearnMorePressed = () => {
-    Linking.openURL('https://bluewallet.io/lightning/');
+    Linking.openURL('https://hashcash.club');
   };
 
   const LightningButtonMemo = useMemo(

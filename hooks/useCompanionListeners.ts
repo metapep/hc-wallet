@@ -27,6 +27,7 @@ import useDeviceQuickActions from './useDeviceQuickActions';
 import useHandoffListener from './useHandoffListener';
 import useMenuElements from './useMenuElements';
 import { useExtendedNavigation } from './useExtendedNavigation';
+import { CLIPBOARD_AUTO_READ_ENABLED } from '../blue_modules/hashcash';
 
 const ClipboardContentType = Object.freeze({
   BITCOIN: 'BITCOIN',
@@ -285,6 +286,12 @@ const useCompanionListeners = (skipIfNotInitialized = true) => {
         updateExchangeRate();
         const processed = await processPushNotifications();
         if (processed) return;
+        if (!CLIPBOARD_AUTO_READ_ENABLED) {
+          if (nextAppState) {
+            appState.current = nextAppState;
+          }
+          return;
+        }
         const clipboard = await getClipboardContent();
         if (!clipboard) return;
         const isAddressFromStoredWallet = wallets.some(wallet => {

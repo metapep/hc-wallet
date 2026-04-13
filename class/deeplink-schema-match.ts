@@ -418,7 +418,8 @@ class DeeplinkSchemaMatch {
         delete options[key];
       }
     }
-    return bip21.encode(address, options);
+    const encoded = bip21.encode(address, options);
+    return encoded.replace(/^bitcoin:/i, `${HASHCASH_URI_SCHEME}:`);
   }
 
   static decodeBitcoinUri(uri: string) {

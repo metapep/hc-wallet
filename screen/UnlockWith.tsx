@@ -17,6 +17,7 @@ import { BiometricType, unlockWithBiometrics, useBiometrics } from '../hooks/use
 import loc from '../loc';
 import { useStorage } from '../hooks/context/useStorage';
 import { PasswordInput, PasswordInputHandle } from '../components/PasswordInput';
+import { useTheme } from '../components/themes';
 
 enum AuthType {
   Encrypted,
@@ -78,6 +79,7 @@ function reducer(state: State, action: Action): State {
 }
 
 const UnlockWith: React.FC = () => {
+  const { dark } = useTheme();
   const [state, dispatch] = useReducer(reducer, initialState);
   const isUnlockingWallets = useRef(false);
   const passwordInputRef = useRef<PasswordInputHandle>(null);
@@ -241,13 +243,15 @@ const UnlockWith: React.FC = () => {
     }
   };
 
+  const unlockLogoSource = dark ? require('../img/logo-word-dark.png') : require('../img/logo-word-light.png');
+
   return (
     <SafeArea style={styles.root}>
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <KeyboardAvoidingView style={styles.keyboardAvoidingView} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
           <View style={styles.contentContainer}>
             <View style={styles.logoContainer}>
-              <Image source={require('../img/icon.png')} style={styles.logoImage} resizeMode="contain" />
+              <Image source={unlockLogoSource} style={styles.logoImage} resizeMode="contain" />
             </View>
             <View style={styles.biometricRow}>{renderUnlockOptions()}</View>
           </View>
@@ -283,8 +287,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   logoImage: {
-    width: 100,
-    height: 75,
+    width: 240,
+    height: 48,
   },
   passwordContainer: {
     width: '100%',

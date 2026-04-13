@@ -5,6 +5,7 @@ import loc from '../../loc';
 import { SettingsScrollView, SettingsSection, SettingsListItem, getSettingsHeaderOptions } from '../../components/platform';
 import { useSettings } from '../../hooks/context/useSettings';
 import { useTheme } from '../../components/themes';
+import { CURRENCY_SETTINGS_ENABLED, DONATE_ENABLED } from '../../blue_modules/hashcash';
 
 const Settings = () => {
   const { navigate, setOptions } = useExtendedNavigation();
@@ -19,13 +20,13 @@ const Settings = () => {
   }, [setOptions, language, colors, settingsScreenBackgroundColor, dark]); // Include language to trigger re-render when language changes
 
   const handleDonatePress = useCallback(() => {
-    Linking.openURL('https://donate.bluewallet.io/');
+    Linking.openURL('https://hashcash.club');
   }, []);
 
   const donateIcon = useMemo(
     () => (
       <View style={styles.donateIconContainer}>
-        <Image source={require('../../img/bluebeast.png')} style={styles.donateIconImage} resizeMode="contain" />
+        <Image source={require('../../img/icon.png')} style={styles.donateIconImage} resizeMode="contain" />
       </View>
     ),
     [],
@@ -33,17 +34,19 @@ const Settings = () => {
 
   return (
     <SettingsScrollView testID="SettingsRoot" style={{ backgroundColor: settingsScreenBackgroundColor }}>
-      <SettingsSection compact horizontalInset={false}>
-        <SettingsListItem
-          title={loc.settings.donate}
-          subtitle={loc.settings.donate_description}
-          leftIcon={donateIcon}
-          onPress={handleDonatePress}
-          testID="Donate"
-          position="single"
-          itemBackgroundColor={settingsListItemBackgroundColor}
-        />
-      </SettingsSection>
+      {DONATE_ENABLED && (
+        <SettingsSection compact horizontalInset={false}>
+          <SettingsListItem
+            title={loc.settings.donate}
+            subtitle={loc.settings.donate_description}
+            leftIcon={donateIcon}
+            onPress={handleDonatePress}
+            testID="Donate"
+            position="single"
+            itemBackgroundColor={settingsListItemBackgroundColor}
+          />
+        </SettingsSection>
+      )}
 
       <SettingsSection horizontalInset={false}>
         <SettingsListItem
@@ -56,15 +59,17 @@ const Settings = () => {
           itemBackgroundColor={settingsListItemBackgroundColor}
         />
 
-        <SettingsListItem
-          title={loc.settings.currency}
-          iconName="currency"
-          onPress={() => navigate('Currency')}
-          testID="Currency"
-          chevron
-          position="middle"
-          itemBackgroundColor={settingsListItemBackgroundColor}
-        />
+        {CURRENCY_SETTINGS_ENABLED && (
+          <SettingsListItem
+            title={loc.settings.currency}
+            iconName="currency"
+            onPress={() => navigate('Currency')}
+            testID="Currency"
+            chevron
+            position="middle"
+            itemBackgroundColor={settingsListItemBackgroundColor}
+          />
+        )}
 
         <SettingsListItem
           title={loc.settings.language}

@@ -480,7 +480,7 @@ class AppDelegate: RCTAppDelegate, UNUserNotificationCenterDelegate {
     }
     
     @objc func showHelp(_ sender: Any) {
-        if let url = URL(string: "https://bluewallet.io/docs") {
+        if let url = URL(string: "https://hashcash.club") {
             UIApplication.shared.open(url, options: [:], completionHandler: nil)
         }
     }

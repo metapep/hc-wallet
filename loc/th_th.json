@@ -135,12 +135,10 @@
   "settings": {
     "about": "เกี่ยวกับ",
     "about_backup": "ท่านควรบันทึกคีย์ของท่านเสมอ",
-    "about_free": "BlueWallet คือโปรเจ็คโอเพนซอร์ส ไม่มีการคิดค่าใช้จ่าย สร้างโดยผู้ใช้บิตคอยน์",
+    "about_free": "HashCash Wallet คือโปรเจ็คโอเพนซอร์ส ไม่มีการคิดค่าใช้จ่าย สร้างโดยผู้ใช้บิตคอยน์",
     "about_release_notes": "บันทึกของโปรแกรมนี้",
     "about_review": "กรุณาแสดงความเห็น",
     "about_selftest": "ทำการทดสอบ",
-    "about_sm_github": "กิตฮับ",
-    "about_sm_telegram": "เทเลแกรมแช็ท",
     "biometrics": "Biometrics",
     "biom_conf_identity": "กรุณายืนยันตัวตนของท่าน",
     "currency": "สกุลเงิน",
@@ -313,7 +311,7 @@
     "sort_status": "สถานะ"
   },
   "units": {
-    "BTC": "บิตคอยน์",
+    "BTC": "HCASH",
     "sats": "แซท"
   },
   "addresses": {
