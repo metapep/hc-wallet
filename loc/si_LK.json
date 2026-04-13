@@ -74,8 +74,8 @@
     "details_setAmount": "මුදල සමග ලබා ගන්න",
     "header": "ලබා ගන්න",
     "maxSats": "උපරිම මුදල සැට් {max} වේ",
-    "maxSatsFull": "උපරිම මුදල {max} sats හෝ {currency} වේ",
-    "minSats": "අවම මුදල sats {min} වේ",
+    "maxSatsFull": "උපරිම මුදල {max} jats හෝ {currency} වේ",
+    "minSats": "අවම මුදල jats {min} වේ",
     "minSatsFull": "අවම මුදල {min} සැට් හෝ {currency} වේ"
   },
   "send": {

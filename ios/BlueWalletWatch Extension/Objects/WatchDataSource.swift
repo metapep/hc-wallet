@@ -281,7 +281,7 @@ class WatchDataSource: NSObject, WCSessionDelegate {
             
             let wallet = Wallet(
                 label: label,
-                balance: "\(balance) BTC",
+                balance: "\(balance) HCASH",
                 type: WalletType(rawString: typeString),
                 chain: chain,
                 preferredBalanceUnit: BitcoinUnit(rawString: preferredBalanceUnitString),

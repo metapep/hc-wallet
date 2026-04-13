@@ -1,1 +1,3 @@
-
+* Self-custody for HCASH
+* Native hcash addresses
+* Electrum and explorer connectivity

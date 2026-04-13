@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useReducer, useRef, useMemo } from 'react';
 import { useFocusEffect, useIsFocused, useRoute, RouteProp } from '@react-navigation/native';
-import { Alert, findNodeHandle, Image, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { ActivityIndicator, Alert, findNodeHandle, Image, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { getClipboardContent } from '../../blue_modules/clipboard';
 import { isDesktop } from '../../blue_modules/environment';
 import * as fs from '../../blue_modules/fs';
@@ -336,7 +336,18 @@ const WalletsList: React.FC = () => {
     (section: { section: { key: any } }) => {
       switch (section.section.key) {
         case WalletsListSections.TRANSACTIONS:
-          if (dataSource.length === 0 && !isLoading) {
+          if (dataSource.length === 0 && isLoading) {
+            return (
+              <View style={styles.footerRoot} testID="TransactionsLoadingState">
+                <View style={styles.loadingState}>
+                  <ActivityIndicator size="small" color="#9aa0aa" />
+                  <Text style={styles.loadingText}>{loc.transactions.updating}</Text>
+                </View>
+              </View>
+            );
+          }
+
+          if (dataSource.length === 0) {
             return (
               <View style={styles.footerRoot} testID="NoTransactionsMessage">
                 <Text style={styles.footerEmpty}>{loc.wallets.list_empty_txs1}</Text>
@@ -539,5 +550,14 @@ const styles = StyleSheet.create({
     color: '#9aa0aa',
     textAlign: 'center',
     fontWeight: '600',
+  },
+  loadingState: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  loadingText: {
+    fontSize: 16,
+    textAlign: 'center',
   },
 });

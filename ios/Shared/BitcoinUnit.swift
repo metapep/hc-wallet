@@ -11,7 +11,7 @@ import Foundation
 /// Conforms to `String`, `Codable`, `Equatable`, and `CustomStringConvertible` for easy encoding/decoding, comparisons, and descriptions.
 enum BitcoinUnit: String, Codable, Equatable, CustomStringConvertible {
     case btc = "BTC"
-    case sats = "sats"
+    case sats = "jats"
     case localCurrency = "local_currency"
     case max = "MAX"
 
@@ -19,9 +19,9 @@ enum BitcoinUnit: String, Codable, Equatable, CustomStringConvertible {
     var description: String {
         switch self {
         case .btc:
-            return "BTC"
+            return "HCASH"
         case .sats:
-            return "sats"
+            return "jats"
         case .localCurrency:
             return "Local Currency"
         case .max:
@@ -33,9 +33,9 @@ enum BitcoinUnit: String, Codable, Equatable, CustomStringConvertible {
     /// - Parameter rawString: The raw string representing the balance unit.
     init(rawString: String) {
         switch rawString.lowercased() {
-        case "btc":
-            self = .sats
-        case "sats":
+        case "btc", "hcash":
+            self = .btc
+        case "sats", "jats":
             self = .sats
         case "local_currency":
             self = .localCurrency

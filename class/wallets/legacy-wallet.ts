@@ -245,6 +245,7 @@ export class LegacyWallet extends AbstractWallet {
   async fetchTransactions(): Promise<void> {
     // Below is a simplified copypaste from HD electrum wallet
     const _txsByExternalIndex: Transaction[] = [];
+    const MAX_HISTORY_ENTRIES_TO_PROCESS = 5000;
     const address = this.getAddress();
     const addresses2fetch = address ? [address] : [];
 
@@ -264,13 +265,20 @@ export class LegacyWallet extends AbstractWallet {
       }
     }
 
-    if (this.getTransactions().length === 0 && Object.values(txs).length > 1000)
-      throw new Error('Addresses with history of > 1000 transactions are not supported');
-    // we check existing transactions, so if there are any then user is just using his wallet and gradually reaching the theshold, which
-    // is safe because in that case our cache is filled
+    let txidsToFetch = Object.keys(txs);
+    if (txidsToFetch.length > MAX_HISTORY_ENTRIES_TO_PROCESS) {
+      // Keep newest records bounded to avoid freezing on very large single-address histories.
+      txidsToFetch = txidsToFetch
+        .sort((a, b) => {
+          const heightA = txs[a]?.height ?? 0;
+          const heightB = txs[b]?.height ?? 0;
+          return heightB - heightA;
+        })
+        .slice(0, MAX_HISTORY_ENTRIES_TO_PROCESS);
+    }
 
     // next, batch fetching each txid we got
-    const txdatas = await BlueElectrum.multiGetTransactionByTxid(Object.keys(txs), true);
+    const txdatas = await BlueElectrum.multiGetTransactionByTxid(txidsToFetch, true);
     const transactions = Object.values(txdatas);
 
     // now, tricky part. we collect all transactions from inputs (vin), and batch fetch them too.
@@ -340,7 +348,15 @@ export class LegacyWallet extends AbstractWallet {
       }
     }
 
-    this._txs_by_external_index = _txsByExternalIndex;
+    const txidToTransaction = new Map<string, Transaction>();
+    for (const tx of this.getTransactions()) {
+      txidToTransaction.set(tx.txid, tx);
+    }
+    for (const tx of _txsByExternalIndex) {
+      txidToTransaction.set(tx.txid, tx);
+    }
+
+    this._txs_by_external_index = Array.from(txidToTransaction.values()).sort((a, b) => Number(b.timestamp) - Number(a.timestamp));
     this._lastTxFetch = +new Date();
   }
 

@@ -20,7 +20,7 @@
   },
   "azteco": {
     "codeIs": "Jou koepon kode is",
-    "errorBeforeRefeem": "Voordat jy eis moet jy eers 'n Bitcoin beursie aanwys.",
+    "errorBeforeRefeem": "Voordat jy eis moet jy eers 'n HashCash beursie aanwys.",
     "errorSomething": "Iets het vout gegaan. Is die koepon steeds geldig?",
     "redeem": "Eis na beursie",
     "redeemButton": "Eis",
@@ -46,7 +46,7 @@
     "payment": "Betaling",
     "placeholder": "Faktuur of adres",
     "refill": "Herlaai",
-    "refill_create": "Om voort te gaan, skep asb 'n Bitcoin beursie om vondse mee aan te vul.",
+    "refill_create": "Om voort te gaan, skep asb 'n HashCash beursie om vondse mee aan te vul.",
     "refill_external": "Vul aan met Eksterne Beursie",
     "refill_lnd_balance": "Herlaai Lightning beursie",
     "sameWalletAsInvoiceError": "U kan nie ‘n faktuur betaal met die selfde beursie waarmee die faktuur geksep is nie.",
@@ -57,7 +57,7 @@
     "lightning_invoice": "Lightning Faktuur",
     "please_pay_between_and": "Betaal asseblief tussen {min} en {max}",
     "please_pay": "Betaal asseblief",
-    "sats": "sats.",
+    "sats": "jats.",
     "wasnt_paid_and_expired": "Die faktuur was nie betaal nie en het verval."
   },
   "plausibledeniability": {
@@ -84,10 +84,10 @@
     "details_setAmount": "Bedrag ontvang",
     "details_share": "Deel...",
     "header": "Ontvang",
-    "maxSats": "Die maksimum bedrag is {max} sats",
-    "maxSatsFull": "Die maksimum bedrag is {max} sats of {currency}",
-    "minSats": "Die Minimale bedrag is {min} sats",
-    "minSatsFull": "Die minimum bedrag is {min} sats of {currency}",
+    "maxSats": "Die maksimum bedrag is {max} jats",
+    "maxSatsFull": "Die maksimum bedrag is {max} jats of {currency}",
+    "minSats": "Die Minimale bedrag is {min} jats",
+    "minSatsFull": "Die minimum bedrag is {min} jats of {currency}",
     "qrcode_for_the_address": "QR Code vir die adres"
   },
   "send": {
@@ -122,8 +122,8 @@
     "fee_3h": "3h",
     "fee_fast": "Vinnig",
     "fee_medium": "Medium",
-    "fee_replace_minvb": "Die totale fooi (satoshi per vByte) wat jy wil betaal, moet meer wees as {min} sat/vByte.",
-    "fee_satvbyte": "in sat/vByte",
+    "fee_replace_minvb": "Die totale fooi (jats per vByte) wat jy wil betaal, moet meer wees as {min} jat/vByte.",
+    "fee_satvbyte": "in jat/vByte",
     "fee_slow": "Stadig",
     "header": "Stuur",
     "input_clear": "Maak skoon",
@@ -153,7 +153,7 @@
     "transaction": "Transaksie"
   },
   "wallets": {
-    "add_bitcoin": "Bitcoin",
+    "add_bitcoin": "HashCash",
     "add_create": "Skep",
     "add_entropy": "Entropie",
     "add_import_wallet": "Beursie Invoer",

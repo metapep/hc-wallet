@@ -1,1 +1,1 @@
-bitcoin,dompet,dompet bitcoin ,rabong,btc,kriptowang,beli bitcoin,samourai,electrum,ethereum
+hashcash,wallet,hcash,electrum,self-custody,crypto

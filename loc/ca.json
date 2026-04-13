@@ -24,7 +24,7 @@
   },
   "azteco": {
     "codeIs": "El codi del teu val és",
-    "errorBeforeRefeem": "Abans de canviar, primer heu d’afegir un moneder de Bitcoin.",
+    "errorBeforeRefeem": "Abans de canviar, primer heu d’afegir un moneder de HashCash.",
     "errorSomething": "Quelcom ha anat malament. Aquest val continua sent vàlid? ",
     "redeem": "Canviar al moneder",
     "redeemButton": "Canviar",
@@ -59,7 +59,7 @@
     "lightning_invoice": "Factura Lightning",
     "please_pay_between_and": "Si us plau, pagui entre {min} i {max}",
     "please_pay": "Si us plau, pagui",
-    "sats": "sats",
+    "sats": "jats",
     "wasnt_paid_and_expired": "Aquesta factura no ha estat pagada i ha caducat"
   },
   "plausibledeniability": {
@@ -111,7 +111,7 @@
     "details_adv_import": "Importar transacció",
     "details_adv_import_qr": "Importar transacció (QR)",
     "details_amount_field_is_not_valid": "Quantitat invalida",
-    "details_amount_field_is_less_than_minimum_amount_sat": "La quantitat especificada és massa petita. Introduïu una quantitat superior a 500 sats.",
+    "details_amount_field_is_less_than_minimum_amount_sat": "La quantitat especificada és massa petita. Introduïu una quantitat superior a 500 jats.",
     "details_create": "Crear",
     "details_fee_field_is_not_valid": "Comissió invalida",
     "details_next": "Següent",
@@ -119,7 +119,7 @@
     "details_scan": "Escanejar",
     "details_total_exceeds_balance": "La quantitat excedeix el balanç disponible.",
     "details_unrecognized_file_format": "Format de fitxer no reconegut",
-    "details_wallet_before_tx": "Abans de crear una transacció, primer heu d’afegir un moneder Bitcoin.",
+    "details_wallet_before_tx": "Abans de crear una transacció, primer heu d’afegir un moneder HashCash.",
     "dynamic_init": "Inicialitzant",
     "dynamic_next": "Següent",
     "dynamic_prev": "Anterior",
@@ -131,7 +131,7 @@
     "fee_custom": "Personalitzada",
     "fee_fast": "Ràpid",
     "fee_medium": "Mitjà",
-    "fee_satvbyte": "en sat/vByte",
+    "fee_satvbyte": "en jat/vByte",
     "fee_slow": "Lent",
     "header": "enviar",
     "input_clear": "Netejar",
@@ -210,8 +210,8 @@
     "updating": "Actualitzant..."
   },
   "wallets": {
-    "add_bitcoin": "Bitcoin",
-    "add_bitcoin_explain": "Moneder de Bitcoin senzill i potent",
+    "add_bitcoin": "HashCash",
+    "add_bitcoin_explain": "Moneder de HashCash senzill i potent",
     "add_create": "Crear",
     "total_balance": "Saldo total",
     "add_entropy": "Entropia",
@@ -259,7 +259,7 @@
     "title": "Saldo total"
   },
   "multisig": {
-    "fee_btc": "{number} BTC",
+    "fee_btc": "{number} HCASH",
     "confirm": "Confirmar",
     "header": "Enviar",
     "view": "Vista",
@@ -277,7 +277,7 @@
     "sort_status": "estat"
   },
   "units": {
-    "sats": "sats"
+    "sats": "jats"
   },
   "addresses": {
     "sign_placeholder_address": "Adreça",

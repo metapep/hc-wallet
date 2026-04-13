@@ -384,7 +384,7 @@
     "vault_key": "مفتاح الخزنة {number}",
     "required_keys_out_of_total": "المفاتيح المطلوبة من الاجمالي",
     "fee": "الرسوم: {number}",
-    "fee_btc": "{number} BTC",
+    "fee_btc": "{number} HCASH",
     "confirm": "تأكيد",
     "header": "إرسال",
     "view": "عرض",

@@ -62,7 +62,7 @@ struct PriceView: View {
     let priceChangePercentage = formattedPriceChangePercentage(currentRate: entry.currentMarketData?.rate, previousRate: entry.previousMarketData?.rate)
     
     return VStack(alignment: .center, spacing: 4) {
-      Text("BTC")
+      Text("HCASH")
         .font(.caption)
         .minimumScaleFactor(0.1)
       Text(priceString)
@@ -75,7 +75,7 @@ struct PriceView: View {
           .foregroundColor(priceChangePercentage.contains("-") ? .red : .green)
       }
     }
-    .widgetURL(URL(string: "bluewallet://marketprice"))
+    .widgetURL(URL(string: "hcash://marketprice"))
   }
   
   private var accessoryInlineView: some View {
@@ -97,7 +97,7 @@ struct PriceView: View {
     let currentPrice = formattedCurrencyString(from: entry.currentMarketData?.rate)
     
     return VStack(alignment: .leading, spacing: 4) {
-      Text("Bitcoin (\(Currency.getUserPreferredCurrency()))")
+      Text("HashCash (\(Currency.getUserPreferredCurrency()))")
         .font(.caption)
         .foregroundColor(.secondary)
       HStack {

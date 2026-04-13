@@ -1,6 +1,6 @@
 // blockExplorer.ts
 import DefaultPreference from 'react-native-default-preference';
-import { BLOCK_EXPLORER_PROFILES, DEFAULT_BLOCK_EXPLORER_URL } from '../blue_modules/hashcash';
+import { AVAILABLE_HCASH_PROFILES, BLOCK_EXPLORER_PROFILES, DEFAULT_BLOCK_EXPLORER_URL } from '../blue_modules/hashcash';
 
 export interface BlockExplorer {
   key: string;
@@ -10,8 +10,12 @@ export interface BlockExplorer {
 
 export const BLOCK_EXPLORERS: { [key: string]: BlockExplorer } = {
   default: { key: 'default', name: 'HashCash Explorer (Dev)', url: DEFAULT_BLOCK_EXPLORER_URL },
-  hcashDev: { key: 'hcashDev', name: 'HashCash Explorer (Dev)', url: BLOCK_EXPLORER_PROFILES.dev },
-  hcashLocal: { key: 'hcashLocal', name: 'HashCash Explorer (Local)', url: BLOCK_EXPLORER_PROFILES.local },
+  ...(AVAILABLE_HCASH_PROFILES.includes('dev')
+    ? { hcashDev: { key: 'hcashDev', name: 'HashCash Explorer (Dev)', url: BLOCK_EXPLORER_PROFILES.dev } }
+    : {}),
+  ...(AVAILABLE_HCASH_PROFILES.includes('local')
+    ? { hcashLocal: { key: 'hcashLocal', name: 'HashCash Explorer (Local)', url: BLOCK_EXPLORER_PROFILES.local } }
+    : {}),
   custom: { key: 'custom', name: 'Custom', url: '' }, // Custom URL will be handled separately
 };
 
@@ -66,6 +70,7 @@ export const getDomain = (url: string): string => {
 };
 
 const BLOCK_EXPLORER_STORAGE_KEY = 'blockExplorer';
+const CUSTOM_BLOCK_EXPLORER_ENABLED = typeof __DEV__ === 'boolean' && __DEV__;
 
 export const saveBlockExplorer = async (url: string): Promise<boolean> => {
   try {
@@ -89,6 +94,10 @@ export const removeBlockExplorer = async (): Promise<boolean> => {
 
 export const getBlockExplorerUrl = async (): Promise<string> => {
   try {
+    if (!CUSTOM_BLOCK_EXPLORER_ENABLED) {
+      return BLOCK_EXPLORERS.default.url;
+    }
+
     const url = (await DefaultPreference.get(BLOCK_EXPLORER_STORAGE_KEY)) as string | null;
     return url ?? BLOCK_EXPLORERS.default.url;
   } catch (error) {

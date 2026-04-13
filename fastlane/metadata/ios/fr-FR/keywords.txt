@@ -1,1 +1,1 @@
-bitcoin,wallet,wallet bitcoin,blockchain,btc,cryptomonnaie,acheter du bitcoin,samourai,electrum
+hashcash,wallet,hcash,electrum,self-custody,crypto

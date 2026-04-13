@@ -5,16 +5,16 @@ class Balance {
       switch toUnit {
       case .sats:
         if withFormatting {
-          completion(NumberFormatter.localizedString(from: balance as NSNumber, number: .decimal) + " SATS")
+          completion(NumberFormatter.localizedString(from: balance as NSNumber, number: .decimal) + " JATS")
         } else {
-          completion("\(balance) SATS")
+          completion("\(balance) JATS")
         }
       case .localCurrency:
         fetchLocalCurrencyEquivalent(satoshi: balance, completion: completion)
         
       default:
         let value = balance / Decimal(100_000_000)
-        completion("\(value) BTC") // Localize unit names as needed.
+        completion("\(value) HCASH")
       }
     }
 
@@ -39,7 +39,7 @@ extension Decimal {
   func formatted(as unit: BitcoinUnit, withFormatting: Bool = false) -> String {
         switch unit {
         case .sats:
-            return withFormatting ? NumberFormatter.localizedString(from: self as NSNumber, number: .decimal) + " SATS" : "\(self) SATS"
+            return withFormatting ? NumberFormatter.localizedString(from: self as NSNumber, number: .decimal) + " JATS" : "\(self) JATS"
         case .localCurrency:
             let userDefaults = UserDefaults(suiteName: UserDefaultsGroupKey.GroupName.rawValue)
             if let widgetData = userDefaults?.object(forKey: MarketData.string) as? Data,
@@ -52,7 +52,7 @@ extension Decimal {
             }
         default:
             let value = self / Decimal(100_000_000)
-            return "\(value) BTC"
+            return "\(value) HCASH"
         }
     }
 }

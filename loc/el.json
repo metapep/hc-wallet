@@ -48,7 +48,7 @@
     "for": "Για:",
     "lightning_invoice": "Τιμολόγιο  Lightning",
     "please_pay": "Παρακαλώ πληρώστε",
-    "sats": "sats.",
+    "sats": "jats.",
     "wasnt_paid_and_expired": "Το τιμολόγιο δεν πληρώθηκε και έχει λήξει."
   },
   "plausibledeniability": {
@@ -73,10 +73,10 @@
     "details_label": "Περιγραφή",
     "details_setAmount": "Λήψη με ποσό",
     "header": "Λήψη",
-    "maxSats": "Το μέγιστο ποσό είναι {max} sats",
-    "maxSatsFull": "Το μέγιστο ποσό είναι {max} sats ή {currency}",
-    "minSats": "Το ελάχιστο ποσό είναι {min} sats",
-    "minSatsFull": "Το ελάχιστο ποσό είναι {min} sats ή {currency}"
+    "maxSats": "Το μέγιστο ποσό είναι {max} jats",
+    "maxSatsFull": "Το μέγιστο ποσό είναι {max} jats ή {currency}",
+    "minSats": "Το ελάχιστο ποσό είναι {min} jats",
+    "minSatsFull": "Το ελάχιστο ποσό είναι {min} jats ή {currency}"
   },
   "send": {
     "broadcastButton": "Μετάδοση",
@@ -91,7 +91,7 @@
     "create_details": "Λεπτομέρειες",
     "create_fee": "Κόστος",
     "create_memo": "Σημείωση",
-    "create_satoshi_per_vbyte": "Satoshi ανά vByte",
+    "create_satoshi_per_vbyte": "Jat ανά vByte",
     "create_this_is_hex": "Αυτή είναι η υπογεγραμμένη συναλλαγή σε μορφή hex και είναι έτοιμη για αποστολή στο δίκτυο.",
     "create_to": "Προς",
     "create_tx_size": "Μέγεθος συναλλαγής",
@@ -104,16 +104,16 @@
     "details_adv_import": "Εισαγωγή συναλλαγής",
     "details_adv_import_qr": "Εισαγωγή συναλλαγής (QR)",
     "details_amount_field_is_not_valid": "Το ποσό δεν είναι σωστό",
-    "details_amount_field_is_less_than_minimum_amount_sat": "Το προσδιορισμένο ποσό είναι πολύ μικρό. Παρακαλώ εισάγετε ποσό μεγαλύτερο από 500 sats.",
+    "details_amount_field_is_less_than_minimum_amount_sat": "Το προσδιορισμένο ποσό είναι πολύ μικρό. Παρακαλώ εισάγετε ποσό μεγαλύτερο από 500 jats.",
     "details_create": "Δημιουργία τιμολογίου",
-    "details_error_decode": "Αδυναμία αποκωδικοποίησης της διεύθυνσης Bitcoin",
+    "details_error_decode": "Αδυναμία αποκωδικοποίησης της διεύθυνσης HashCash",
     "details_fee_field_is_not_valid": "Τα έξοδα συναλλαγής δεν είναι σωστά",
     "details_next": "Επόμενο",
     "details_note_placeholder": "Σημείωση",
     "details_scan": "Σάρωση",
     "details_total_exceeds_balance": "Δεν έχετε αρκετό υπόλοιπο για να στείλετε αυτό το ποσό.",
     "details_unrecognized_file_format": "Μη αναγνωρισμένος τύπος αρχείου",
-    "details_wallet_before_tx": "Πριν δημιουργήσετε μια συναλλαγή, πρέπει πρώτα να προσθέσετε ένα πορτοφόλι Bitcoin.",
+    "details_wallet_before_tx": "Πριν δημιουργήσετε μια συναλλαγή, πρέπει πρώτα να προσθέσετε ένα πορτοφόλι HashCash.",
     "dynamic_next": "Επόμενο",
     "dynamic_prev": "Προηγούμενο",
     "dynamic_start": "Έναρξη",
@@ -124,7 +124,7 @@
     "fee_custom": "Προσαρμογή",
     "fee_fast": "Υψηλή ταχύτητα",
     "fee_medium": "Μεσαία ταχύτητα",
-    "fee_satvbyte": "σε sat/vByte",
+    "fee_satvbyte": "σε jat/vByte",
     "fee_slow": "Αργή",
     "header": "Αποστολή",
     "input_clear": "Καθαρισμός",
@@ -216,8 +216,8 @@
     "txid": "ID συναλλαγής"
   },
   "wallets": {
-    "add_bitcoin": "Bitcoin",
-    "add_bitcoin_explain": "Απλό και ισχυρό πορτοφόλι Bitcoin",
+    "add_bitcoin": "HashCash",
+    "add_bitcoin_explain": "Απλό και ισχυρό πορτοφόλι HashCash",
     "add_create": "Δημιουργία",
     "total_balance": "Συνολικό υπόλοιπο",
     "add_entropy": "Εντροπία",
@@ -275,7 +275,7 @@
   },
   "multisig": {
     "provide_signature": "Παροχή υπογραφής",
-    "fee_btc": "{number} BTC",
+    "fee_btc": "{number} HCASH",
     "confirm": "Επιβεβαίωση",
     "header": "Αποστολή",
     "view": "Προβολή",
@@ -307,7 +307,7 @@
     "BTC": "HCASH",
     "MAX": "Μέγιστο",
     "sat_vbyte": "jat/vByte",
-    "sats": "sats"
+    "sats": "jats"
   },
   "addresses": {
     "copy_private_key": "Αντιγραφή ιδιωτικού κλειδιού",

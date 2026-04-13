@@ -19,6 +19,7 @@ import { AbstractHDWallet } from './abstract-hd-wallet';
 import { CreateTransactionResult, CreateTransactionTarget, CreateTransactionUtxo, Transaction, Utxo } from './types';
 import { SilentPayment, UTXOType as SPUTXOType, UTXO as SPUTXO } from 'silent-payments';
 import { isValidBech32Address } from '../../util/isValidBech32Address.ts';
+import { HASHCASH_NETWORK } from '../../blue_modules/hashcash';
 
 const ECPair = ECPairFactory(ecc);
 const bip32 = BIP32Factory(ecc);
@@ -170,6 +171,40 @@ export class AbstractHDElectrumWallet extends AbstractHDWallet {
     this.secret = bip39.entropyToMnemonic(uint8ArrayToHex(user));
   }
 
+  protected isExtendedPrivateKeySecret(secret: string = this.secret): boolean {
+    return ['xprv', 'yprv', 'zprv', 'tprv', 'uprv', 'vprv'].includes(secret.trim().substring(0, 4).toLowerCase());
+  }
+
+  protected normalizeExtendedPrivateKeySecret(secret: string = this.secret): string {
+    let data = b58.decode(secret.trim());
+    data = data.slice(4);
+    return b58.encode(concatUint8Arrays([hexToUint8Array('0488ade4'), data]));
+  }
+
+  protected getSigningRootNode(): BIP32Interface {
+    if (this.isExtendedPrivateKeySecret()) {
+      return bip32.fromBase58(this.normalizeExtendedPrivateKeySecret());
+    }
+
+    const seed = this._getSeed();
+    return bip32.fromSeed(seed);
+  }
+
+  protected getAccountRootNode(): BIP32Interface {
+    const signingRoot = this.getSigningRootNode();
+    if (signingRoot.depth > 0) {
+      // Account-level xprv/tprv imports already include derivation path context.
+      return signingRoot;
+    }
+
+    const path = this.getDerivationPath();
+    if (!path) {
+      throw new Error('Internal error: no path');
+    }
+
+    return signingRoot.derivePath(path);
+  }
+
   _getExternalWIFByIndex(index: number): string | false {
     return this._getWIFByIndex(false, index);
   }
@@ -187,10 +222,8 @@ export class AbstractHDElectrumWallet extends AbstractHDWallet {
    */
   _getWIFByIndex(internal: boolean, index: number): string | false {
     if (!this.secret) return false;
-    const seed = this._getSeed();
-    const root = bip32.fromSeed(seed);
-    const path = `${this.getDerivationPath()}/${internal ? 1 : 0}/${index}`;
-    const child = root.derivePath(path);
+    const accountRoot = this.getAccountRootNode();
+    const child = accountRoot.derivePath(`${internal ? 1 : 0}/${index}`);
 
     return child.toWIF();
   }
@@ -280,14 +313,7 @@ export class AbstractHDElectrumWallet extends AbstractHDWallet {
       return this._xpub; // cache hit
     }
     // first, getting xpub
-    const seed = this._getSeed();
-    const root = bip32.fromSeed(seed);
-
-    const path = this.getDerivationPath();
-    if (!path) {
-      throw new Error('Internal error: no path');
-    }
-    const child = root.derivePath(path).neutered();
+    const child = this.getAccountRootNode().neutered();
     const xpub = child.toBase58();
 
     // bitcoinjs does not support zpub yet, so we just convert it from xpub
@@ -1395,6 +1421,7 @@ export class AbstractHDElectrumWallet extends AbstractHDWallet {
   _nodeToBech32SegwitAddress(hdNode: BIP32Interface): string {
     const { address } = bitcoin.payments.p2wpkh({
       pubkey: hdNode.publicKey,
+      network: HASHCASH_NETWORK,
     });
 
     if (!address) {
@@ -1407,6 +1434,7 @@ export class AbstractHDElectrumWallet extends AbstractHDWallet {
   _nodeToLegacyAddress(hdNode: BIP32Interface): string {
     const { address } = bitcoin.payments.p2pkh({
       pubkey: hdNode.publicKey,
+      network: HASHCASH_NETWORK,
     });
 
     if (!address) {
@@ -1421,7 +1449,8 @@ export class AbstractHDElectrumWallet extends AbstractHDWallet {
    */
   _nodeToP2shSegwitAddress(hdNode: BIP32Interface): string {
     const { address } = bitcoin.payments.p2sh({
-      redeem: bitcoin.payments.p2wpkh({ pubkey: hdNode.publicKey }),
+      redeem: bitcoin.payments.p2wpkh({ pubkey: hdNode.publicKey, network: HASHCASH_NETWORK }),
+      network: HASHCASH_NETWORK,
     });
 
     if (!address) {
@@ -1527,8 +1556,7 @@ export class AbstractHDElectrumWallet extends AbstractHDWallet {
    * @returns {{ tx: Transaction }}
    */
   cosignPsbt(psbt: Psbt) {
-    const seed = this._getSeed();
-    const hdRoot = bip32.fromSeed(seed);
+    const hdRoot = this.getSigningRootNode();
 
     for (let cc = 0; cc < psbt.inputCount; cc++) {
       try {
@@ -1586,6 +1614,13 @@ export class AbstractHDElectrumWallet extends AbstractHDWallet {
   getMasterFingerprintHex() {
     if (this._fp) {
       return this._fp; // cache hit
+    }
+
+    if (this.isExtendedPrivateKeySecret()) {
+      let hex = uint8ArrayToHex(this.getSigningRootNode().fingerprint);
+      while (hex.length < 8) hex = '0' + hex;
+      this._fp = hex.toUpperCase();
+      return this._fp;
     }
 
     const seed = this._getSeed();

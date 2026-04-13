@@ -5,7 +5,7 @@ import { FlatList, StyleSheet, TextInput, View } from 'react-native';
 import debounce from '../../blue_modules/debounce';
 import { BlueFormLabel, BlueTextCentered } from '../../BlueComponents';
 import { HDLegacyP2PKHWallet, HDSegwitBech32Wallet, HDSegwitP2SHWallet, HDTaprootWallet } from '../../class';
-import { validateBip32 } from '../../class/wallet-import';
+import { isTestnetExtendedPrivateKey, validateBip32 } from '../../class/wallet-import';
 import { TWallet } from '../../class/wallets/types';
 import Button from '../../components/Button';
 import SafeArea from '../../components/SafeArea';
@@ -41,7 +41,8 @@ const ImportCustomDerivationPath: React.FC = () => {
   const { colors } = useTheme();
   const { importText, password } = useRoute<RouteProps>().params;
   const { addAndSaveWallet } = useStorage();
-  const [path, setPath] = useState<string>("m/84'/0'/0'");
+  const defaultPath = useMemo(() => (isTestnetExtendedPrivateKey(importText) ? "m/84'/1'/0'" : "m/84'/0'/0'"), [importText]);
+  const [path, setPath] = useState<string>(defaultPath);
   const [wallets, setWallets] = useState<TWalletsByPath>({});
   const [used, setUsed] = useState<TUsedByPath>({});
   const [selected, setSelected] = useState<string>('');
@@ -97,6 +98,10 @@ const ImportCustomDerivationPath: React.FC = () => {
     if (path in wallets) return;
     debouncedSavePath.current(path);
   }, [path, wallets]);
+
+  useEffect(() => {
+    setPath(defaultPath);
+  }, [defaultPath]);
 
   const items: TItem[] = useMemo(() => {
     if (wallets[path] === WRONG_PATH) return [];

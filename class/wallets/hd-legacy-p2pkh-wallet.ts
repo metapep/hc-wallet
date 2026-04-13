@@ -1,13 +1,10 @@
-import BIP32Factory, { BIP32Interface } from 'bip32';
+import { BIP32Interface } from 'bip32';
 import { Psbt } from 'bitcoinjs-lib';
 import { CoinSelectReturnInput } from 'coinselect';
 
 import * as BlueElectrum from '../../blue_modules/BlueElectrum';
-import ecc from '../../blue_modules/noble_ecc';
 import { AbstractHDElectrumWallet } from './abstract-hd-electrum-wallet';
 import { hexToUint8Array } from '../../blue_modules/uint8array-extras';
-
-const bip32 = BIP32Factory(ecc);
 
 /**
  * HD Wallet (BIP39).
@@ -51,14 +48,7 @@ export class HDLegacyP2PKHWallet extends AbstractHDElectrumWallet {
     if (this._xpub) {
       return this._xpub; // cache hit
     }
-    const seed = this._getSeed();
-    const root = bip32.fromSeed(seed);
-
-    const path = this.getDerivationPath();
-    if (!path) {
-      throw new Error('Internal error: no path');
-    }
-    const child = root.derivePath(path).neutered();
+    const child = this.getAccountRootNode().neutered();
     this._xpub = child.toBase58();
 
     return this._xpub;

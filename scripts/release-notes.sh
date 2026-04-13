@@ -40,5 +40,6 @@ sed '/See this package in npm/I d; /https:\/\/www.npmjs.com\//I d; /See this pro
 awk '{$1=$1};1' | \
 awk 'length($0) > 5' | \
 sed '/lightning/I d' | \
+sed '/bitcoin/I d' | \
 sed -E '/^\* (WIP|FIX|REF|ADD|DEL) *$/d' | \
 apply_filter

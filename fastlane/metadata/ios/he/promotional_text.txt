@@ -1,10 +1,3 @@
-תכונות
-
-* קוד פתוח
-* הצפנה מלאה
-* הכחשה סבירה (Plausible deniability)
-* עמלות גמישות
-* Replace-By-Fee (RBF)
-* SegWit
-* ארנקי צפייה בלבד
-* רשת הברק
+* Self-custody for HCASH
+* Native hcash addresses
+* Electrum and explorer connectivity

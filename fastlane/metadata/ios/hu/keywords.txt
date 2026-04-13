@@ -1,1 +1,1 @@
-bitcoin,tárca,bitcoin tárca,blokklánc,btc,cryptopénz,bitcoin vétel,samourai,electrum,ethereum
+hashcash,wallet,hcash,electrum,self-custody,crypto

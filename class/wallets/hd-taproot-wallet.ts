@@ -4,6 +4,7 @@ import ecc from '../../blue_modules/noble_ecc';
 import * as bitcoin from 'bitcoinjs-lib';
 import { Psbt } from 'bitcoinjs-lib';
 import { CoinSelectReturnInput } from 'coinselect';
+import { HASHCASH_NETWORK } from '../../blue_modules/hashcash';
 
 const bip32 = BIP32Factory(ecc);
 
@@ -24,14 +25,7 @@ export class HDTaprootWallet extends AbstractHDElectrumWallet {
     if (this._xpub) {
       return this._xpub; // cache hit
     }
-    const seed = this._getSeed();
-    const root = bip32.fromSeed(seed);
-
-    const path = this.getDerivationPath();
-    if (!path) {
-      throw new Error('Internal error: no path');
-    }
-    const child = root.derivePath(path).neutered();
+    const child = this.getAccountRootNode().neutered();
     const xpub = child.toBase58();
     this._xpub = xpub;
 
@@ -49,6 +43,7 @@ export class HDTaprootWallet extends AbstractHDElectrumWallet {
 
     const { address } = bitcoin.payments.p2tr({
       internalPubkey: xOnlyPubkey,
+      network: HASHCASH_NETWORK,
     });
 
     if (!address) {

@@ -131,14 +131,11 @@
                 <data android:scheme="file" android:mimeType="application/octet-stream" android:pathPattern=".*\\.psbt" />
             </intent-filter>
             
-            <!-- Intent filter for other custom schemes (hcash, bluewallet, etc.) -->
+            <!-- Intent filter for supported URI schemes -->
             <intent-filter tools:ignore="AppLinkUrlError">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:scheme="hcash" />
-                <data android:scheme="bluewallet" />
-                <data android:scheme="lapp" />
-                <data android:scheme="blue" />
                 <data android:scheme="http" />
                 <data android:scheme="https" />
             </intent-filter>

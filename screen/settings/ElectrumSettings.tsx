@@ -66,6 +66,7 @@ const ElectrumSettings: React.FC = () => {
     tcp: '',
     ssl: '',
   });
+  const canSwitchServers = __DEV__;
 
   const stylesHook = StyleSheet.create({
     inputWrap: {
@@ -337,6 +338,8 @@ const ElectrumSettings: React.FC = () => {
   );
 
   const generateToolTipActions = useCallback(() => {
+    if (!canSwitchServers) return [];
+
     const determineConnectedServer = (): string | null => {
       const allServers = [...suggestedServers, ...Array.from(serverHistory)];
       for (const value of allServers) {
@@ -403,7 +406,7 @@ const ElectrumSettings: React.FC = () => {
     actions.push(resetToDefaults);
 
     return actions;
-  }, [config?.connected, config?.host, config.port, createServerAction, host, isPreferred, serverHistory]);
+  }, [canSwitchServers, config?.connected, config?.host, config.port, createServerAction, host, isPreferred, serverHistory]);
 
   const HeaderRight = useMemo(
     () => <HeaderMenuButton actions={generateToolTipActions()} onPressMenuItem={onPressMenuItem} />,
@@ -412,9 +415,9 @@ const ElectrumSettings: React.FC = () => {
 
   useEffect(() => {
     navigation.setOptions({
-      headerRight: isElectrumDisabled ? null : () => HeaderRight,
+      headerRight: isElectrumDisabled || !canSwitchServers ? null : () => HeaderRight,
     });
-  }, [HeaderRight, isElectrumDisabled, navigation]);
+  }, [HeaderRight, canSwitchServers, isElectrumDisabled, navigation]);
 
   const checkServer = async () => {
     setIsLoading(true);
@@ -555,6 +558,7 @@ const ElectrumSettings: React.FC = () => {
   const preferredServerIsEmpty = !host || (!port && !sslPort);
   const saveDisabled: boolean =
     preferredServerIsEmpty ||
+    !canSwitchServers ||
     (host === savedServer.host &&
       ((savedServer.tcp !== '' && port?.toString() === savedServer.tcp) ||
         (savedServer.ssl !== '' && sslPort?.toString() === savedServer.ssl)));
@@ -596,7 +600,7 @@ const ElectrumSettings: React.FC = () => {
                   placeholder={loc.formatString(loc.settings.electrum_host, { example: '10.20.30.40' })}
                   address={host}
                   onChangeText={text => setHost(text.trim())}
-                  editable={!isLoading}
+                  editable={!isLoading && canSwitchServers}
                   keyboardType="default"
                   onBlur={() => setIsAndroidAddressKeyboardVisible(false)}
                   onFocus={() => setIsAndroidAddressKeyboardVisible(true)}
@@ -620,7 +624,7 @@ const ElectrumSettings: React.FC = () => {
                     }}
                     numberOfLines={1}
                     style={[styles.inputText, stylesHook.inputText]}
-                    editable={!isLoading}
+                    editable={!isLoading && canSwitchServers}
                     placeholderTextColor="#81868e"
                     underlineColorAndroid="transparent"
                     autoCorrect={false}
@@ -637,13 +641,19 @@ const ElectrumSettings: React.FC = () => {
                   testID="SSLPortInput"
                   value={sslPort !== undefined}
                   onValueChange={onSSLPortChange}
-                  disabled={host?.endsWith('.onion') || isLoading || host === '' || (port === undefined && sslPort === undefined)}
+                  disabled={
+                    !canSwitchServers || host?.endsWith('.onion') || isLoading || host === '' || (port === undefined && sslPort === undefined)
+                  }
                 />
               </View>
 
-              <View style={styles.buttonContainer}>
-                <Button disabled={saveDisabled} testID="Save" onPress={save} title={loc.settings.save} />
-              </View>
+              {canSwitchServers ? (
+                <View style={styles.buttonContainer}>
+                  <Button disabled={saveDisabled} testID="Save" onPress={save} title={loc.settings.save} />
+                </View>
+              ) : (
+                <SettingsSubtitle>Preferred server changes are locked in release builds.</SettingsSubtitle>
+              )}
 
               <View style={styles.buttonContainer}>
                 <Button disabled={isLoading} testID="RunElectrumDiagnostics" onPress={runDiagnostics} title="Run diagnostics" />

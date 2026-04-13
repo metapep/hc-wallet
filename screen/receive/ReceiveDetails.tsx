@@ -501,18 +501,18 @@ const ReceiveDetails = () => {
   }, [route.params, setParams, wallet]);
 
   /**
-   * @returns {string} BTC amount, accounting for current `customUnit` and `customUnit`
+   * @returns {string} HCASH amount, accounting for current `customUnit` and `customUnit`
    */
   const getDisplayAmount = (): string | null => {
     const number = Number(customAmount);
     if (number > 0) {
       switch (customUnit) {
         case BitcoinUnit.BTC:
-          return customAmount + ' BTC';
+          return customAmount + ` ${loc.units.BTC}`;
         case BitcoinUnit.SATS:
-          return satoshiToBTC(number) + ' BTC';
+          return satoshiToBTC(number) + ` ${loc.units.BTC}`;
         case BitcoinUnit.LOCAL_CURRENCY:
-          return fiatToBTC(number) + ' BTC';
+          return fiatToBTC(number) + ` ${loc.units.BTC}`;
       }
       return customAmount + ' ' + customUnit;
     } else {

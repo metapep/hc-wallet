@@ -1,9 +1,3 @@
-Funktioner
-* Öppen källkod
-* Full kryptering
-* Trolig förnekelse
-* Flexibla avgifter
-* Replace-By-Fee(RBF)
-* SegWit
-* Se bara (Sentinel) plånböcker
-* Lightning nätverket
+* Self-custody for HCASH
+* Native hcash addresses
+* Electrum and explorer connectivity

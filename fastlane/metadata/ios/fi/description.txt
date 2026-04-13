@@ -1,53 +1,5 @@
-Bitcoin-lompakko, jonka avulla voit tallentaa, lähettää, vastaanottaa, sekä ostaa Bitcoinia keskittyen turvallisuuteen ja yksinkertaisuuteen.
+HashCash Wallet is a self-custodial mobile wallet for HCASH.
 
-Sinä omistat yksityiset avaimesi HashCash Wallet bitcoin-lompakossa. Bitcoin-käyttäjien tekemä Bitcoin-lompakko yhteisölle.
+Use native hcash addresses, monitor balances and transactions, and stay connected to HashCash explorer and Electrum services.
 
-Voit tehdä heti kauppaa kenen tahansa kanssa maailmassa ja muuttaa rahoitusjärjestelmää suoraan taskustasi.
-
-Luo ilmaiseksi rajoittamaton määrä bitcoin-lompakoita tai tuo nykyinen lompakkosi. Se on yksinkertaista ja nopeaa.
-
-_____
-
-Nämä saat:
-
-
-1 - Suunniteltu tietoturvalliseksi
-
-Avoin lähdekoodi
-MIT-lisensoitu, voit rakentaa sen ja käyttää sitä itsenäisesti! Tehty ReactNative: lla
-
-Uskottava kiistettävyys
-Salasana, joka purkaa vale bitcoin-lompakot, jos sinun on pakko paljastaa käyttöoikeutesi
-
-Täysi salaus
-IOS:in monikerroksisen salauksen lisäksi salaamme kaiken lisätyillä salasanoilla
-
-Täysi solmu
-Yhdistä täyteen Bitcoin solmuusi Electrumin kautta
-
-Kylmäsäilytys
-Yhdistä laitteistolompakkoosi ja säilytä kolikkosi kylmäsäilössä
-
-2 - Kohdennettu kokemukseesi
-
-Kontrolloi itse
-Yksityiset avaimesi eivät koskaan poistu laitteeltasi.
-Sinä hallitset yksityisiä avaimiasi
-
-Joustavat siirtokulut
-Alkaen 1 Satoshista. Käyttäjän itse määrittämä
-
-Replace-By-Fee
-(RBF) Nopeuta siirtotapahtumiasi korottamalla siirtokulua (BIP125)
-
-Vain lukuoikeus-lompakot
-Vain lukuoikeus-lompakot antavat sinun pitää silmällä kylmäsäilöä koskematta laitteistoon.
-
-Salamaverkko
-Salamalompakko nolla-konfiguraatiolla. Luvattoman halvat ja nopeat siirrot parhaalla Bitcoin käyttökokemuksella.
-
-Osta bitcoinia
-Osallistu avoimeen talouden vallankumoukseen kyvyllä ostaa bitcoinia suoraan lompakkoosi.
-
-Paikallinen kauppias
-P2p Bitcoin-vaihtoalusta, jonka avulla voit ostaa ja myydä bitcoinia suoraan muille käyttäjille ilman kolmansia osapuolia.
+Your keys stay on your device.

@@ -73,7 +73,7 @@
     "please_pay_between_and": "Zaplaťte prosím mezi {min} a {max}",
     "please_pay": "Zaplaťte prosím",
     "preimage": "Předobraz",
-    "sats": "sats.",
+    "sats": "jats.",
     "date_time": "Datum a čas",
     "wasnt_paid_and_expired": "Tato faktura nebyla zaplacena a její platnost vypršela."
   },
@@ -103,10 +103,10 @@
     "address_not_found": "Nepodařilo se vygenerovat přijímací adresu",
     "header": "Přijmout",
     "reset": "Obnovit",
-    "maxSats": "Maximální množství je {max} sats",
-    "maxSatsFull": "Maximální částka je {max} sats nebo {currency} ",
-    "minSats": "Minimální množství je {min} sats",
-    "minSatsFull": "Minimální částka je {min} sats nebo {currency} ",
+    "maxSats": "Maximální množství je {max} jats",
+    "maxSatsFull": "Maximální částka je {max} jats nebo {currency} ",
+    "minSats": "Minimální množství je {min} jats",
+    "minSatsFull": "Minimální částka je {min} jats nebo {currency} ",
     "qrcode_for_the_address": "QR kód pro adresu",
     "bip47_explanation": "Platební kódy jsou univerzální adresy, které zabraňují prozrazení adres vaší peněženky. Ne všechny služby je však podporují."
   },
@@ -125,7 +125,7 @@
     "create_details": "Podrobnosti",
     "create_fee": "Poplatek",
     "create_memo": "Poznámka",
-    "create_satoshi_per_vbyte": "Satoshi na vByte",
+    "create_satoshi_per_vbyte": "Jat na vByte",
     "create_this_is_hex": "Toto je vaše transakce, podepsána a připravena k odeslání do sítě.",
     "create_to": "Komu",
     "create_tx_size": "Velikost transakce",
@@ -152,7 +152,7 @@
     "details_create": "Vytvořit fakturu",
     "details_error_decode": "Bitcoinovou adresu nelze dekódovat",
     "details_fee_field_is_not_valid": "Poplatek není správně vyplněn.",
-    "details_frozen": "{amount} BTC je zmrazeno.",
+    "details_frozen": "{amount} HCASH je zmrazeno.",
     "details_next": "Další",
     "details_no_signed_tx": "Vybraný soubor neobsahuje transakci, kterou lze importovat.",
     "details_note_placeholder": "Poznámka pro sebe",
@@ -176,8 +176,8 @@
     "insert_custom_fee": "Zadejte poplatek",
     "fee_fast": "Rychle",
     "fee_medium": "Středně rychle",
-    "fee_replace_minvb": "Celková sazba poplatku (satoshi na vByte), kterou chcete zaplatit, by měla být vyšší než {min} sat/vByte.",
-    "fee_satvbyte": "v jednotkách sat/vByte",
+    "fee_replace_minvb": "Celková sazba poplatku (jat na vByte), kterou chcete zaplatit, by měla být vyšší než {min} jat/vByte.",
+    "fee_satvbyte": "v jednotkách jat/vByte",
     "fee_slow": "Pomalu",
     "header": "Odeslat",
     "input_clear": "Vymazat",
@@ -388,7 +388,7 @@
     "custom_fee_warning_description": "Poplatky ve výši pod 1 sat/vB jsou platné, ale nemusí být vyslány dále do sítě z důvodu zásad uzlu."
   },
   "wallets": {
-    "add_bitcoin": "Bitcoin",
+    "add_bitcoin": "HashCash",
     "add_bitcoin_explain": "Jednoduchá a výkonná bitcoinová peněženka",
     "add_create": "Vytvořit",
     "total_balance": "Celkový zůstatek",
@@ -420,7 +420,7 @@
     "details_are_you_sure": "Jste si jisti?",
     "details_connected_to": "Připojeno k",
     "details_del_wb_err": "Poskytnutá částka zůstatku neodpovídá zůstatku této peněženky. Prosím zkuste to znovu.",
-    "details_del_wb_q": "Tato peněženka má nějaký zůstatek. Než budete pokračovat, uvědomte si, že bez přístupové fráze této peněženky nebudete moci tyto prostředky získat zpět. Abyste se vyhnuli náhodnému odstranění, zadejte prosím zůstatek peněženky ve výši {balance} satoshi.",
+    "details_del_wb_q": "Tato peněženka má nějaký zůstatek. Než budete pokračovat, uvědomte si, že bez přístupové fráze této peněženky nebudete moci tyto prostředky získat zpět. Abyste se vyhnuli náhodnému odstranění, zadejte prosím zůstatek peněženky ve výši {balance} jat.",
     "details_delete": "Smazat",
     "details_delete_wallet": "Smazat peněženku",
     "details_derivation_path": "derivační cesta",
@@ -506,7 +506,7 @@
   "total_balance_view": {
     "display_in_bitcoin": "Zobrazit v bitcoinech",
     "hide": "Skrýt",
-    "display_in_sats": "Zobrazit v satoshi",
+    "display_in_sats": "Zobrazit v jat",
     "display_in_fiat": "Zobrazit v {currency}",
     "title": "Celkový zůstatek",
     "explanation": "Zobrazit celkový zůstatek všech vašich peněženek na přehledové obrazovce."
@@ -523,7 +523,7 @@
     "vault_key": "{number}. klíč Úložiště",
     "required_keys_out_of_total": "Požadovaných klíčů z celkového počtu",
     "fee": "Poplatek: {number}",
-    "fee_btc": "{number} BTC",
+    "fee_btc": "{number} HCASH",
     "confirm": "Potvrdit",
     "header": "Odeslat",
     "share": "Sdílet…",
@@ -627,7 +627,7 @@
     "BTC": "HCASH",
     "MAX": "Max.",
     "sat_vbyte": "jat/vByte",
-    "sats": "sats"
+    "sats": "jats"
   },
   "addresses": {
     "copy_private_key": "Zkopírovat soukromý klíč",

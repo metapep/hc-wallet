@@ -18,8 +18,9 @@ import SettingsBlockExplorerCustomUrlItem from '../../components/SettingsBlockEx
 const SettingsBlockExplorer: React.FC = () => {
   const { selectedBlockExplorer, setBlockExplorerStorage } = useSettings();
   const customUrlInputRef = useRef<TextInput>(null);
+  const customExplorerEnabled = __DEV__;
   const [customUrl, setCustomUrl] = useState<string>(selectedBlockExplorer.key === 'custom' ? selectedBlockExplorer.url : '');
-  const [isCustomEnabled, setIsCustomEnabled] = useState<boolean>(selectedBlockExplorer.key === 'custom');
+  const [isCustomEnabled, setIsCustomEnabled] = useState<boolean>(customExplorerEnabled && selectedBlockExplorer.key === 'custom');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const predefinedExplorers = getBlockExplorersList().filter(explorer => explorer.key !== 'custom');
 
@@ -79,6 +80,9 @@ const SettingsBlockExplorer: React.FC = () => {
       LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
       setIsCustomEnabled(value);
       if (value) {
+        if (!customExplorerEnabled) {
+          return;
+        }
         await removeBlockExplorer();
         customUrlInputRef.current?.focus();
       } else {
@@ -96,7 +100,7 @@ const SettingsBlockExplorer: React.FC = () => {
         }
       }
     },
-    [setBlockExplorerStorage, isSubmitting],
+    [customExplorerEnabled, setBlockExplorerStorage, isSubmitting],
   );
 
   useEffect(() => {
@@ -140,17 +144,21 @@ const SettingsBlockExplorer: React.FC = () => {
         })}
       </SettingsSection>
 
-      <SettingsSectionHeader title={loc.wallets.details_advanced} />
-      <SettingsSection compact horizontalInset={false}>
-        <SettingsBlockExplorerCustomUrlItem
-          isCustomEnabled={isCustomEnabled}
-          onSwitchToggle={handleCustomSwitchToggle}
-          customUrl={customUrl}
-          onCustomUrlChange={handleCustomUrlChange}
-          onSubmitCustomUrl={handleSubmitCustomUrl}
-          inputRef={customUrlInputRef}
-        />
-      </SettingsSection>
+      {customExplorerEnabled ? (
+        <>
+          <SettingsSectionHeader title={loc.wallets.details_advanced} />
+          <SettingsSection compact horizontalInset={false}>
+            <SettingsBlockExplorerCustomUrlItem
+              isCustomEnabled={isCustomEnabled}
+              onSwitchToggle={handleCustomSwitchToggle}
+              customUrl={customUrl}
+              onCustomUrlChange={handleCustomUrlChange}
+              onSubmitCustomUrl={handleSubmitCustomUrl}
+              inputRef={customUrlInputRef}
+            />
+          </SettingsSection>
+        </>
+      ) : null}
     </SettingsScrollView>
   );
 };

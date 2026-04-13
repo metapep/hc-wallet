@@ -1,1 +1,1 @@
-биткоин,биткойн,кошелек,блокчейн,криптовалюта,крипта,биток,bitcoin,lightning,segwit
+hashcash,wallet,hcash,electrum,self-custody,crypto

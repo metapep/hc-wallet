@@ -7,7 +7,7 @@
       <key>signingStyle</key>
       <string>manual</string>
       <key>teamID</key>
-      <string>A7W54YZ4WU</string>
+      <string>6953P2XBG2</string>
       <key>uploadSymbols</key>
       <true/>
       <key>compileBitcode</key>
@@ -18,16 +18,16 @@
       <string>export</string>
       <key>provisioningProfiles</key>
       <dict>
-          <key>io.bluewallet.bluewallet</key>
-          <string>match AppStore io.bluewallet.bluewallet</string>
-          <key>io.bluewallet.bluewallet.watch</key>
-          <string>match AppStore io.bluewallet.bluewallet.watch</string>
-          <key>io.bluewallet.bluewallet.watch.extension</key>
-          <string>match AppStore io.bluewallet.bluewallet.watch.extension</string>
-          <key>io.bluewallet.bluewallet.Stickers</key>
-          <string>match AppStore io.bluewallet.bluewallet.Stickers</string>
-          <key>io.bluewallet.bluewallet.MarketWidget</key>
-          <string>match AppStore io.bluewallet.bluewallet.MarketWidget</string>
+          <key>network.hcash.wallet</key>
+          <string>match AppStore network.hcash.wallet</string>
+          <key>network.hcash.wallet.watch</key>
+          <string>match AppStore network.hcash.wallet.watch</string>
+          <key>network.hcash.wallet.watch.extension</key>
+          <string>match AppStore network.hcash.wallet.watch.extension</string>
+          <key>network.hcash.wallet.Stickers</key>
+          <string>match AppStore network.hcash.wallet.Stickers</string>
+          <key>network.hcash.wallet.MarketWidget</key>
+          <string>match AppStore network.hcash.wallet.MarketWidget</string>
       </dict>
   </dict>
 </plist>

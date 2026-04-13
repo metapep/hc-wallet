@@ -1,7 +1,3 @@
-* Открытый исходный код
-* Все данные шифруются
-* Двойное дно
-* Гибкие настройки комиссии
-* Повышение комиссии за транзакцию (RBF)
-* SegWit
-* Lightning network
+* Self-custody for HCASH
+* Native hcash addresses
+* Electrum and explorer connectivity

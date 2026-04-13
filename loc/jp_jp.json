@@ -73,7 +73,7 @@
     "please_pay_between_and": "{min}と{max}の間で支払ってください",
     "please_pay": "取引額",
     "preimage": "プリイメージ",
-    "sats": "sats",
+    "sats": "jats",
     "date_time": "日時",
     "wasnt_paid_and_expired": "この請求書は支払いが行われなかったため無効になりました"
   },
@@ -103,10 +103,10 @@
     "address_not_found": "受取アドレスを生成できません。",
     "header": "入金",
     "reset": "リセット",
-    "maxSats": "最大額は{max}satsです",
-    "maxSatsFull": "最大額は{max}sats（{currency}）です",
-    "minSats": "最小額は{min}satsです",
-    "minSatsFull": "最小額は{min}sats（{currency}）です",
+    "maxSats": "最大額は{max}jatsです",
+    "maxSatsFull": "最大額は{max}jats（{currency}）です",
+    "minSats": "最小額は{min}jatsです",
+    "minSatsFull": "最小額は{min}jats（{currency}）です",
     "qrcode_for_the_address": "アドレスのQRコード",
     "bip47_explanation": "支払いコードは、ウォレットアドレスを開示せずに済む汎用のアドレスです。すべてのサービスがサポートしているわけではありません。"
   },
@@ -125,7 +125,7 @@
     "create_details": "詳細",
     "create_fee": "手数料",
     "create_memo": "メモ",
-    "create_satoshi_per_vbyte": "vByteあたりsatoshi",
+    "create_satoshi_per_vbyte": "vByteあたりjat",
     "create_this_is_hex": "署名されネットワークへ送信される 16 進数取引コードです",
     "create_to": "送金先",
     "create_tx_size": "TX サイズ",
@@ -152,7 +152,7 @@
     "details_create": "作成",
     "details_error_decode": "ビットコインアドレスを復号できません",
     "details_fee_field_is_not_valid": "手数料欄が正しくありません",
-    "details_frozen": "{amount}BTCがフリーズされています",
+    "details_frozen": "{amount}HCASHがフリーズされています",
     "details_next": "次",
     "details_no_signed_tx": "選択したファイルには、インポート可能なトランザクションが含まれていません。",
     "details_note_placeholder": "ラベル",
@@ -176,8 +176,8 @@
     "insert_custom_fee": "手数料を入力",
     "fee_fast": "高速",
     "fee_medium": "中速",
-    "fee_replace_minvb": "希望する手数料レート（vByteあたりsatoshi）は{min} sat/vByteより高くするのが良いです。",
-    "fee_satvbyte": "(sat/vByte)",
+    "fee_replace_minvb": "希望する手数料レート（vByteあたりjat）は{min} jat/vByteより高くするのが良いです。",
+    "fee_satvbyte": "(jat/vByte)",
     "fee_slow": "低速",
     "header": "送金",
     "input_clear": "クリア",
@@ -389,7 +389,7 @@
   },
   "wallets": {
     "add_bitcoin": "ビットコイン",
-    "add_bitcoin_explain": "シンプルかつパワフルなBitcoinウォレット",
+    "add_bitcoin_explain": "シンプルかつパワフルなHashCashウォレット",
     "add_create": "作成",
     "total_balance": "合計残高",
     "add_entropy_reset_title": "エントロピーをリセット",
@@ -506,7 +506,7 @@
   "total_balance_view": {
     "display_in_bitcoin": "ビットコインで表示",
     "hide": "非表示",
-    "display_in_sats": "satsで表示",
+    "display_in_sats": "jatsで表示",
     "display_in_fiat": "{currency}で表示",
     "title": "合計残高",
     "explanation": "すべてのウォレットの合計残高を概要画面に表示"
@@ -523,7 +523,7 @@
     "vault_key": "金庫キー {number}",
     "required_keys_out_of_total": "全体のうち必要なキー",
     "fee": "費用: {number}",
-    "fee_btc": "{number} BTC",
+    "fee_btc": "{number} HCASH",
     "confirm": "承認",
     "header": "送る",
     "share": "共有...",
@@ -627,7 +627,7 @@
     "BTC": "HCASH",
     "MAX": "最大",
     "sat_vbyte": "jat/vByte",
-    "sats": "sats"
+    "sats": "jats"
   },
   "addresses": {
     "copy_private_key": "秘密鍵をコピー",

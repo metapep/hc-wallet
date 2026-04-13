@@ -1,8 +1,3 @@
-* Open Source
-* Totalmente criptografada
-* Negação plausível
-* Taxas flexíveis
-* Replace-By-Fee
-* SegWit
-* Carteiras Watch-only (somente leitura)
-* Lightning Network
+* Self-custody for HCASH
+* Native hcash addresses
+* Electrum and explorer connectivity

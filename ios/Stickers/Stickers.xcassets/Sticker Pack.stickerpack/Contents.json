@@ -8,10 +8,10 @@
   },
   "stickers" : [
     {
-      "filename" : "Bitcoin.sticker"
+      "filename" : "HashCash.sticker"
     },
     {
-      "filename" : "BlueWallet.sticker"
+      "filename" : "HashCash Wallet.sticker"
     },
     {
       "filename" : "bluebeast.sticker"
@@ -23,7 +23,7 @@
       "filename" : "Vault.sticker"
     },
     {
-      "filename" : "Bitcoin (Blue).sticker"
+      "filename" : "HashCash (Color).sticker"
     }
   ]
 }

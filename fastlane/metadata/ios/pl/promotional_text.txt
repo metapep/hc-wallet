@@ -1,8 +1,3 @@
-* Otwarty kod źródłowy
-* Pełne szyfrowanie
-* Wiarygodna zaprzeczalność
-* Elastyczne opłaty
-* Replace-By-Fee
-* SegWit
-* Portfele tylko-do-wglądu(Sentinel)
-* Sieć Lightning
+* Self-custody for HCASH
+* Native hcash addresses
+* Electrum and explorer connectivity

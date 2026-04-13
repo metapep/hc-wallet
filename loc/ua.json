@@ -23,7 +23,7 @@
   },
   "azteco": {
     "codeIs": "Ваш код ваучера",
-    "errorBeforeRefeem": "Перш ніж підтвердити, ви повинні додати гаманець Bitcoin.",
+    "errorBeforeRefeem": "Перш ніж підтвердити, ви повинні додати гаманець HashCash.",
     "errorSomething": "Щось пішло не так. Цей ваучер ще дійсний?",
     "redeem": "Купити на гаманець",
     "redeemButton": "Купити",
@@ -57,7 +57,7 @@
     "lightning_invoice": "Lightning Рахунок",
     "please_pay_between_and": "Будь ласка, сплатіть від {min} до {max}",
     "please_pay": "Будь ласка оплатіть",
-    "sats": "sats.",
+    "sats": "jats.",
     "wasnt_paid_and_expired": "Цей рахунок не було оплачено, термін його дії закінчився."
   },
   "plausibledeniability": {
@@ -108,7 +108,7 @@
     "details_adv_import": "Імпортувати Транзакцію",
     "details_adv_import_qr": "Імпортувати Транзакцію (QR-код)",
     "details_amount_field_is_not_valid": "Поле \"сума\" не валідне.",
-    "details_amount_field_is_less_than_minimum_amount_sat": "Вказана сума занадто мала. Будь ласка, введіть суму більше 500 sats.",
+    "details_amount_field_is_less_than_minimum_amount_sat": "Вказана сума занадто мала. Будь ласка, введіть суму більше 500 jats.",
     "details_create": "Створити рахунок",
     "details_fee_field_is_not_valid": "Поле \"комісія\" не валідне.",
     "details_next": "Наступний",
@@ -125,7 +125,7 @@
     "fee_3h": "3г",
     "fee_fast": "Швидко",
     "fee_medium": "Середня",
-    "fee_satvbyte": "в sat/vByte",
+    "fee_satvbyte": "в jat/vByte",
     "fee_slow": "Повільно",
     "header": "Надіслати",
     "input_clear": "Очистити",
@@ -152,7 +152,7 @@
   "settings": {
     "about": "Про програму",
     "about_backup": "Завжди створюйте резервні копії ключів!",
-    "about_free": "HashCash Wallet — це безкоштовний проект з відкритим кодом. Створено користувачами Bitcoin.",
+    "about_free": "HashCash Wallet — це безкоштовний проект з відкритим кодом. Створено користувачами HashCash.",
     "about_license": "MIT Ліцензія",
     "about_release_notes": "Інформація про реліз",
     "about_review": "Залиште нам відгук",
@@ -205,7 +205,7 @@
     "updating": "Оновлення..."
   },
   "wallets": {
-    "add_bitcoin": "Bitcoin",
+    "add_bitcoin": "HashCash",
     "add_bitcoin_explain": "Простий і потужний Біткойн гаманець",
     "add_create": "Створити",
     "total_balance": "Загальний Баланс",
@@ -262,7 +262,7 @@
   },
   "multisig": {
     "fee": "Комісія: {number}",
-    "fee_btc": "{number} BTC",
+    "fee_btc": "{number} HCASH",
     "confirm": "Підтвердити",
     "header": "Надіслати",
     "view": "Переглянути",

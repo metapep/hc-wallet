@@ -23,12 +23,7 @@ class DeeplinkSchemaMatch {
   static hasSchema(schemaString: string): boolean {
     if (typeof schemaString !== 'string' || schemaString.length <= 0) return false;
     const lowercaseString = schemaString.trim().toLowerCase();
-    return (
-      lowercaseString.startsWith(`${HASHCASH_URI_SCHEME}:`) ||
-      lowercaseString.startsWith('blue:') ||
-      lowercaseString.startsWith('bluewallet:') ||
-      lowercaseString.startsWith('lapp:')
-    );
+    return lowercaseString.startsWith(`${HASHCASH_URI_SCHEME}:`);
   }
 
   /**
@@ -51,9 +46,14 @@ class DeeplinkSchemaMatch {
       return;
     }
 
-    if (event.url.toLowerCase().startsWith(`bluewallet:${HASHCASH_URI_SCHEME}:`)) {
-      event.url = event.url.substring(11);
+    if (event.url.toLowerCase().startsWith(`${HASHCASH_URI_SCHEME}:${HASHCASH_URI_SCHEME}:`)) {
+      event.url = event.url.substring(`${HASHCASH_URI_SCHEME}:`.length);
+    } else if (event.url.toLocaleLowerCase().startsWith(`${HASHCASH_URI_SCHEME}://widget?action=`)) {
+      event.url = event.url.substring(`${HASHCASH_URI_SCHEME}://`.length);
+    } else if (event.url.toLowerCase().startsWith(`bluewallet:${HASHCASH_URI_SCHEME}:`)) {
+      event.url = event.url.substring('bluewallet:'.length);
     } else if (event.url.toLocaleLowerCase().startsWith('bluewallet://widget?action=')) {
+      // Legacy compatibility for pre-HashCash deeplinks.
       event.url = event.url.substring('bluewallet://'.length);
     }
 
@@ -214,7 +214,7 @@ class DeeplinkSchemaMatch {
     } else {
       const urlObject = URL.parse(event.url, true); // eslint-disable-line n/no-deprecated-api
       (async () => {
-        if (urlObject.protocol === 'bluewallet:' || urlObject.protocol === 'lapp:' || urlObject.protocol === 'blue:') {
+        if (urlObject.protocol === `${HASHCASH_URI_SCHEME}:` || urlObject.protocol === 'bluewallet:') {
           switch (urlObject.host) {
             case 'setelectrumserver':
               completionHandler([
@@ -240,28 +240,42 @@ class DeeplinkSchemaMatch {
   }
 
   /**
-   * Extracts server from a deeplink like `bluewallet:setelectrumserver?server=electrum1.bluewallet.io%3A443%3As`
+   * Extracts server from a deeplink like `hcash:setelectrumserver?server=electrum1.hcash.network%3A50002%3As`
    * returns FALSE if none found
    *
    * @param url {string}
    * @return {string|boolean}
    */
   static getServerFromSetElectrumServerAction(url: string): string | false {
-    if (!url.startsWith('bluewallet:setelectrumserver') && !url.startsWith('setelectrumserver')) return false;
+    const normalized = url.toLowerCase();
+    if (
+      !normalized.startsWith(`${HASHCASH_URI_SCHEME}:setelectrumserver`) &&
+      !normalized.startsWith('bluewallet:setelectrumserver') &&
+      !normalized.startsWith('setelectrumserver')
+    ) {
+      return false;
+    }
     const splt = url.split('server=');
     if (splt[1]) return decodeURIComponent(splt[1]);
     return false;
   }
 
   /**
-   * Extracts url from a deeplink like `bluewallet:setlndhuburl?url=https%3A%2F%2Flndhub.herokuapp.com`
+   * Extracts url from a deeplink like `hcash:setlndhuburl?url=https%3A%2F%2Flndhub.example.com`
    * returns FALSE if none found
    *
    * @param url {string}
    * @return {string|boolean}
    */
   static getUrlFromSetLndhubUrlAction(url: string): string | false {
-    if (!url.startsWith('bluewallet:setlndhuburl') && !url.startsWith('setlndhuburl')) return false;
+    const normalized = url.toLowerCase();
+    if (
+      !normalized.startsWith(`${HASHCASH_URI_SCHEME}:setlndhuburl`) &&
+      !normalized.startsWith('bluewallet:setlndhuburl') &&
+      !normalized.startsWith('setlndhuburl')
+    ) {
+      return false;
+    }
     const splt = url.split('url=');
     if (splt[1]) return decodeURIComponent(splt[1]);
     return false;

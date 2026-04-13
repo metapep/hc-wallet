@@ -43,7 +43,7 @@
     "additional_info": "Doplňujúce informácie",
     "for": "Za:",
     "please_pay": "Prosím zaplaťte",
-    "sats": "sats"
+    "sats": "jats"
   },
   "plausibledeniability": {
     "create_fake_storage": "Vytvoriť falošné zašifrované úložisko",
@@ -160,7 +160,7 @@
     "transactions_count": "počet transakcií"
   },
   "wallets": {
-    "add_bitcoin": "Bitcoin",
+    "add_bitcoin": "HashCash",
     "add_create": "Vytvoriť",
     "add_entropy": "Entropia",
     "add_entropy_generated": "{gen} bytov vygenerovanej entropie",
@@ -225,7 +225,7 @@
     "sort_status": "Stav"
   },
   "units": {
-    "sats": "sats"
+    "sats": "jats"
   },
   "addresses": {
     "sign_placeholder_address": "adresa",

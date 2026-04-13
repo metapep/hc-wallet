@@ -1,8 +1,3 @@
-* Avoin lähdekoodi
-* Täysi salaus
-* Uskottava kiistettävyys
-* Joustavat siirtokulut
-* Replace-By-Fee (RBF)
-* SegWit
-* Vain lukuoikeus (Vahti)-lompakot
-* Lightning-verkko
+* Self-custody for HCASH
+* Native hcash addresses
+* Electrum and explorer connectivity

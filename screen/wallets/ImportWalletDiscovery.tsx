@@ -4,7 +4,7 @@ import { ActivityIndicator, FlatList, LayoutAnimation, Platform, StyleSheet, UIM
 import triggerHapticFeedback, { HapticFeedbackTypes } from '../../blue_modules/hapticFeedback';
 import { BlueButtonLink, BlueFormLabel, BlueText } from '../../BlueComponents';
 import { HDSegwitBech32Wallet, WatchOnlyWallet } from '../../class';
-import startImport, { TImport } from '../../class/wallet-import';
+import startImport, { isExtendedPrivateKey, TImport } from '../../class/wallet-import';
 import presentAlert from '../../components/Alert';
 import Button from '../../components/Button';
 import SafeArea from '../../components/SafeArea';
@@ -49,10 +49,10 @@ const ImportWalletDiscovery: React.FC = () => {
   const [selected, setSelected] = useState<number>(0);
   const [progress, setProgress] = useState<string | undefined>();
   const importing = useRef<boolean>(false);
-  const bip39 = useMemo(() => {
+  const showCustomDerivation = useMemo(() => {
     const hd = new HDSegwitBech32Wallet();
     hd.setSecret(importText);
-    return hd.validateMnemonic();
+    return hd.validateMnemonic() || isExtendedPrivateKey(importText);
   }, [importText]);
 
   const stylesHook = StyleSheet.create({
@@ -244,7 +244,7 @@ const ImportWalletDiscovery: React.FC = () => {
         removeClippedSubviews={false}
       />
       <View style={[styles.center, stylesHook.center]}>
-        {bip39 && (
+        {showCustomDerivation && (
           <BlueButtonLink
             title={loc.wallets.import_discovery_derivation}
             testID="CustomDerivationPathButton"

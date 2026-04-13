@@ -101,6 +101,14 @@ export class AbstractHDWallet extends LegacyWallet {
     } catch (e) {}
     // end SeedQR
 
+    const trimmedSecret = newSecret.trim();
+    const prefix = trimmedSecret.substring(0, 4).toLowerCase();
+    if (['xprv', 'yprv', 'zprv', 'tprv', 'uprv', 'vprv'].includes(prefix)) {
+      // Extended private keys are base58 and case-sensitive, so we must preserve exact input casing.
+      this.secret = trimmedSecret;
+      return this;
+    }
+
     this.secret = newSecret.trim().toLowerCase();
     this.secret = this.secret.replace(/[^a-zA-Z0-9]/g, ' ').replace(/\s+/g, ' ');
 

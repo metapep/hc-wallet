@@ -1,7 +1,3 @@
-* Open Source
-* Chiffrement complet
-* Possibilité de déni plausible
-* Frais flexibles
-* Remplacement des frais (RBF)
-* Portefeuilles spectateurs
-* Réseau Lightning
+* Self-custody for HCASH
+* Native hcash addresses
+* Electrum and explorer connectivity

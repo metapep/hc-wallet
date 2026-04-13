@@ -15,6 +15,8 @@ export type HcashElectrumPeer = {
   tcp?: number;
 };
 
+const IS_DEV_BUILD = typeof __DEV__ === 'boolean' && __DEV__;
+
 const PROFILE_ENDPOINTS: Record<HcashProfile, { explorer: string; explorerApiBase: string; electrum: HcashElectrumPeer }> = {
   local: {
     explorer: 'http://127.0.0.1:18080',
@@ -29,6 +31,7 @@ const PROFILE_ENDPOINTS: Record<HcashProfile, { explorer: string; explorerApiBas
 };
 
 const resolveProfile = (): HcashProfile => {
+  if (!IS_DEV_BUILD) return 'dev';
   const runtimeProcess = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process;
   const raw = (runtimeProcess?.env?.HCASH_WALLET_PROFILE || '').toLowerCase();
   if (raw === 'local') return 'local';
@@ -39,10 +42,12 @@ export const ACTIVE_HCASH_PROFILE: HcashProfile = resolveProfile();
 export const DEFAULT_BLOCK_EXPLORER_URL = PROFILE_ENDPOINTS[ACTIVE_HCASH_PROFILE].explorer;
 export const DEFAULT_BLOCK_EXPLORER_API_BASE = PROFILE_ENDPOINTS[ACTIVE_HCASH_PROFILE].explorerApiBase;
 
-export const BLOCK_EXPLORER_PROFILES = {
+export const BLOCK_EXPLORER_PROFILES: Record<HcashProfile, string> = {
   dev: PROFILE_ENDPOINTS.dev.explorer,
   local: PROFILE_ENDPOINTS.local.explorer,
 };
+
+export const AVAILABLE_HCASH_PROFILES: HcashProfile[] = IS_DEV_BUILD ? ['dev', 'local'] : ['dev'];
 
 export const DEFAULT_ELECTRUM_PEER: HcashElectrumPeer = PROFILE_ENDPOINTS[ACTIVE_HCASH_PROFILE].electrum;
 
@@ -51,7 +56,9 @@ const electrumPeersByProfile: Record<HcashProfile, HcashElectrumPeer[]> = {
   dev: [PROFILE_ENDPOINTS.dev.electrum],
 };
 
-const suggestedElectrumPeers: HcashElectrumPeer[] = [PROFILE_ENDPOINTS.dev.electrum, PROFILE_ENDPOINTS.local.electrum];
+const suggestedElectrumPeers: HcashElectrumPeer[] = IS_DEV_BUILD
+  ? [PROFILE_ENDPOINTS.dev.electrum, PROFILE_ENDPOINTS.local.electrum]
+  : [PROFILE_ENDPOINTS.dev.electrum];
 
 // Keep unique peers while preserving deterministic order.
 const dedupePeerKey = (peer: HcashElectrumPeer): string => `${peer.host}:${peer.ssl ?? peer.tcp ?? ''}`;

@@ -1,14 +1,11 @@
-import BIP32Factory, { BIP32Interface } from 'bip32';
+import { BIP32Interface } from 'bip32';
 import * as bitcoin from 'bitcoinjs-lib';
 import { Psbt } from 'bitcoinjs-lib';
 import b58 from 'bs58check';
 import { CoinSelectReturnInput } from 'coinselect';
 
-import ecc from '../../blue_modules/noble_ecc';
 import { concatUint8Arrays, hexToUint8Array } from '../../blue_modules/uint8array-extras';
 import { AbstractHDElectrumWallet } from './abstract-hd-electrum-wallet';
-
-const bip32 = BIP32Factory(ecc);
 
 /**
  * HD Wallet (BIP39).
@@ -60,14 +57,7 @@ export class HDSegwitP2SHWallet extends AbstractHDElectrumWallet {
       return this._xpub; // cache hit
     }
     // first, getting xpub
-    const seed = this._getSeed();
-    const root = bip32.fromSeed(seed);
-
-    const path = this.getDerivationPath();
-    if (!path) {
-      throw new Error('Internal error: no path');
-    }
-    const child = root.derivePath(path).neutered();
+    const child = this.getAccountRootNode().neutered();
     const xpub = child.toBase58();
 
     // bitcoinjs does not support ypub yet, so we just convert it from xpub

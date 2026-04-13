@@ -1,1 +1,1 @@
-bitcoin,cartera,blockchain,btc,criptomoneda,comprar,samourai,electrum,ethereum,moneda
+hashcash,wallet,hcash,electrum,self-custody,crypto

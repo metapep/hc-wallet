@@ -32,6 +32,15 @@ import { HDTaprootWallet } from './wallets/hd-taproot-wallet';
 let usedBucketNum: boolean | number = false;
 let savingInProgress = 0; // its both a flag and a counter of attempts to write to disk
 
+const isTooManyHistoryEntriesError = (error: unknown): boolean => {
+  const message = String((error as Error)?.message ?? error ?? '').toLowerCase();
+  return (
+    message.includes('too many history entries') ||
+    message.includes('history of > 1000 transactions') ||
+    message.includes('history limit reached')
+  );
+};
+
 export type TTXMetadata = {
   [txid: string]: {
     memo?: string;
@@ -779,20 +788,42 @@ export class BlueApp {
       let c = 0;
       for (const wallet of this.wallets) {
         if (c++ === index) {
-          await wallet.fetchTransactions();
+          try {
+            await wallet.fetchTransactions();
 
-          if ('fetchPendingTransactions' in wallet) {
-            await wallet.fetchPendingTransactions();
-            await wallet.fetchUserInvoices();
+            if ('fetchPendingTransactions' in wallet) {
+              await wallet.fetchPendingTransactions();
+              await wallet.fetchUserInvoices();
+            }
+          } catch (error) {
+            if (isTooManyHistoryEntriesError(error)) {
+              console.warn(
+                '[fetchWalletTransactions] Electrum history limit reached for wallet; preserving existing transactions and skipping refresh',
+                wallet.getLabel(),
+              );
+              return;
+            }
+            throw error;
           }
         }
       }
     } else {
       for (const wallet of this.wallets) {
-        await wallet.fetchTransactions();
-        if ('fetchPendingTransactions' in wallet) {
-          await wallet.fetchPendingTransactions();
-          await wallet.fetchUserInvoices();
+        try {
+          await wallet.fetchTransactions();
+          if ('fetchPendingTransactions' in wallet) {
+            await wallet.fetchPendingTransactions();
+            await wallet.fetchUserInvoices();
+          }
+        } catch (error) {
+          if (isTooManyHistoryEntriesError(error)) {
+            console.warn(
+              '[fetchWalletTransactions] Electrum history limit reached for wallet; preserving existing transactions and skipping refresh',
+              wallet.getLabel(),
+            );
+            continue;
+          }
+          throw error;
         }
       }
     }

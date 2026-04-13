@@ -77,10 +77,10 @@
     "details_label": "विवरण",
     "details_setAmount": "रकम सहित प्राप्त गर्नुहोस्",
     "header": "प्राप्त गर्नुहोस्",
-    "maxSats": "अधिकतम रकम {max} sats हो",
-    "maxSatsFull": "अधिकतम रकम {max} sats वा {currency} हो",
-    "minSats": "न्यूनतम रकम {min} sats हो",
-    "minSatsFull": "न्यूनतम रकम {min} sats वा {currency} हो"
+    "maxSats": "अधिकतम रकम {max} jats हो",
+    "maxSatsFull": "अधिकतम रकम {max} jats वा {currency} हो",
+    "minSats": "न्यूनतम रकम {min} jats हो",
+    "minSatsFull": "न्यूनतम रकम {min} jats वा {currency} हो"
   },
   "send": {
     "provided_address_is_invoice": "यो ठेगाना लाइटनिङ इनभ्वाइसको लागि हो जस्तो देखिन्छ। कृपया, यो इनभ्वाइसको लागि भुक्तानी गर्न आफ्नो लाइटनिङ वालेटमा जानुहोस्।",
@@ -113,7 +113,7 @@
     "details_adv_import": "आयात लेनदेन",
     "details_adv_import_qr": "आयात लेनदेन (QR)",
     "details_amount_field_is_not_valid": "रकम मान्य छैन।",
-    "details_amount_field_is_less_than_minimum_amount_sat": "तोकिएको रकम ज्यादै सानो छ। कृपया 500 sats भन्दा बढी रकम प्रविष्ट गर्नुहोस्।",
+    "details_amount_field_is_less_than_minimum_amount_sat": "तोकिएको रकम ज्यादै सानो छ। कृपया 500 jats भन्दा बढी रकम प्रविष्ट गर्नुहोस्।",
     "details_create": "इनभ्वाइस सिर्जना गर्नुहोस्",
     "details_error_decode": "बिटकोइन ठेगाना डिकोड गर्न असमर्थ भयो",
     "details_fee_field_is_not_valid": "शुल्क मान्य छैन।",
@@ -136,8 +136,8 @@
     "fee_custom": "अनुकूलन",
     "fee_fast": "छिटो",
     "fee_medium": "मध्यम",
-    "fee_replace_minvb": "तपाईंले तिर्न चाहनुभएको कुल शुल्क दर (सतोशी प्रति vByte) {min} sat/vByte भन्दा बढी हुनुपर्छ।",
-    "fee_satvbyte": "sat/vByte मा",
+    "fee_replace_minvb": "तपाईंले तिर्न चाहनुभएको कुल शुल्क दर (सतोशी प्रति vByte) {min} jat/vByte भन्दा बढी हुनुपर्छ।",
+    "fee_satvbyte": "jat/vByte मा",
     "fee_slow": "बिस्तारी",
     "header": "पठाउनुहोस्",
     "input_clear": "सफा",
@@ -282,7 +282,7 @@
     "title": "पूरा रकम"
   },
   "multisig": {
-    "fee_btc": "{number} BTC",
+    "fee_btc": "{number} HCASH",
     "confirm": "पक्का ",
     "header": "पठाउनुहोस्",
     "view": "हेर्नुहोस्",

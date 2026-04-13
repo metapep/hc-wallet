@@ -30,6 +30,9 @@ import { LIGHTNING_ENABLED } from '../blue_modules/hashcash';
 
 // https://github.com/bitcoinjs/bip32/blob/master/ts-src/bip32.ts#L43
 export const validateBip32 = (path: string) => path.match(/^(m\/)?(\d+'?\/)*\d+'?$/) !== null;
+const EXTENDED_PRIVATE_KEY_PREFIXES = new Set(['xprv', 'yprv', 'zprv', 'tprv', 'uprv', 'vprv']);
+export const isExtendedPrivateKey = (text: string) => EXTENDED_PRIVATE_KEY_PREFIXES.has(text.trim().substring(0, 4).toLowerCase());
+export const isTestnetExtendedPrivateKey = (text: string) => ['tprv', 'uprv', 'vprv'].includes(text.trim().substring(0, 4).toLowerCase());
 
 // because original file bip39WalletFormatsElectrum is from Electrum X and doesn't contain p2tr wallets, we need to add it
 bip39WalletFormatsElectrum.push({
@@ -84,7 +87,14 @@ const startImport = (
   // in offline mode all wallets are considered used
   const wasUsed = async (wallet: TWallet): Promise<boolean> => {
     if (offline) return true;
-    return wallet.wasEverUsed();
+    try {
+      return await wallet.wasEverUsed();
+    } catch (error: any) {
+      // Some backends can reject unsupported script/address formats for a probe address.
+      // Treat probe errors as "not used" so discovery can continue across other wallet types.
+      console.warn('wallet-import: wasEverUsed failed for', wallet.type, wallet.getID?.(), error?.message);
+      return false;
+    }
   };
   const fetch = async (wallet: TWallet, balance: boolean = false, transactions: boolean = false) => {
     if (offline) return;
@@ -233,13 +243,26 @@ const startImport = (
     yield { progress: 'bip39' };
     const hd2 = new HDSegwitBech32Wallet();
     hd2.setSecret(text);
-    if (password) {
+    const isValidBip39 = hd2.validateMnemonic();
+    const isHdXprv = isExtendedPrivateKey(text);
+    const isTestnetXprv = isHdXprv && isTestnetExtendedPrivateKey(text);
+    if (password && isValidBip39) {
       hd2.setPassphrase(password);
     }
-    if (hd2.validateMnemonic()) {
+    if (isValidBip39 || isHdXprv) {
+      if (isTestnetXprv) {
+        hd2.setDerivationPath("m/84'/1'/0'");
+      }
+
       let walletFound = false;
       // by default we don't try all the paths and options
-      const searchPaths = searchAccounts ? bip39WalletFormatsElectrum : bip39WalletFormatsBlueWallet;
+      const sourcePaths = searchAccounts ? bip39WalletFormatsElectrum : bip39WalletFormatsBlueWallet;
+      const searchPaths = isTestnetXprv
+        ? sourcePaths.map(path => ({
+            ...path,
+            derivation_path: path.derivation_path.replace(/^m\/(\d+)'\/0'\//, "m/$1'/1'/"),
+          }))
+        : sourcePaths;
       for (const i of searchPaths) {
         // we need to skip m/0' p2pkh from default scan list. It could be a BRD wallet and will be handled later
         if (i.derivation_path === "m/0'" && i.script_type === 'p2pkh') continue;
@@ -268,7 +291,7 @@ const startImport = (
         for (const path of paths) {
           const wallet = new WalletClass();
           wallet.setSecret(text);
-          if (password) {
+          if (password && isValidBip39) {
             wallet.setPassphrase(password);
           }
           wallet.setDerivationPath(path);
@@ -282,42 +305,44 @@ const startImport = (
         }
       }
 
-      // m/0' p2pkh is a special case. It could be regular a HD wallet or a BRD wallet.
-      // to decide which one is it let's compare number of transactions
-      const m0Legacy = new HDLegacyP2PKHWallet();
-      m0Legacy.setSecret(text);
-      if (password) {
-        m0Legacy.setPassphrase(password);
-      }
-      m0Legacy.setDerivationPath("m/0'");
-      yield { progress: "bip39 p2pkh m/0'" };
-      // BRD doesn't support passphrase and only works with 12 words seeds
-      // do not try to guess BRD wallet in offline mode
-      if (!password && text.split(' ').length === 12 && !offline) {
-        const brd = new HDLegacyBreadwalletWallet();
-        brd.setSecret(text);
+      if (isValidBip39) {
+        // m/0' p2pkh is a special case. It could be regular a HD wallet or a BRD wallet.
+        // to decide which one is it let's compare number of transactions
+        const m0Legacy = new HDLegacyP2PKHWallet();
+        m0Legacy.setSecret(text);
+        if (password) {
+          m0Legacy.setPassphrase(password);
+        }
+        m0Legacy.setDerivationPath("m/0'");
+        yield { progress: "bip39 p2pkh m/0'" };
+        // BRD doesn't support passphrase and only works with 12 words seeds
+        // do not try to guess BRD wallet in offline mode
+        if (!password && text.split(' ').length === 12 && !offline) {
+          const brd = new HDLegacyBreadwalletWallet();
+          brd.setSecret(text);
 
-        if (await wasUsed(m0Legacy)) {
-          await m0Legacy.fetchBalance();
-          await m0Legacy.fetchTransactions();
-          yield { progress: 'BRD' };
-          await brd.fetchBalance();
-          await brd.fetchTransactions();
-          if (brd.getTransactions().length > m0Legacy.getTransactions().length) {
-            yield { wallet: brd };
-          } else {
-            yield { wallet: m0Legacy };
+          if (await wasUsed(m0Legacy)) {
+            await m0Legacy.fetchBalance();
+            await m0Legacy.fetchTransactions();
+            yield { progress: 'BRD' };
+            await brd.fetchBalance();
+            await brd.fetchTransactions();
+            if (brd.getTransactions().length > m0Legacy.getTransactions().length) {
+              yield { wallet: brd };
+            } else {
+              yield { wallet: m0Legacy };
+            }
+            walletFound = true;
           }
-          walletFound = true;
-        }
-      } else {
-        if (await wasUsed(m0Legacy)) {
-          yield { wallet: m0Legacy };
-          walletFound = true;
+        } else {
+          if (await wasUsed(m0Legacy)) {
+            yield { wallet: m0Legacy };
+            walletFound = true;
+          }
         }
       }
 
-      // if we havent found any wallet for this seed suggest new bech32 wallet
+      // if we havent found any wallet for this seed/xprv suggest a default bech32 wallet
       if (!walletFound) {
         yield { wallet: hd2 };
       }

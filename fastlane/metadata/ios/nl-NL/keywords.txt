@@ -1,1 +1,1 @@
-bitcoin,portomonnee,bitcoin portomonnee,blockchain,btc,cryptovaluta,bitcoin kopen,samourai,electrum
+hashcash,wallet,hcash,electrum,self-custody,crypto
