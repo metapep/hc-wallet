@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { View, StyleSheet, NativeSyntheticEvent } from 'react-native';
 import NativeSegmentedControl from '../codegen/SegmentControlNativeComponent';
+import { useTheme } from './themes';
 
 interface SegmentedControlProps {
   values: string[];
@@ -13,6 +14,7 @@ interface SegmentedControlEvent {
 }
 
 const SegmentedControl: React.FC<SegmentedControlProps> = ({ values, selectedIndex, onChange }) => {
+  const { colors } = useTheme();
   const handleChange = useMemo(
     () => (event: NativeSyntheticEvent<SegmentedControlEvent>) => {
       if (event?.nativeEvent?.selectedIndex !== undefined) {
@@ -32,9 +34,9 @@ const SegmentedControl: React.FC<SegmentedControlProps> = ({ values, selectedInd
         values={values}
         selectedIndex={selectedIndex}
         enabled
-        backgroundColor="transparent"
-        tintColor="#007AFF"
-        textColor="#007AFF"
+        backgroundColor={colors.backgroundPrimary}
+        tintColor={colors.accentPrimary}
+        textColor={colors.accentPrimary}
         momentary={false}
         style={styles.segmentedControl}
         onChange={handleChange}

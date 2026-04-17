@@ -84,6 +84,15 @@ export default function PaymentCodesList() {
   const [reload, setReload] = useState<number>(0);
   const [data, setData] = useState<DataSection[]>([]);
   const { colors } = useTheme();
+  const avatarColors = useMemo(
+    () => [colors.accentInfoBackground, colors.accentSuccessBackground, colors.accentErrorBackground, colors.backgroundSurfaceSecondary],
+    [colors.accentInfoBackground, colors.accentSuccessBackground, colors.accentErrorBackground, colors.backgroundSurfaceSecondary],
+  );
+  const stylesHook = StyleSheet.create({
+    stick: {
+      borderColor: colors.borderSubtle,
+    },
+  });
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [loadingText, setLoadingText] = useState<string>('Loading...');
   const state = navigation.getState();
@@ -202,7 +211,8 @@ export default function PaymentCodesList() {
   const renderItem = (pc: string, index: number) => {
     if (counterpartyMetadata?.[pc]?.hidden) return null; // hidden contact, do not render
 
-    const color = uint8ArrayToHex(sha256(pc)).substring(0, 6);
+    const hashHex = uint8ArrayToHex(sha256(pc)).substring(0, 6);
+    const avatarColor = avatarColors[parseInt(hashHex, 16) % avatarColors.length];
 
     const displayName = shortenContactName(counterpartyMetadata?.[pc]?.label || pc);
 
@@ -210,14 +220,14 @@ export default function PaymentCodesList() {
       return (
         <TouchableOpacity onPress={() => onToolTipPress(Actions.pay, pc)}>
           <View style={styles.contactRowContainer}>
-            <View style={[styles.circle, { backgroundColor: '#' + color }]} />
+            <View style={[styles.circle, { backgroundColor: avatarColor }]} />
             <View style={styles.contactRowBody}>
               <Text testID={`ContactListItem${index}`} style={[styles.contactRowNameText, { color: colors.labelText }]}>
                 {displayName}
               </Text>
             </View>
           </View>
-          <View style={styles.stick} />
+          <View style={[styles.stick, stylesHook.stick]} />
         </TouchableOpacity>
       );
     }
@@ -231,14 +241,14 @@ export default function PaymentCodesList() {
         buttonStyle={styles.tooltipButton}
       >
         <View style={styles.contactRowContainer}>
-          <View style={[styles.circle, { backgroundColor: '#' + color }]} />
+          <View style={[styles.circle, { backgroundColor: avatarColor }]} />
           <View style={styles.contactRowBody}>
             <Text testID={`ContactListItem${index}`} style={[styles.contactRowNameText, { color: colors.labelText }]}>
               {displayName}
             </Text>
           </View>
         </View>
-        <View style={styles.stick} />
+        <View style={[styles.stick, stylesHook.stick]} />
       </ToolTipMenu>
     );
   };
@@ -397,6 +407,6 @@ const styles = StyleSheet.create({
   contactRowBody: { justifyContent: 'center', top: -3, marginLeft: 10, flexShrink: 1 },
   contactRowNameText: { fontSize: 16 },
   contactRowContainer: { flexDirection: 'row', padding: 15 },
-  stick: { borderStyle: 'solid', borderWidth: 0.5, borderColor: 'gray', opacity: 0.5, top: 0, left: -10, width: '110%' },
+  stick: { borderStyle: 'solid', borderWidth: 0.5, opacity: 0.5, top: 0, left: -10, width: '110%' },
   tooltipButton: { width: '100%', alignSelf: 'stretch' },
 });

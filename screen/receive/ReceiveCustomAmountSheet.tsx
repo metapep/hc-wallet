@@ -128,7 +128,7 @@ const ReceiveCustomAmountSheet = () => {
         <View style={[styles.customAmount, stylesHook.customAmount]}>
           <TextInput
             onChangeText={handleLabelChange}
-            placeholderTextColor="#81868e"
+            placeholderTextColor={colors.placeholderTextColor}
             placeholder={loc.receive.details_label}
             value={label || ''}
             numberOfLines={1}

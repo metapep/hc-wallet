@@ -625,7 +625,7 @@ const ElectrumSettings: React.FC = () => {
                     numberOfLines={1}
                     style={[styles.inputText, stylesHook.inputText]}
                     editable={!isLoading && canSwitchServers}
-                    placeholderTextColor="#81868e"
+                    placeholderTextColor={colors.placeholderTextColor}
                     underlineColorAndroid="transparent"
                     autoCorrect={false}
                     autoCapitalize="none"

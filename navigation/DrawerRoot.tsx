@@ -7,6 +7,7 @@ import DrawerList from '../screen/wallets/DrawerList';
 import DetailViewStackScreensStack from './DetailViewScreensStack';
 import { DrawerParamList } from './DrawerParamList';
 import useCompanionListeners from '../hooks/useCompanionListeners';
+import { useTheme } from '../components/themes';
 
 const Drawer = createDrawerNavigator<DrawerParamList>();
 
@@ -36,6 +37,7 @@ const getAnimationConfig = (isDrawerTransitionConfigured: boolean) => {
 const DrawerRoot = () => {
   const { sizeClass, isLargeScreen } = useSizeClass();
   const { direction } = useLocale();
+  const { colors } = useTheme();
   useCompanionListeners();
 
   const getDrawerWidth = useMemo(() => {
@@ -57,12 +59,12 @@ const DrawerRoot = () => {
         height: '100%',
       },
       drawerType: isLargeScreen ? 'permanent' : 'front',
-      overlayColor: 'rgba(0,0,0,0.4)',
+      overlayColor: colors.backgroundSurfaceSecondary,
       swipeEnabled: false,
 
       ...getAnimationConfig(true),
     }),
-    [getDrawerWidth, isLargeScreen, direction],
+    [colors.backgroundSurfaceSecondary, getDrawerWidth, isLargeScreen, direction],
   );
 
   useEffect(() => {

@@ -81,12 +81,16 @@ const TransactionDetails = () => {
       borderColor: colors.formBorder,
       borderBottomColor: colors.formBorder,
       backgroundColor: colors.inputBackgroundColor,
+      color: colors.textPrimary,
     },
     greyButton: {
       backgroundColor: colors.lightButton,
     },
     Link: {
       color: colors.buttonTextColor,
+    },
+    rowValue: {
+      color: colors.textSecondary,
     },
   });
 
@@ -237,7 +241,7 @@ const TransactionDetails = () => {
 
       fromArray.push(
         <ToolTipMenu key={address} isButton title={address} shouldOpenOnLongPress actions={actions} onPressMenuItem={onPressMenuItem}>
-          <BlueText style={isWeOwnAddress ? [styles.rowValue, styles.weOwnAddress] : styles.rowValue}>
+          <BlueText style={isWeOwnAddress ? [styles.rowValue, stylesHooks.rowValue, styles.weOwnAddress] : [styles.rowValue, stylesHooks.rowValue]}>
             {address}
             {index === array.length - 1 ? null : ','}
           </BlueText>
@@ -260,7 +264,7 @@ const TransactionDetails = () => {
           <TextInput
             placeholder={loc.send.details_note_placeholder}
             value={memo}
-            placeholderTextColor="#81868e"
+            placeholderTextColor={colors.placeholderTextColor}
             clearButtonMode="while-editing"
             style={[styles.memoTextInput, stylesHooks.memoTextInput]}
             onChangeText={setMemo}
@@ -274,7 +278,7 @@ const TransactionDetails = () => {
                 placeholder={loc.send.counterparty_label_placeholder}
                 value={counterpartyLabel}
                 onBlur={handleMemoBlur}
-                placeholderTextColor="#81868e"
+                placeholderTextColor={colors.placeholderTextColor}
                 style={[styles.memoTextInput, stylesHooks.memoTextInput]}
                 onChangeText={setCounterpartyLabel}
               />
@@ -311,7 +315,7 @@ const TransactionDetails = () => {
               <BlueText style={styles.txid}>{loc.transactions.txid}</BlueText>
               <CopyToClipboardButton stringToCopy={tx.hash} />
             </View>
-            <BlueText selectable style={styles.rowValue}>
+            <BlueText selectable style={[styles.rowValue, stylesHooks.rowValue]}>
               {tx.hash}
             </BlueText>
             <View style={styles.marginBottom18} />
@@ -321,7 +325,7 @@ const TransactionDetails = () => {
         {tx.timestamp && (
           <>
             <BlueText style={styles.rowCaption}>{loc.transactions.details_received}</BlueText>
-            <BlueText selectable style={styles.rowValue}>
+            <BlueText selectable style={[styles.rowValue, stylesHooks.rowValue]}>
               {dayjs(tx.timestamp * 1000).format('LLL')}
             </BlueText>
             <View style={styles.marginBottom18} />
@@ -331,7 +335,7 @@ const TransactionDetails = () => {
         {tx.inputs && (
           <>
             <BlueText style={styles.rowCaption}>{loc.transactions.details_inputs}</BlueText>
-            <BlueText selectable style={styles.rowValue}>
+            <BlueText selectable style={[styles.rowValue, stylesHooks.rowValue]}>
               {tx.inputs.length}
             </BlueText>
             <View style={styles.marginBottom18} />
@@ -341,7 +345,7 @@ const TransactionDetails = () => {
         {tx.outputs?.length > 0 && (
           <>
             <BlueText style={styles.rowCaption}>{loc.transactions.details_outputs}</BlueText>
-            <BlueText selectable style={styles.rowValue}>
+            <BlueText selectable style={[styles.rowValue, stylesHooks.rowValue]}>
               {tx.outputs.length}
             </BlueText>
             <View style={styles.marginBottom18} />
@@ -375,7 +379,6 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   rowValue: {
-    color: 'grey',
   },
   marginBottom18: {
     marginBottom: 18,
@@ -401,7 +404,6 @@ const styles = StyleSheet.create({
     marginVertical: 8,
     borderRadius: 4,
     paddingHorizontal: 8,
-    color: '#81868e',
   },
   greyButton: {
     borderRadius: 9,

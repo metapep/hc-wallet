@@ -230,9 +230,9 @@ const AddWalletStack = () => {
           title: '',
           gestureEnabled: false,
           headerStyle: {
-            backgroundColor: '#0070FF',
+            backgroundColor: theme.colors.accentInfoBackground,
           },
-          headerTintColor: '#FFFFFF',
+          headerTintColor: theme.colors.accentInfoText,
           headerBackTitle: undefined,
           statusBarStyle: 'light',
           headerShadowVisible: false,

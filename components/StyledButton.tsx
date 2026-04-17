@@ -15,8 +15,20 @@ interface StyledButtonProps {
 const StyledButton: FC<StyledButtonProps> = ({ onPress, text, disabled = false, buttonStyle = StyledButtonType.default }) => {
   const { colors } = useTheme();
   const stylesHook = StyleSheet.create({
+    buttonDefault: {
+      backgroundColor: colors.accentInfoBackground,
+    },
+    buttonDestroy: {
+      backgroundColor: colors.accentErrorBackground,
+    },
     buttonGrey: {
       backgroundColor: colors.lightButton,
+    },
+    textDefault: {
+      color: colors.accentInfoText,
+    },
+    textDestroy: {
+      color: colors.accentErrorText,
     },
     textGray: {
       color: colors.buttonTextColor,
@@ -29,9 +41,9 @@ const StyledButton: FC<StyledButtonProps> = ({ onPress, text, disabled = false, 
     if (buttonStyle === StyledButtonType.grey) {
       return stylesHook.textGray;
     } else if (buttonStyle === StyledButtonType.destroy) {
-      return styles.textDestroy;
+      return stylesHook.textDestroy;
     } else {
-      return styles.textDefault;
+      return stylesHook.textDefault;
     }
   };
 
@@ -39,9 +51,9 @@ const StyledButton: FC<StyledButtonProps> = ({ onPress, text, disabled = false, 
     if (buttonStyle === StyledButtonType.grey) {
       return stylesHook.buttonGrey;
     } else if (buttonStyle === StyledButtonType.destroy) {
-      return styles.buttonDestroy;
+      return stylesHook.buttonDestroy;
     } else {
-      return styles.buttonDefault;
+      return stylesHook.buttonDefault;
     }
   };
 
@@ -66,21 +78,9 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     marginHorizontal: 4,
   },
-  buttonDefault: {
-    backgroundColor: '#EBF2FB',
-  },
-  buttonDestroy: {
-    backgroundColor: '#FFF5F5',
-  },
   text: {
     fontWeight: '600',
     fontSize: 15,
-  },
-  textDefault: {
-    color: '#1961B9',
-  },
-  textDestroy: {
-    color: '#D0021B',
   },
 });
 

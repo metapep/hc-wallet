@@ -34,6 +34,7 @@ import { Transaction, TWallet } from '../class/wallets/types';
 import { BlueSpacing10 } from './BlueSpacing';
 import { useLocale } from '@react-navigation/native';
 import { getBalanceDisplayParts } from '../blue_modules/balanceDisplay';
+import WalletGradient from '../class/wallet-gradient';
 
 // Horizontal carousel shows a small peek of the next card; adjust overlap to control that spacing.
 const CARD_OVERLAP = 24;
@@ -85,7 +86,7 @@ const nStyles = StyleSheet.create({
 });
 
 const NewWalletPanel: React.FC<NewWalletPanelProps> = ({ onPress, fullWidth = false }) => {
-  const { colors, dark } = useTheme();
+  const { colors } = useTheme();
   const { width } = useWindowDimensions();
   const itemWidth = width * 0.82 > 375 ? 375 : width * 0.82;
   const createButtonText = loc.wallets.list_create_a_button === 'Add now' ? 'Create' : 'Create';
@@ -97,7 +98,7 @@ const NewWalletPanel: React.FC<NewWalletPanelProps> = ({ onPress, fullWidth = fa
     button: {
       backgroundColor: colors.buttonBackgroundColor,
       borderWidth: 1,
-      borderColor: dark ? '#FFFFFF' : '#000000',
+      borderColor: colors.borderDefault,
     },
   });
 
@@ -387,6 +388,8 @@ export const WalletCarouselItem: React.FC<WalletCarouselItemProps> = React.memo(
     const homeBalanceDisplay = isBalanceOnlyCard ? getBalanceDisplayParts(formattedBalance, 4, 8) : undefined;
     const displayBalance = isBalanceOnlyCard ? `${homeBalanceDisplay?.numeric ?? ''}${homeBalanceDisplay?.suffix ?? ''}` : formattedBalance;
     const safeBalance = displayBalance || undefined;
+    const cardPrimaryTextColor = colors.textPrimary;
+    const cardSecondaryTextColor = colors.textSecondary;
 
     const animatePressScale = useCallback(
       (toValue: number) => {
@@ -529,7 +532,7 @@ export const WalletCarouselItem: React.FC<WalletCarouselItemProps> = React.memo(
             ]}
           >
             <LinearGradient
-              colors={['#000000', '#000000']}
+              colors={WalletGradient.gradientsFor(item.type)}
               style={[
                 iStyles.grad,
                 isCompact && iStyles.gradCompact,
@@ -552,7 +555,7 @@ export const WalletCarouselItem: React.FC<WalletCarouselItemProps> = React.memo(
                               isCompact && iStyles.balanceCompact,
                               iStyles.balanceLineHeight,
                               isCompact && iStyles.balanceCompactLineHeight,
-                              { color: colors.inverseForegroundColor, writingDirection: direction },
+                              { color: cardPrimaryTextColor, writingDirection: direction },
                             ]}
                           >
                             {renderHighlightedText ? renderHighlightedText(walletLabel, searchQuery || '') : walletLabel}
@@ -573,7 +576,7 @@ export const WalletCarouselItem: React.FC<WalletCarouselItemProps> = React.memo(
                                   isCompact && iStyles.balanceCompact,
                                   iStyles.balanceLineHeight,
                                   isCompact && iStyles.balanceCompactLineHeight,
-                                  { color: colors.inverseForegroundColor, writingDirection: direction },
+                                  { color: cardPrimaryTextColor, writingDirection: direction },
                                   animatedBalanceStyle,
                                 ]}
                               >
@@ -604,7 +607,7 @@ export const WalletCarouselItem: React.FC<WalletCarouselItemProps> = React.memo(
                           style={[
                             iStyles.label,
                             isCompact && iStyles.labelCompact,
-                            { color: colors.inverseForegroundColor, writingDirection: direction },
+                            { color: cardPrimaryTextColor, writingDirection: direction },
                           ]}
                         >
                           {renderHighlightedText ? renderHighlightedText(walletLabel, searchQuery || '') : walletLabel}
@@ -623,7 +626,7 @@ export const WalletCarouselItem: React.FC<WalletCarouselItemProps> = React.memo(
                               style={[
                                 iStyles.balance,
                                 isCompact && iStyles.balanceCompact,
-                                { color: colors.inverseForegroundColor, writingDirection: direction },
+                                { color: cardPrimaryTextColor, writingDirection: direction },
                                 animatedBalanceStyle,
                               ]}
                             >
@@ -637,7 +640,7 @@ export const WalletCarouselItem: React.FC<WalletCarouselItemProps> = React.memo(
                           style={[
                             iStyles.latestTx,
                             isCompact && iStyles.latestTxCompact,
-                            { color: colors.inverseForegroundColor, writingDirection: direction },
+                            { color: cardSecondaryTextColor, writingDirection: direction },
                           ]}
                         >
                           {loc.wallets.list_latest_transaction}
@@ -647,7 +650,7 @@ export const WalletCarouselItem: React.FC<WalletCarouselItemProps> = React.memo(
                           style={[
                             iStyles.latestTxTime,
                             isCompact && iStyles.latestTxTimeCompact,
-                            { color: colors.inverseForegroundColor, writingDirection: direction },
+                            { color: cardPrimaryTextColor, writingDirection: direction },
                           ]}
                         >
                           {latestTransactionText}

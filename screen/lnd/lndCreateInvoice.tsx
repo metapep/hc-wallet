@@ -43,7 +43,7 @@ const LNDCreateInvoice = () => {
   const { wallets, saveToDisk } = useStorage();
   const { uri, walletID } = useRoute<RouteProp<{ params: LNDCreateInvoiceRouteParams }, 'params'>>().params;
   const wallet = useRef(wallets.find(item => item.getID() === walletID) || wallets.find(item => item.chain === Chain.OFFCHAIN));
-  const { colors } = useTheme();
+  const { colors, scanImage } = useTheme();
   const { navigate, goBack, setParams } = useExtendedNavigation();
   const [unit, setUnit] = useState(wallet.current?.getPreferredBalanceUnit() || BitcoinUnit.BTC);
   const [amount, setAmount] = useState<string>();
@@ -69,6 +69,9 @@ const LNDCreateInvoice = () => {
     walletNameSats: {
       color: colors.buttonAlternativeTextColor,
     },
+    walletChooseText: {
+      color: colors.buttonDisabledTextColor,
+    },
     root: {
       backgroundColor: colors.elevated,
     },
@@ -79,6 +82,9 @@ const LNDCreateInvoice = () => {
       borderColor: colors.formBorder,
       borderBottomColor: colors.formBorder,
       backgroundColor: colors.inputBackgroundColor,
+    },
+    fiat2: {
+      color: colors.placeholderTextColor,
     },
   });
 
@@ -348,7 +354,7 @@ const LNDCreateInvoice = () => {
         accessibilityLabel={loc.send.details_scan}
         accessibilityHint={loc.send.details_scan_hint}
       >
-        <Image style={{}} source={require('../../img/scan-white.png')} />
+        <Image source={scanImage} />
         <Text style={[styles.scanClick, styleHooks.scanClick]}>{loc.send.details_scan}</Text>
       </TouchableOpacity>
     );
@@ -364,8 +370,8 @@ const LNDCreateInvoice = () => {
       <View style={styles.walletRoot}>
         {!isLoading && (
           <TouchableOpacity accessibilityRole="button" style={styles.walletChooseWrap} onPress={navigateToSelectWallet}>
-            <Text style={styles.walletChooseText}>{loc.wallets.select_wallet.toLowerCase()}</Text>
-            <Icon name={direction === 'rtl' ? 'angle-left' : 'angle-right'} size={18} type="font-awesome" color="#9aa0aa" />
+            <Text style={[styles.walletChooseText, styleHooks.walletChooseText]}>{loc.wallets.select_wallet.toLowerCase()}</Text>
+            <Icon name={direction === 'rtl' ? 'angle-left' : 'angle-right'} size={18} type="font-awesome" color={colors.buttonDisabledTextColor} />
           </TouchableOpacity>
         )}
         <View style={styles.walletNameWrap}>
@@ -413,8 +419,8 @@ const LNDCreateInvoice = () => {
               placeholder={loc.receive.details_label}
               value={description}
               numberOfLines={1}
-              placeholderTextColor="#81868e"
-              style={styles.fiat2}
+              placeholderTextColor={colors.placeholderTextColor}
+              style={[styles.fiat2, styleHooks.fiat2]}
               editable={!isLoading}
               onSubmitEditing={Keyboard.dismiss}
               inputAccessoryViewID={DismissKeyboardInputAccessoryViewID}
@@ -459,7 +465,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   walletChooseText: {
-    color: '#9aa0aa',
     fontSize: 14,
     marginRight: 8,
   },
@@ -509,7 +514,6 @@ const styles = StyleSheet.create({
     flex: 1,
     marginHorizontal: 8,
     minHeight: 33,
-    color: '#81868e',
   },
 });
 

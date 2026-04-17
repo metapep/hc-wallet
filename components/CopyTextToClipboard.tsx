@@ -24,6 +24,9 @@ const CopyTextToClipboard = forwardRef<React.ElementRef<typeof TouchableOpacity>
         color: colors.alternativeTextColor2,
         fontWeight: '500',
       },
+      address: {
+        color: colors.textSecondary,
+      },
     });
 
     useEffect(() => {
@@ -47,7 +50,7 @@ const CopyTextToClipboard = forwardRef<React.ElementRef<typeof TouchableOpacity>
       if (address.includes(loc.wallets.xpub_copiedToClipboard)) {
         return (
           <Animated.Text
-            style={styles.address}
+            style={[styles.address, stylesHook.address]}
             {...(truncated ? { numberOfLines: 1, ellipsizeMode: 'middle' } : { numberOfLines: 0 })}
             testID="AddressValue"
           >
@@ -71,7 +74,7 @@ const CopyTextToClipboard = forwardRef<React.ElementRef<typeof TouchableOpacity>
         const end = addrPart.slice(-6);
 
         return (
-          <Animated.Text style={styles.address} numberOfLines={truncated ? 1 : 0} ellipsizeMode="middle" testID="AddressValue">
+          <Animated.Text style={[styles.address, stylesHook.address]} numberOfLines={truncated ? 1 : 0} ellipsizeMode="middle" testID="AddressValue">
             <Text>{prefix}</Text>
 
             <Text style={stylesHook.addressSection}>{start}</Text>
@@ -87,7 +90,7 @@ const CopyTextToClipboard = forwardRef<React.ElementRef<typeof TouchableOpacity>
 
       return (
         <Animated.Text
-          style={styles.address}
+          style={[styles.address, stylesHook.address]}
           {...(truncated ? { numberOfLines: 1, ellipsizeMode: 'middle' } : { numberOfLines: 0 })}
           testID="AddressValue"
         >
@@ -111,7 +114,7 @@ const CopyTextToClipboard = forwardRef<React.ElementRef<typeof TouchableOpacity>
             <>{renderHighlightedAddress()}</>
           ) : (
             <Animated.Text
-              style={styles.address}
+              style={[styles.address, stylesHook.address]}
               {...(truncated ? { numberOfLines: 1, ellipsizeMode: 'middle' } : { numberOfLines: 0 })}
               testID="AddressValue"
             >
@@ -131,7 +134,6 @@ const styles = StyleSheet.create({
   address: {
     marginVertical: 32,
     fontSize: 15,
-    color: '#9aa0aa',
     textAlign: 'center',
   },
 });

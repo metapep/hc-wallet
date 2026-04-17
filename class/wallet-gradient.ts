@@ -13,69 +13,77 @@ import { SLIP39LegacyP2PKHWallet, SLIP39SegwitBech32Wallet, SLIP39SegwitP2SHWall
 import { WatchOnlyWallet } from './wallets/watch-only-wallet';
 import { TaprootWallet } from './wallets/taproot-wallet.ts';
 import { LightningArkWallet } from './wallets/lightning-ark-wallet.ts';
+import { BlueCurrentTheme } from '../components/themes';
 
 export default class WalletGradient {
-  static hdSegwitP2SHWallet: string[] = ['#000000', '#000000'];
-  static hdSegwitBech32Wallet: string[] = ['#000000', '#000000'];
-  static segwitBech32Wallet: string[] = ['#000000', '#000000'];
-  static watchOnlyWallet: string[] = ['#000000', '#000000'];
-  static legacyWallet: string[] = ['#000000', '#000000'];
-  static taprootWallet: string[] = ['#000000', '#000000'];
-  static hdLegacyP2PKHWallet: string[] = ['#000000', '#000000'];
-  static hdLegacyBreadWallet: string[] = ['#000000', '#000000'];
-  static multisigHdWallet: string[] = ['#000000', '#000000', '#000000'];
-  static defaultGradients: string[] = ['#000000', '#000000'];
-  static lightningCustodianWallet: string[] = ['#000000', '#000000'];
-  static aezeedWallet: string[] = ['#000000', '#000000'];
+  private static get paletteStart(): string {
+    return BlueCurrentTheme.colors.backgroundSurface;
+  }
+
+  private static get paletteMiddle(): string {
+    return BlueCurrentTheme.colors.backgroundSurfaceSecondary;
+  }
+
+  private static get paletteEnd(): string {
+    return BlueCurrentTheme.colors.backgroundPrimary;
+  }
+
+  private static get walletGradient(): string[] {
+    return [WalletGradient.paletteStart, WalletGradient.paletteEnd];
+  }
+
+  private static get multisigGradient(): string[] {
+    return [WalletGradient.paletteStart, WalletGradient.paletteMiddle, WalletGradient.paletteEnd];
+  }
 
   static createWallet = () => {
-    return WalletGradient.defaultGradients[0];
+    return WalletGradient.paletteStart;
   };
 
   static gradientsFor(type: string): string[] {
     let gradient: string[];
     switch (type) {
       case WatchOnlyWallet.type:
-        gradient = WalletGradient.watchOnlyWallet;
+        gradient = WalletGradient.walletGradient;
         break;
       case LegacyWallet.type:
-        gradient = WalletGradient.legacyWallet;
+        gradient = WalletGradient.walletGradient;
         break;
       case TaprootWallet.type:
-        gradient = WalletGradient.taprootWallet;
+        gradient = WalletGradient.walletGradient;
         break;
       case HDLegacyP2PKHWallet.type:
       case HDLegacyElectrumSeedP2PKHWallet.type:
       case SLIP39LegacyP2PKHWallet.type:
-        gradient = WalletGradient.hdLegacyP2PKHWallet;
+        gradient = WalletGradient.walletGradient;
         break;
       case HDLegacyBreadwalletWallet.type:
-        gradient = WalletGradient.hdLegacyBreadWallet;
+        gradient = WalletGradient.walletGradient;
         break;
       case HDSegwitP2SHWallet.type:
       case SLIP39SegwitP2SHWallet.type:
-        gradient = WalletGradient.hdSegwitP2SHWallet;
+        gradient = WalletGradient.walletGradient;
         break;
       case HDSegwitBech32Wallet.type:
       case HDSegwitElectrumSeedP2WPKHWallet.type:
       case SLIP39SegwitBech32Wallet.type:
-        gradient = WalletGradient.hdSegwitBech32Wallet;
+        gradient = WalletGradient.walletGradient;
         break;
       case SegwitBech32Wallet.type:
-        gradient = WalletGradient.segwitBech32Wallet;
+        gradient = WalletGradient.walletGradient;
         break;
       case MultisigHDWallet.type:
-        gradient = WalletGradient.multisigHdWallet;
+        gradient = WalletGradient.multisigGradient;
         break;
       case HDAezeedWallet.type:
-        gradient = WalletGradient.aezeedWallet;
+        gradient = WalletGradient.walletGradient;
         break;
       case LightningArkWallet.type:
       case LightningCustodianWallet.type:
-        gradient = WalletGradient.lightningCustodianWallet;
+        gradient = WalletGradient.walletGradient;
         break;
       default:
-        gradient = WalletGradient.defaultGradients;
+        gradient = WalletGradient.walletGradient;
         break;
     }
     return gradient;

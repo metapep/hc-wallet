@@ -51,6 +51,9 @@ const LnurlPay: React.FC = () => {
     root: {
       backgroundColor: colors.background,
     },
+    walletSelectText: {
+      color: colors.buttonDisabledTextColor,
+    },
     walletWrapLabel: {
       color: colors.buttonAlternativeTextColor,
     },
@@ -178,8 +181,8 @@ const LnurlPay: React.FC = () => {
           style={styles.walletSelectTouch}
           onPress={() => navigate('SelectWallet', { onWalletSelect, chainType: Chain.OFFCHAIN })}
         >
-          <Text style={styles.walletSelectText}>{loc.wallets.select_wallet.toLowerCase()}</Text>
-          <Icon name={direction === 'rtl' ? 'angle-left' : 'angle-right'} size={18} type="font-awesome" color="#9aa0aa" />
+          <Text style={[styles.walletSelectText, stylesHook.walletSelectText]}>{loc.wallets.select_wallet.toLowerCase()}</Text>
+          <Icon name={direction === 'rtl' ? 'angle-left' : 'angle-right'} size={18} type="font-awesome" color={colors.buttonDisabledTextColor} />
         </TouchableOpacity>
       )}
       <View style={styles.walletWrap}>
@@ -268,7 +271,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   walletSelectText: {
-    color: '#9aa0aa',
     fontSize: 14,
     marginRight: 8,
   },

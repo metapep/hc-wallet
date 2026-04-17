@@ -13,6 +13,7 @@ import ToolTipMenu from './TooltipMenu';
 import useAnimateOnChange from '../hooks/useAnimateOnChange';
 import { useLocale } from '@react-navigation/native';
 import { getBalanceDisplayParts } from '../blue_modules/balanceDisplay';
+import { useTheme } from './themes';
 
 interface TransactionsNavigationHeaderProps {
   wallet: TWallet;
@@ -25,6 +26,7 @@ const TransactionsNavigationHeader: React.FC<TransactionsNavigationHeaderProps> 
   onManageFundsPressed,
   onWalletBalanceVisibilityChange,
 }) => {
+  const { colors } = useTheme();
   const { hideBalance } = wallet;
   const [allowOnchainAddress, setAllowOnchainAddress] = useState(false);
   const { direction } = useLocale();
@@ -168,13 +170,36 @@ const TransactionsNavigationHeader: React.FC<TransactionsNavigationHeaderProps> 
         return require('../img/icon.png');
     }
   }, [direction, wallet.type]);
+  const stylesHook = useMemo(
+    () => ({
+      walletLabel: {
+        color: colors.textPrimary,
+      },
+      walletBalanceText: {
+        color: colors.textPrimary,
+      },
+      manageFundsButton: {
+        backgroundColor: colors.backgroundSurfaceSecondary,
+      },
+      manageFundsButtonText: {
+        color: colors.textPrimary,
+      },
+      walletPreferredUnitView: {
+        backgroundColor: colors.backgroundSurfaceSecondary,
+      },
+      walletPreferredUnitText: {
+        color: colors.textPrimary,
+      },
+    }),
+    [colors.backgroundSurfaceSecondary, colors.textPrimary],
+  );
 
   return (
     <LinearGradient colors={WalletGradient.gradientsFor(wallet.type)} style={styles.lineaderGradient}>
       <ImageBackground source={imageSource} style={styles.chainIcon} />
 
       <View style={styles.contentContainer}>
-        <Text testID="WalletLabel" numberOfLines={1} style={[styles.walletLabel, { writingDirection: direction }]}>
+        <Text testID="WalletLabel" numberOfLines={1} style={[styles.walletLabel, stylesHook.walletLabel, { writingDirection: direction }]}>
           {wallet.getLabel()}
         </Text>
         <Animated.View style={[styles.walletBalanceAndUnitContainer, balanceAnimatedStyle]}>
@@ -197,7 +222,7 @@ const TransactionsNavigationHeader: React.FC<TransactionsNavigationHeaderProps> 
                     numberOfLines={1}
                     minimumFontScale={0.5}
                     adjustsFontSizeToFit
-                    style={[styles.walletBalanceText, animatedBalanceTextStyle]}
+                    style={[styles.walletBalanceText, stylesHook.walletBalanceText, animatedBalanceTextStyle]}
                   >
                     {balanceParts.numeric}
                     {balanceParts.hiddenDecimals > 0 ? (
@@ -208,8 +233,8 @@ const TransactionsNavigationHeader: React.FC<TransactionsNavigationHeaderProps> 
               )}
             </View>
           </ToolTipMenu>
-          <View style={styles.walletPreferredUnitView}>
-            <Text style={styles.walletPreferredUnitText}>HCASH</Text>
+          <View style={[styles.walletPreferredUnitView, stylesHook.walletPreferredUnitView]}>
+            <Text style={[styles.walletPreferredUnitText, stylesHook.walletPreferredUnitText]}>HCASH</Text>
           </View>
         </Animated.View>
         {(wallet.type === LightningCustodianWallet.type || wallet.type === LightningArkWallet.type) && allowOnchainAddress && (
@@ -218,14 +243,14 @@ const TransactionsNavigationHeader: React.FC<TransactionsNavigationHeaderProps> 
             isButton
             onPressMenuItem={handleManageFundsPressed}
             actions={toolTipActions}
-            buttonStyle={styles.manageFundsButton}
+            buttonStyle={[styles.manageFundsButton, stylesHook.manageFundsButton]}
           >
-            <Text style={styles.manageFundsButtonText}>{loc.lnd.title}</Text>
+            <Text style={[styles.manageFundsButtonText, stylesHook.manageFundsButtonText]}>{loc.lnd.title}</Text>
           </ToolTipMenu>
         )}
         {wallet.type === MultisigHDWallet.type && (
-          <TouchableOpacity style={styles.manageFundsButton} accessibilityRole="button" onPress={() => handleManageFundsPressed()}>
-            <Text style={styles.manageFundsButtonText}>{loc.multisig.manage_keys}</Text>
+          <TouchableOpacity style={[styles.manageFundsButton, stylesHook.manageFundsButton]} accessibilityRole="button" onPress={() => handleManageFundsPressed()}>
+            <Text style={[styles.manageFundsButtonText, stylesHook.manageFundsButtonText]}>{loc.multisig.manage_keys}</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -249,9 +274,7 @@ const styles = StyleSheet.create({
     right: 0,
   },
   walletLabel: {
-    backgroundColor: 'transparent',
     fontSize: 19,
-    color: '#fff',
     marginBottom: 10,
   },
   walletBalance: {
@@ -261,7 +284,6 @@ const styles = StyleSheet.create({
   manageFundsButton: {
     marginTop: 14,
     marginBottom: 10,
-    backgroundColor: 'rgba(255,255,255,0.2)',
     borderRadius: 9,
     minHeight: 39,
     alignSelf: 'flex-start',
@@ -271,7 +293,6 @@ const styles = StyleSheet.create({
   manageFundsButtonText: {
     fontWeight: '500',
     fontSize: 14,
-    color: '#FFFFFF',
     padding: 12,
   },
   walletBalanceAndUnitContainer: {
@@ -280,7 +301,6 @@ const styles = StyleSheet.create({
     paddingRight: 10, // Ensure there's some padding to the right
   },
   walletBalanceText: {
-    color: '#fff',
     fontWeight: 'bold',
     fontSize: 36,
     flexShrink: 1, // Allow the text to shrink if there's not enough space
@@ -296,13 +316,11 @@ const styles = StyleSheet.create({
   walletPreferredUnitView: {
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.25)',
     borderRadius: 8,
     minHeight: 35,
     minWidth: 65,
   },
   walletPreferredUnitText: {
-    color: '#fff',
     fontWeight: '600',
   },
 });

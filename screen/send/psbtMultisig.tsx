@@ -128,6 +128,9 @@ const PsbtMultisig = () => {
     addressSection: {
       color: colors.alternativeTextColor2,
     },
+    msleft: {
+      borderColor: colors.borderDefault,
+    },
   });
 
   const [isFiltered, setIsFiltered] = useState(true);
@@ -343,7 +346,7 @@ const PsbtMultisig = () => {
           <View style={styles.container}>
             <View style={styles.mstopcontainer}>
               <View style={styles.mscontainer}>
-                <View style={[styles.msleft, { height: flatListHeight - 260 }]} />
+                <View style={[styles.msleft, stylesHook.msleft, { height: flatListHeight - 260 }]} />
               </View>
               <View style={styles.msright}>
                 <BlueCard>
@@ -412,7 +415,6 @@ const styles = StyleSheet.create({
     width: 1,
     borderStyle: 'dashed',
     borderWidth: 0.8,
-    borderColor: '#c4c4c4',
     marginLeft: 40,
     marginTop: 220,
   },

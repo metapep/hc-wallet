@@ -5,6 +5,7 @@ import { BlueButtonLink, BlueCard, BlueText } from '../../BlueComponents';
 import Lnurl from '../../class/lnurl';
 import Button from '../../components/Button';
 import SafeArea from '../../components/SafeArea';
+import { useTheme } from '../../components/themes';
 import loc from '../../loc';
 import { SuccessView } from '../send/success';
 import { popToTop } from '../../NavigationService';
@@ -29,6 +30,7 @@ const LnurlPaySuccess: React.FC = () => {
   const [preamble, setPreamble] = useState<string>('');
   const [message, setMessage] = useState<string>('');
   const [url, setUrl] = useState<string>('');
+  const { colors } = useTheme();
 
   useEffect(() => {
     const loadSuccessfulPayment = async () => {
@@ -121,7 +123,7 @@ const LnurlPaySuccess: React.FC = () => {
                 });
               }}
               title="repeat" // TODO: translate this
-              icon={{ name: 'refresh', type: 'font-awesome', color: '#9aa0aa' }}
+              icon={{ name: 'refresh', type: 'font-awesome', color: colors.textSecondary }}
             />
           ) : (
             <Button

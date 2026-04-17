@@ -138,6 +138,9 @@ const WalletsAdd: React.FC = () => {
       borderBottomColor: colors.formBorder,
       backgroundColor: colors.inputBackgroundColor,
     },
+    textInputCommon: {
+      color: colors.placeholderTextColor,
+    },
   };
 
   const entropyButtonText = useMemo(() => {
@@ -497,10 +500,10 @@ const WalletsAdd: React.FC = () => {
           <TextInput
             testID="WalletNameInput"
             value={label}
-            placeholderTextColor="#81868e"
+            placeholderTextColor={colors.placeholderTextColor}
             placeholder={loc.wallets.add_placeholder}
             onChangeText={setLabel}
-            style={styles.textInputCommon}
+            style={[styles.textInputCommon, stylesHook.textInputCommon]}
             editable={!isLoading}
             underlineColorAndroid="transparent"
           />
@@ -551,8 +554,8 @@ const WalletsAdd: React.FC = () => {
                   autoCapitalize="none"
                   textContentType="URL"
                   autoCorrect={false}
-                  placeholderTextColor="#81868e"
-                  style={styles.textInputCommon}
+                  placeholderTextColor={colors.placeholderTextColor}
+                  style={[styles.textInputCommon, stylesHook.textInputCommon]}
                   editable={!isLoading}
                   underlineColorAndroid="transparent"
                 />
@@ -605,7 +608,6 @@ const styles = StyleSheet.create({
   textInputCommon: {
     flex: 1,
     marginHorizontal: 8,
-    color: '#81868e',
   },
   buttons: {
     flexDirection: 'column',

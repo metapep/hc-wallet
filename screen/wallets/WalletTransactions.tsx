@@ -89,7 +89,8 @@ const WalletTransactions: React.FC<WalletTransactionsProps> = ({ route }: { rout
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const navigation = useExtendedNavigation();
   const { setOptions, navigate } = navigation;
-  const { colors } = useTheme();
+  const theme = useTheme();
+  const { colors } = theme;
   const { isElectrumDisabled } = useSettings();
   const transactionDisplayUnit = BitcoinUnit.BTC;
   const walletActionButtonsRef = useRef<View>(null);
@@ -133,14 +134,29 @@ const WalletTransactions: React.FC<WalletTransactionsProps> = ({ route }: { rout
       backgroundColor: headerHeight > 0 ? WalletGradient.headerColorFor(wallet.type) : colors.background,
       height: headerHeight > 0 ? headerHeight : '30%',
     },
+    transactionsLoadingInlineText: {
+      color: colors.buttonDisabledTextColor,
+    },
+    emptyTxs: {
+      color: colors.buttonDisabledTextColor,
+    },
+    emptyTxsLightning: {
+      color: colors.buttonDisabledTextColor,
+    },
+    loadMoreButton: {
+      backgroundColor: colors.backgroundSurfaceSecondary,
+    },
+    loadMoreButtonText: {
+      color: colors.backgroundSurface,
+    },
     sendIcon: { transform: [{ rotate: direction === 'rtl' ? '-225deg' : '225deg' }] },
     receiveIcon: { transform: [{ rotate: direction === 'rtl' ? '-45deg' : '45deg' }] },
   });
 
   useFocusEffect(
     useCallback(() => {
-      setOptions(getWalletTransactionsOptions({ route }));
-    }, [route, setOptions]),
+      setOptions(getWalletTransactionsOptions({ route, theme }));
+    }, [route, setOptions, theme]),
   );
 
   const onBarCodeRead = useCallback(
@@ -301,17 +317,17 @@ const WalletTransactions: React.FC<WalletTransactionsProps> = ({ route }: { rout
           accessibilityLabel={`Load next ${WALLET_PAGE_SIZE} transactions`}
           onPress={loadMoreTransactions}
           disabled={isLoadingMore}
-          style={[styles.loadMoreButton, isLoadingMore ? styles.loadMoreButtonDisabled : null]}
+          style={[styles.loadMoreButton, stylesHook.loadMoreButton, isLoadingMore ? styles.loadMoreButtonDisabled : null]}
         >
           {isLoadingMore ? (
             <ActivityIndicator style={styles.loadMoreSpinner} />
           ) : (
-            <Text style={styles.loadMoreButtonText}>{`Load next ${WALLET_PAGE_SIZE}`}</Text>
+            <Text style={[styles.loadMoreButtonText, stylesHook.loadMoreButtonText]}>{`Load next ${WALLET_PAGE_SIZE}`}</Text>
           )}
         </TouchableOpacity>
       </View>
     );
-  }, [isLoadingMore, loadMoreTransactions, nextCursor, stylesHook.listFooterStyle]);
+  }, [isLoadingMore, loadMoreTransactions, nextCursor, stylesHook.listFooterStyle, stylesHook.loadMoreButton, stylesHook.loadMoreButtonText]);
 
   const navigateToSendScreen = () => {
     navigate('SendDetailsRoot', {
@@ -523,14 +539,14 @@ const WalletTransactions: React.FC<WalletTransactionsProps> = ({ route }: { rout
       const offsetY = event.nativeEvent.contentOffset.y;
       const combinedHeight = 180;
       if (offsetY < combinedHeight) {
-        setOptions({ ...getWalletTransactionsOptions({ route }), headerTitle: undefined });
+        setOptions({ ...getWalletTransactionsOptions({ route, theme }), headerTitle: undefined });
       } else {
         navigation.setOptions({
           headerTitle: `${wallet.getLabel()} ${walletBalance}`,
         });
       }
     },
-    [navigation, wallet, walletBalance, setOptions, route],
+    [navigation, wallet, walletBalance, setOptions, route, theme],
   );
 
   const measureHeaderHeight = useCallback(() => {
@@ -606,7 +622,7 @@ const WalletTransactions: React.FC<WalletTransactionsProps> = ({ route }: { rout
             {isLoading && (
               <View style={styles.transactionsLoadingInline}>
                 <ActivityIndicator style={styles.transactionsLoadingInlineSpinner} />
-                <Text style={styles.transactionsLoadingInlineText}>Loading transactions...</Text>
+                <Text style={[styles.transactionsLoadingInlineText, stylesHook.transactionsLoadingInlineText]}>Loading transactions...</Text>
               </View>
             )}
           </View>
@@ -630,6 +646,7 @@ const WalletTransactions: React.FC<WalletTransactionsProps> = ({ route }: { rout
       measureHeaderHeight,
       stylesHook.backgroundContainer,
       stylesHook.listHeaderText,
+      stylesHook.transactionsLoadingInlineText,
       saveToDisk,
       isBiometricUseCapableAndEnabled,
       isLoading,
@@ -672,16 +689,16 @@ const WalletTransactions: React.FC<WalletTransactionsProps> = ({ route }: { rout
             {isLoading ? (
               <View style={styles.loadingStateContainer}>
                 <ActivityIndicator style={styles.loadingStateSpinner} />
-                <Text numberOfLines={0} style={styles.emptyTxs} testID="TransactionsListEmpty">
+                <Text numberOfLines={0} style={[styles.emptyTxs, stylesHook.emptyTxs]} testID="TransactionsListEmpty">
                   {loc.transactions.updating}
                 </Text>
               </View>
             ) : (
               <>
-                <Text numberOfLines={0} style={styles.emptyTxs} testID="TransactionsListEmpty">
+                <Text numberOfLines={0} style={[styles.emptyTxs, stylesHook.emptyTxs]} testID="TransactionsListEmpty">
                   {(isLightning() && loc.wallets.list_empty_txs1_lightning) || loc.wallets.list_empty_txs1}
                 </Text>
-                {isLightning() && <Text style={styles.emptyTxsLightning}>{loc.wallets.list_empty_txs2_lightning}</Text>}
+                {isLightning() && <Text style={[styles.emptyTxsLightning, stylesHook.emptyTxsLightning]}>{loc.wallets.list_empty_txs2_lightning}</Text>}
               </>
             )}
           </ScrollView>
@@ -769,7 +786,6 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   transactionsLoadingInlineText: {
-    color: '#9aa0aa',
     fontSize: 14,
   },
   loadingStateContainer: {
@@ -789,8 +805,8 @@ const styles = StyleSheet.create({
     right: 0,
   },
   emptyTxsContainer: { height: '10%', minHeight: '10%', flex: 1 },
-  emptyTxs: { fontSize: 18, color: '#9aa0aa', textAlign: 'center', marginVertical: 16 },
-  emptyTxsLightning: { fontSize: 18, color: '#9aa0aa', textAlign: 'center', fontWeight: '600' },
+  emptyTxs: { fontSize: 18, textAlign: 'center', marginVertical: 16 },
+  emptyTxsLightning: { fontSize: 18, textAlign: 'center', fontWeight: '600' },
   loadMoreButton: {
     alignItems: 'center',
     borderRadius: 10,
@@ -800,13 +816,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 16,
     paddingVertical: 10,
-    backgroundColor: '#2f3542',
   },
   loadMoreButtonDisabled: {
     opacity: 0.8,
   },
   loadMoreButtonText: {
-    color: '#ffffff',
     fontSize: 16,
     fontWeight: '600',
   },

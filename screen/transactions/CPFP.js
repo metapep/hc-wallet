@@ -33,11 +33,11 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   hexInput: {
-    borderColor: '#ebebeb',
-    backgroundColor: '#d2f8d6',
+    borderColor: BlueCurrentTheme.colors.borderSubtle,
+    backgroundColor: BlueCurrentTheme.colors.accentSuccessBackground,
     borderRadius: 4,
     marginTop: 20,
-    color: '#37c0a1',
+    color: BlueCurrentTheme.colors.accentSuccessText,
     fontWeight: '500',
     fontSize: 14,
     paddingHorizontal: 16,
@@ -48,7 +48,7 @@ const styles = StyleSheet.create({
     marginVertical: 24,
   },
   actionText: {
-    color: '#9aa0aa',
+    color: BlueCurrentTheme.colors.buttonDisabledTextColor,
     fontSize: 15,
     fontWeight: '500',
     alignSelf: 'center',

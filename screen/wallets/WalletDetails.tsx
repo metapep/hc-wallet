@@ -293,6 +293,9 @@ const WalletDetails: React.FC = () => {
       borderBottomColor: colors.formBorder,
       backgroundColor: colors.inputBackgroundColor,
     },
+    inputText: {
+      color: colors.placeholderTextColor,
+    },
   });
 
   const navigateToWalletExport = () => {
@@ -469,8 +472,8 @@ const WalletDetails: React.FC = () => {
                   }}
                   onBlur={walletNameTextInputOnBlur}
                   numberOfLines={1}
-                  placeholderTextColor="#81868e"
-                  style={[styles.inputText, { writingDirection: direction }]}
+                  placeholderTextColor={colors.placeholderTextColor}
+                  style={[styles.inputText, stylesHook.inputText, { writingDirection: direction }]}
                   editable={!isLoading}
                   underlineColorAndroid="transparent"
                   testID="WalletNameInput"
@@ -714,7 +717,6 @@ const styles = StyleSheet.create({
     flex: 1,
     marginHorizontal: 8,
     minHeight: 33,
-    color: '#81868e',
   },
   hardware: {
     flexDirection: 'row',

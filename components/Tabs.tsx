@@ -7,18 +7,15 @@ const tabsStyles = StyleSheet.create({
   root: {
     flexDirection: 'row',
     height: 50,
-    borderColor: '#e3e3e3',
     borderBottomWidth: 1,
   },
   tabRoot: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    borderColor: 'white',
     borderBottomWidth: 2,
   },
   activeTabRoot: {
-    borderColor: 'transparent',
     borderBottomWidth: 2,
   },
   marginBottom: {
@@ -39,14 +36,22 @@ interface TabsProps {
 
 export const Tabs: React.FC<TabsProps> = ({ active, onSwitch, tabs, isIpad = false }) => {
   const { colors } = useTheme();
+  const stylesHook = StyleSheet.create({
+    root: {
+      borderColor: colors.borderSubtle,
+    },
+    tabRoot: {
+      borderColor: colors.backgroundSurface,
+    },
+  });
   return (
-    <View style={[tabsStyles.root, isIpad && tabsStyles.marginBottom]}>
+    <View style={[tabsStyles.root, stylesHook.root, isIpad && tabsStyles.marginBottom]}>
       {tabs.map((Tab, i) => (
         <TouchableOpacity
           key={i}
           accessibilityRole="button"
           onPress={() => onSwitch(i)}
-          style={[tabsStyles.tabRoot, active === i && { ...tabsStyles.activeTabRoot, borderColor: colors.buttonAlternativeTextColor }]}
+          style={[tabsStyles.tabRoot, stylesHook.tabRoot, active === i && { ...tabsStyles.activeTabRoot, borderColor: colors.buttonAlternativeTextColor }]}
         >
           <Tab active={active === i} />
         </TouchableOpacity>

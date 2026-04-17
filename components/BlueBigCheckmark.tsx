@@ -7,8 +7,13 @@ interface BlueBigCheckmarkProps extends ViewProps {}
 
 export function BlueBigCheckmark(props: BlueBigCheckmarkProps) {
   const { colors } = useTheme();
+  const styleHook = StyleSheet.create({
+    container: {
+      backgroundColor: colors.accentSuccessBackground,
+    },
+  });
   return (
-    <View style={[styles.container, props.style]}>
+    <View style={[styles.container, styleHook.container, props.style]}>
       <Icon name="check" size={50} type="font-awesome" color={colors.successCheck} />
     </View>
   );
@@ -16,7 +21,6 @@ export function BlueBigCheckmark(props: BlueBigCheckmarkProps) {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#ccddf9',
     width: 120,
     height: 120,
     borderRadius: 60,

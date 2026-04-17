@@ -88,6 +88,9 @@ export const SuccessView = ({ amount, amountUnit, fee, invoiceDescription, shoul
     amountUnit: {
       color: colors.alternativeTextColor2,
     },
+    feeText: {
+      color: colors.accentSuccessText,
+    },
   });
 
   return (
@@ -103,11 +106,11 @@ export const SuccessView = ({ amount, amountUnit, fee, invoiceDescription, shoul
             ) : null}
           </View>
           {(fee ?? 0) > 0 && (
-            <Text style={styles.feeText}>
+            <Text style={[styles.feeText, stylesHook.feeText]}>
               {loc.send.create_fee}: {new BigNumber(fee ?? 0).toFixed(8)} {loc.units[BitcoinUnit.BTC]}
             </Text>
           )}
-          <Text numberOfLines={0} style={styles.feeText}>
+          <Text numberOfLines={0} style={[styles.feeText, stylesHook.feeText]}>
             {invoiceDescription}
           </Text>
         </BlueCard>
@@ -169,7 +172,6 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-end',
   },
   feeText: {
-    color: '#37c0a1',
     fontSize: 14,
     marginHorizontal: 4,
     paddingVertical: 6,

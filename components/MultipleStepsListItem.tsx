@@ -83,6 +83,9 @@ const MultipleStepsListItem = (props: MultipleStepsListItemProps) => {
     rowPartialLeftText: {
       color: colors.alternativeTextColor,
     },
+    buttonPartialContainer: {
+      borderColor: colors.borderSubtle,
+    },
   });
   const selfRef = useRef(null); // Create a ref for the component itself
 
@@ -115,7 +118,7 @@ const MultipleStepsListItem = (props: MultipleStepsListItemProps) => {
           width: 1,
           borderStyle: 'dashed',
           borderWidth: 0.8,
-          borderColor: '#c4c4c4',
+          borderColor: colors.borderDefault,
           top: 0,
           bottom: 0,
           marginLeft: 20,
@@ -126,7 +129,7 @@ const MultipleStepsListItem = (props: MultipleStepsListItemProps) => {
           width: 1,
           borderStyle: 'dashed',
           borderWidth: 0.8,
-          borderColor: '#c4c4c4',
+          borderColor: colors.borderDefault,
           top: '50%',
           bottom: 0,
           marginLeft: 20,
@@ -137,7 +140,7 @@ const MultipleStepsListItem = (props: MultipleStepsListItemProps) => {
           width: 1,
           borderStyle: 'dashed',
           borderWidth: 0.8,
-          borderColor: '#c4c4c4',
+          borderColor: colors.borderDefault,
           top: 0,
           bottom: '50%',
           marginLeft: 20,
@@ -195,7 +198,7 @@ const MultipleStepsListItem = (props: MultipleStepsListItemProps) => {
                 </Pressable>
               ))}
             {props.button.buttonType === MultipleStepsListItemButtonType.Partial && (
-              <View style={styles.buttonPartialContainer}>
+              <View style={[styles.buttonPartialContainer, stylesHook.buttonPartialContainer]}>
                 <Text numberOfLines={1} style={[styles.rowPartialLeftText, stylesHook.rowPartialLeftText]} lineBreakMode="middle">
                   {props.button.leftText}
                 </Text>
@@ -254,7 +257,6 @@ const styles = StyleSheet.create({
   },
   buttonPartialContainer: {
     borderRadius: 8,
-    borderColor: '#EEF0F4',
     borderWidth: 1,
     height: 48,
     flex: 1,

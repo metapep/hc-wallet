@@ -184,7 +184,7 @@ export const TransactionListItem: React.FC<TransactionListItemProps> = memo(
           if (item.ispaid) {
             color = colors.successColor;
           } else {
-            color = '#9AA0AA';
+            color = colors.buttonDisabledTextColor;
           }
         }
       } else if (item.value! / 100000000 < 0) {
@@ -201,6 +201,7 @@ export const TransactionListItem: React.FC<TransactionListItemProps> = memo(
       } as TextStyle;
     }, [
       colors.successColor,
+      colors.buttonDisabledTextColor,
       colors.foregroundColor,
       item.type,
       item.value,

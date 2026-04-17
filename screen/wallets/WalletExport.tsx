@@ -46,11 +46,19 @@ const CopyBox: React.FC<{ text: string; onPress: () => void }> = ({ text, onPres
 
 const DoNotDisclose: React.FC = () => {
   const { colors } = useTheme();
+  const stylesHook = StyleSheet.create({
+    warningBox: {
+      backgroundColor: colors.accentErrorBackground,
+    },
+    warningText: {
+      color: colors.accentErrorText,
+    },
+  });
 
   return (
-    <View style={[styles.warningBox, { backgroundColor: colors.changeText }]}>
-      <Icon type="font-awesome-6" name="circle-exclamation" size={24} color="white" />
-      <BlueText style={styles.warning}>{loc.wallets.warning_do_not_disclose}</BlueText>
+    <View style={[styles.warningBox, stylesHook.warningBox]}>
+      <Icon type="font-awesome-6" name="circle-exclamation" size={24} color={colors.accentErrorText} />
+      <BlueText style={[styles.warning, stylesHook.warningText]}>{loc.wallets.warning_do_not_disclose}</BlueText>
     </View>
   );
 };
@@ -67,6 +75,9 @@ const WalletExport: React.FC = () => {
   const { currentAppState, previousAppState } = useAppState();
   const stylesHook = StyleSheet.create({
     root: { backgroundColor: colors.elevated },
+    typeText: {
+      color: colors.textSecondary,
+    },
   });
 
   const secrets: string[] = useMemo(() => {
@@ -173,7 +184,7 @@ const WalletExport: React.FC = () => {
           </React.Fragment>
         ))}
 
-        <BlueText style={styles.typeText}>{loc.formatString(loc.wallets.wallet_type_this, { type: wallet.typeReadable })}</BlueText>
+        <BlueText style={[styles.typeText, stylesHook.typeText]}>{loc.formatString(loc.wallets.wallet_type_this, { type: wallet.typeReadable })}</BlueText>
       </Scroll>
     );
   }
@@ -219,7 +230,7 @@ const WalletExport: React.FC = () => {
         <HandOffComponent title={loc.wallets.xpub_title} type={HandOffActivityType.Xpub} userInfo={{ xpub: secret }} />
       )}
 
-      <BlueText style={styles.typeText}>{loc.formatString(loc.wallets.wallet_type_this, { type: wallet.typeReadable })}</BlueText>
+      <BlueText style={[styles.typeText, stylesHook.typeText]}>{loc.formatString(loc.wallets.wallet_type_this, { type: wallet.typeReadable })}</BlueText>
     </ScrollView>
   );
 };
@@ -243,7 +254,6 @@ const styles = StyleSheet.create({
   },
   warning: {
     fontSize: 20,
-    color: 'white',
   },
   scanText: {
     textAlign: 'center',
@@ -261,7 +271,6 @@ const styles = StyleSheet.create({
   typeText: {
     textAlign: 'center',
     fontSize: 17,
-    color: 'grey',
   },
   copyRoot: {
     padding: 10,

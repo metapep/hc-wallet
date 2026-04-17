@@ -52,6 +52,9 @@ const ScanLNDInvoice = () => {
   const [isAmountInitiallyEmpty, setIsAmountInitiallyEmpty] = useState<boolean | undefined>();
   const [expiresIn, setExpiresIn] = useState<string | undefined>();
   const stylesHook = StyleSheet.create({
+    walletSelectText: {
+      color: colors.buttonDisabledTextColor,
+    },
     walletWrapLabel: {
       color: colors.buttonAlternativeTextColor,
     },
@@ -66,10 +69,13 @@ const ScanLNDInvoice = () => {
     },
     expiresIn: {
       writingDirection: direction,
-      color: '#81868e',
+      color: colors.placeholderTextColor,
       fontSize: 12,
       left: 20,
       top: 10,
+    },
+    descriptionText: {
+      color: colors.placeholderTextColor,
     },
   });
 
@@ -281,8 +287,8 @@ const ScanLNDInvoice = () => {
       <View style={styles.walletSelectRoot}>
         {!isLoading && (
           <TouchableOpacity accessibilityRole="button" style={styles.walletSelectTouch} onPress={naviageToSelectWallet}>
-            <Text style={styles.walletSelectText}>{loc.wallets.select_wallet.toLowerCase()}</Text>
-            <Icon name={direction === 'rtl' ? 'angle-left' : 'angle-right'} size={18} type="font-awesome" color="#9aa0aa" />
+            <Text style={[styles.walletSelectText, stylesHook.walletSelectText]}>{loc.wallets.select_wallet.toLowerCase()}</Text>
+            <Icon name={direction === 'rtl' ? 'angle-left' : 'angle-right'} size={18} type="font-awesome" color={colors.buttonDisabledTextColor} />
           </TouchableOpacity>
         )}
         <View style={styles.walletWrap}>
@@ -382,7 +388,7 @@ const ScanLNDInvoice = () => {
               style={styles.addressInput}
             />
             <View style={styles.description}>
-              <Text numberOfLines={0} style={styles.descriptionText}>
+              <Text numberOfLines={0} style={[styles.descriptionText, stylesHook.descriptionText]}>
                 {decoded !== undefined ? decoded.description : ''}
               </Text>
             </View>
@@ -432,7 +438,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   walletSelectText: {
-    color: '#9aa0aa',
     fontSize: 14,
     marginRight: 8,
   },
@@ -478,7 +483,6 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   descriptionText: {
-    color: '#81868e',
     fontWeight: '500',
     fontSize: 14,
   },

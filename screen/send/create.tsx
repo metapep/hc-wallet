@@ -54,6 +54,14 @@ const SendCreate = () => {
     cardText: {
       color: colors.foregroundColor,
     },
+    cardTx: {
+      borderColor: colors.borderSubtle,
+      backgroundColor: colors.accentSuccessBackground,
+      color: colors.accentSuccessText,
+    },
+    actionText: {
+      color: colors.buttonDisabledTextColor,
+    },
   });
 
   const { enableScreenProtect, disableScreenProtect } = useScreenProtect();
@@ -155,17 +163,17 @@ const SendCreate = () => {
         </>
       ) : null}
       <BlueText style={[styles.cardText, styleHooks.cardText]}>{loc.send.create_this_is_hex}</BlueText>
-      <TextInput testID="TxhexInput" style={styles.cardTx} multiline editable={false} value={tx} />
+      <TextInput testID="TxhexInput" style={[styles.cardTx, styleHooks.cardTx]} multiline editable={false} value={tx} />
 
       <TouchableOpacity accessibilityRole="button" style={styles.actionTouch} onPress={() => Clipboard.setString(tx)}>
-        <Text style={styles.actionText}>{loc.send.create_copy}</Text>
+        <Text style={[styles.actionText, styleHooks.actionText]}>{loc.send.create_copy}</Text>
       </TouchableOpacity>
       <TouchableOpacity
         accessibilityRole="button"
         style={styles.actionTouch}
         onPress={() => Linking.openURL('https://coinb.in/?verify=' + tx)}
       >
-        <Text style={styles.actionText}>{loc.send.create_verify}</Text>
+        <Text style={[styles.actionText, styleHooks.actionText]}>{loc.send.create_verify}</Text>
       </TouchableOpacity>
     </View>
   );
@@ -232,11 +240,8 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   cardTx: {
-    borderColor: '#ebebeb',
-    backgroundColor: '#d2f8d6',
     borderRadius: 4,
     marginTop: 20,
-    color: '#37c0a1',
     fontWeight: '500',
     fontSize: 14,
     paddingHorizontal: 16,
@@ -248,7 +253,6 @@ const styles = StyleSheet.create({
     marginVertical: 24,
   },
   actionText: {
-    color: '#9aa0aa',
     fontSize: 15,
     fontWeight: '500',
     alignSelf: 'center',

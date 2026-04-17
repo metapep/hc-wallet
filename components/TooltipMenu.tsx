@@ -3,6 +3,7 @@ import { NativeSyntheticEvent, Platform, Pressable, StyleSheet, ViewStyle } from
 import ContextMenu, { ContextMenuAction, ContextMenuOnPressNativeEvent } from 'react-native-context-menu-view';
 import { ToolTipMenuProps, Action } from './types';
 import { useSettings } from '../hooks/context/useSettings';
+import { useTheme } from './themes';
 
 const ToolTipMenu = (props: ToolTipMenuProps) => {
   const {
@@ -27,6 +28,7 @@ const ToolTipMenu = (props: ToolTipMenuProps) => {
   } = props;
 
   const { language } = useSettings();
+  const { colors } = useTheme();
   const openedRef = useRef(false);
 
   const normalizeMenuState = useCallback((menuState?: Action['menuState']): boolean | undefined => {
@@ -145,7 +147,7 @@ const ToolTipMenu = (props: ToolTipMenuProps) => {
 
     return (
       <Pressable
-        android_ripple={enableAndroidRipple ? { color: '#d9d9d9', foreground: true } : undefined}
+        android_ripple={enableAndroidRipple ? { color: colors.androidRippleColor, foreground: true } : undefined}
         style={({ pressed }) => {
           const base: ViewStyle[] = [styles.pressable];
           if (buttonStyle) {

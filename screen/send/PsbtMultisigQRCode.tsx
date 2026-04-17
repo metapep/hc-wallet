@@ -41,6 +41,9 @@ const PsbtMultisigQRCode: React.FC = () => {
     exportButton: {
       backgroundColor: colors.buttonDisabledBackgroundColor,
     },
+    divider: {
+      backgroundColor: colors.borderSubtle,
+    },
   });
   const fileName = `${Date.now()}.psbt`;
 
@@ -136,7 +139,7 @@ const PsbtMultisigQRCode: React.FC = () => {
       {!isLoading && (
         <>
           <BlueSpacing20 />
-          <View style={styles.divider} />
+          <View style={[styles.divider, stylesHook.divider]} />
           <TipBox
             number="2"
             title={loc.multisig.provide_signature_next_steps}
@@ -183,7 +186,6 @@ const styles = StyleSheet.create({
   },
   divider: {
     height: 0.5,
-    backgroundColor: '#d2d2d2',
     marginVertical: 20,
   },
   exportButton: {

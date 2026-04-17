@@ -106,9 +106,9 @@ const CoinControlOutputSheet: React.FC = () => {
         <HeaderRightButton testID="CoinControlOutputDone" title={loc.send.input_done} onPress={applyChangesAndClose} disabled={loading} />
       </View>
       <View style={styles.flex}>
-        <View style={styles.headerContainer}>
-          <View style={styles.rowContent}>
-            <Avatar rounded size={40} containerStyle={[styles.avatar, { backgroundColor: color }]} />
+        <View style={[styles.headerContainer, { borderBottomColor: colors.background, backgroundColor: colors.background }]}>
+          <View style={[styles.rowContent, { borderBottomColor: colors.borderSubtle }]}>
+            <Avatar rounded size={40} containerStyle={[styles.avatar, { backgroundColor: color, borderColor: colors.backgroundSurface }]} />
             <View style={styles.listContent}>
               <Text numberOfLines={1} style={[styles.amount, { color: colors.foregroundColor }]}>
                 {amount}
@@ -136,7 +136,7 @@ const CoinControlOutputSheet: React.FC = () => {
             testID="OutputMemo"
             placeholder={loc.send.details_note_placeholder}
             value={memo}
-            placeholderTextColor="#81868e"
+            placeholderTextColor={colors.placeholderTextColor}
             editable={!loading}
             style={[
               styles.memoTextInput,
@@ -175,21 +175,18 @@ const styles = StyleSheet.create({
   },
   headerContainer: {
     paddingHorizontal: 0,
-    borderBottomColor: 'transparent',
-    backgroundColor: 'transparent',
   },
   rowContent: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: 'transparent',
     gap: 10,
   },
   listContent: {
     flex: 1,
   },
-  avatar: { borderColor: 'white', borderWidth: 1 },
+  avatar: { borderWidth: 1 },
   amount: { fontWeight: 'bold' },
   tranContainer: { paddingLeft: 20 },
   tranText: { fontWeight: 'normal', fontSize: 13 },

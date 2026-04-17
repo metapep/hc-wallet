@@ -229,7 +229,7 @@ const NotificationSettings: React.FC = () => {
                 onChangeText={setURI}
                 numberOfLines={1}
                 style={[styles.uriText, { color: colors.alternativeTextColor }]}
-                placeholderTextColor="#81868e"
+                placeholderTextColor={colors.placeholderTextColor}
                 editable={!isLoading}
                 textContentType="URL"
                 autoCapitalize="none"

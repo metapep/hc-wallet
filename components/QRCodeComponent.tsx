@@ -88,7 +88,10 @@ const QRCodeComponent: React.FC<QRCodeComponentProps> = ({
   // Adjust the size of the QR code to account for the border width
   const newSize = dark ? size - BORDER_WIDTH * 2 : size;
   const stylesHook = StyleSheet.create({
-    container: { borderWidth: dark ? BORDER_WIDTH : 0 },
+    container: {
+      borderWidth: dark ? BORDER_WIDTH : 0,
+      borderColor: colors.backgroundSurface,
+    },
   });
 
   const qrButtonStyle: ViewStyle = {
@@ -104,9 +107,9 @@ const QRCodeComponent: React.FC<QRCodeComponentProps> = ({
       {...(isLogoRendered ? { logo: QR_CENTER_LOGO } : {})}
       size={newSize}
       logoSize={logoSize}
-      color="#000000"
-      logoBackgroundColor={colors.brandingColor}
-      backgroundColor="#FFFFFF"
+      color={colors.textPrimary}
+      logoBackgroundColor={colors.backgroundSurface}
+      backgroundColor={colors.backgroundSurface}
       ecl={ecl}
       getRef={(c: any) => (qrCode.current = c)}
       onError={onError}
@@ -143,5 +146,5 @@ const QRCodeComponent: React.FC<QRCodeComponentProps> = ({
 export default QRCodeComponent;
 
 const styles = StyleSheet.create({
-  container: { borderColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center' },
+  container: { alignItems: 'center', justifyContent: 'center' },
 });

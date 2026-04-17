@@ -37,7 +37,7 @@ struct CompactPriceView: View {
     }
 
     private var textColor: Color {
-        colorScheme == .dark ? .white : .black
+        Color("TextColor")
     }
 
     private var shadowColor: Color {

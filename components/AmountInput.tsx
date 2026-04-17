@@ -327,7 +327,7 @@ export const AmountInput: React.FC<AmountInputProps> = props => {
             )}
           </View>
           <View style={styles.secondaryRoot}>
-            <Text style={styles.secondaryText} selectable>
+            <Text style={[styles.secondaryText, { color: colors.buttonDisabledTextColor }]} selectable>
               {secondaryDisplayCurrency}
             </Text>
           </View>
@@ -346,7 +346,7 @@ export const AmountInput: React.FC<AmountInputProps> = props => {
       </View>
       {outdatedRefreshRate && (
         <View style={styles.outdatedRateContainer}>
-          <Badge badgeStyle={styles.warningBadge} />
+          <Badge badgeStyle={[styles.warningBadge, { backgroundColor: colors.accentErrorText }]} />
           <View style={styles.spacing8} />
           <BlueText>{loc.formatString(loc.send.outdated_rate, { date: dayjs(outdatedRefreshRate.LastUpdated).format('l LT') })}</BlueText>
           <View style={styles.spacing8} />
@@ -383,7 +383,6 @@ const styles = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: '#fc990e',
   },
   disabledButton: {
     opacity: 0.5,
@@ -427,7 +426,6 @@ const styles = StyleSheet.create({
   },
   secondaryText: {
     fontSize: 16,
-    color: '#9BA0A9',
     fontWeight: '600',
   },
   maxEstimate: {

@@ -112,6 +112,12 @@ const Confirm: React.FC = () => {
     payjoinWrapper: {
       backgroundColor: colors.buttonDisabledBackgroundColor,
     },
+    payjoinText: {
+      color: colors.placeholderTextColor,
+    },
+    cardText: {
+      color: colors.accentSuccessText,
+    },
     addressSection: {
       color: colors.alternativeTextColor2,
     },
@@ -326,7 +332,7 @@ const Confirm: React.FC = () => {
           <View style={styles.cardContainer}>
             <BlueCard>
               <View style={[styles.payjoinWrapper, stylesHook.payjoinWrapper]}>
-                <Text style={styles.payjoinText}>Payjoin</Text>
+                <Text style={[styles.payjoinText, stylesHook.payjoinText]}>Payjoin</Text>
                 <Switch
                   testID="PayjoinSwitch"
                   value={state.isPayjoinEnabled}
@@ -339,7 +345,7 @@ const Confirm: React.FC = () => {
       </View>
       <View style={styles.cardBottom}>
         <BlueCard>
-          <Text style={styles.cardText} testID="TransactionFee">
+          <Text style={[styles.cardText, stylesHook.cardText]} testID="TransactionFee">
             {loc.send.create_fee}: {formatBalance(feeSatoshi, BitcoinUnit.BTC)} ({satoshiToLocalCurrency(feeSatoshi)})
           </Text>
           {state.isLoading ? (
@@ -421,7 +427,6 @@ const styles = StyleSheet.create({
   },
   cardText: {
     flexDirection: 'row',
-    color: '#37c0a1',
     fontSize: 14,
     marginVertical: 8,
     marginHorizontal: 24,
@@ -449,7 +454,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   payjoinText: {
-    color: '#81868e',
     fontSize: 15,
     fontWeight: 'bold',
   },

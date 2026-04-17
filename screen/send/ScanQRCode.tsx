@@ -27,7 +27,6 @@ type RouteProps = RouteProp<SendDetailsStackParamList, 'ScanQRCode'>;
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#000000',
   },
   openSettingsContainer: {
     justifyContent: 'center',
@@ -38,13 +37,12 @@ const styles = StyleSheet.create({
   backdoorButton: {
     width: 60,
     height: 60,
-    backgroundColor: 'rgba(0,0,0,0.01)',
     position: 'absolute',
     top: 60,
     left: '50%',
     transform: [{ translateX: -30 }],
   },
-  backdoorInputWrapper: { position: 'absolute', left: '5%', top: '10%', width: '90%', height: '70%', backgroundColor: 'white' },
+  backdoorInputWrapper: { position: 'absolute', left: '5%', top: '10%', width: '90%', height: '70%' },
   progressWrapper: { position: 'absolute', alignSelf: 'center', alignItems: 'center', top: '50%', padding: 8, borderRadius: 8 },
   backdoorInput: {
     height: '50%',
@@ -77,8 +75,17 @@ const ScanQRCode = () => {
   const [animatedQRCodeData, setAnimatedQRCodeData] = useState<Record<string, string>>({});
   const [cameraStatusGranted, setCameraStatusGranted] = useState<boolean | undefined>(undefined);
   const stylesHook = StyleSheet.create({
+    root: {
+      backgroundColor: colors.backgroundPrimary,
+    },
     openSettingsContainer: {
       backgroundColor: colors.brandingColor,
+    },
+    backdoorButton: {
+      backgroundColor: colors.backgroundPrimary,
+    },
+    backdoorInputWrapper: {
+      backgroundColor: colors.backgroundSurface,
     },
     progressWrapper: { backgroundColor: colors.brandingColor, borderColor: colors.foregroundColor, borderWidth: 4 },
     backdoorInput: {
@@ -298,7 +305,7 @@ const ScanQRCode = () => {
         </View>
       )}
       {backdoorVisible && (
-        <View style={styles.backdoorInputWrapper}>
+        <View style={[styles.backdoorInputWrapper, stylesHook.backdoorInputWrapper]}>
           <BlueText>Provide QR code contents manually:</BlueText>
           <TextInput
             testID="scanQrBackdoorInput"
@@ -320,13 +327,13 @@ const ScanQRCode = () => {
         accessibilityRole="button"
         accessibilityLabel={loc._.qr_custom_input_button}
         testID="ScanQrBackdoorButton"
-        style={styles.backdoorButton}
+        style={[styles.backdoorButton, stylesHook.backdoorButton]}
         onPress={handleInvisibleBackdoorPress}
       />
     </View>
   );
 
-  return <SafeArea style={styles.root}>{render}</SafeArea>;
+  return <SafeArea style={[styles.root, stylesHook.root]}>{render}</SafeArea>;
 };
 
 export default ScanQRCode;

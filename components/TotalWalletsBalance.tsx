@@ -95,7 +95,7 @@ const TotalWalletsBalance: React.FC = React.memo(() => {
   return (
     <ToolTipMenu actions={toolTipActions} onPressMenuItem={onPressMenuItem} shouldOpenOnLongPress>
       <View style={styles.container}>
-        <Text style={styles.label}>{loc.wallets.total_balance}</Text>
+        <Text style={[styles.label, { color: colors.textSecondary }]}>{loc.wallets.total_balance}</Text>
         <TouchableOpacity onPress={handleBalanceOnPress}>
           <Text style={[styles.balance, { color: colors.foregroundColor }]}>
             {totalBalanceFormatted}{' '}
@@ -118,7 +118,6 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     marginBottom: 4,
-    color: '#9BA0A9',
   },
   balance: {
     fontSize: 32,

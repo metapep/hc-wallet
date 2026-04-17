@@ -26,7 +26,7 @@ export const AddressInputScanButton = ({
   testID = 'BlueAddressInputScanQrButton',
   beforePress,
 }: AddressInputScanButtonProps) => {
-  const { colors } = useTheme();
+  const { colors, scanImage } = useTheme();
   const { isClipboardGetContentEnabled } = useSettings();
 
   const stylesHook = StyleSheet.create({
@@ -144,7 +144,7 @@ export const AddressInputScanButton = ({
     >
       {type === 'default' ? (
         <View style={styles.scanContent}>
-          <Image source={require('../img/scan-white.png')} accessible={false} />
+          <Image source={scanImage} accessible={false} />
           <Text numberOfLines={1} style={[styles.scanText, stylesHook.scanText]} accessible={false}>
             {loc.send.details_scan}
           </Text>

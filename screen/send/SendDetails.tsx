@@ -1278,6 +1278,9 @@ const SendDetails = () => {
     selectLabel: {
       color: colors.buttonTextColor,
     },
+    selectText: {
+      color: colors.buttonDisabledTextColor,
+    },
     of: {
       color: colors.feeText,
     },
@@ -1285,6 +1288,9 @@ const SendDetails = () => {
       borderColor: colors.formBorder,
       borderBottomColor: colors.formBorder,
       backgroundColor: colors.inputBackgroundColor,
+    },
+    memoText: {
+      color: colors.placeholderTextColor,
     },
     feeLabel: {
       color: colors.feeText,
@@ -1351,8 +1357,8 @@ const SendDetails = () => {
               navigation.navigate('SelectWallet', { chainType: Chain.ONCHAIN, selectedWalletID: wallet?.getID() });
             }}
           >
-            <Text style={styles.selectText}>{loc.wallets.select_wallet.toLowerCase()}</Text>
-            <Icon name={direction === 'rtl' ? 'angle-left' : 'angle-right'} size={18} type="font-awesome" color="#9aa0aa" />
+            <Text style={[styles.selectText, stylesHook.selectText]}>{loc.wallets.select_wallet.toLowerCase()}</Text>
+            <Icon name={direction === 'rtl' ? 'angle-left' : 'angle-right'} size={18} type="font-awesome" color={colors.buttonDisabledTextColor} />
           </Pressable>
         )}
         <View style={styles.selectWrap}>
@@ -1529,10 +1535,10 @@ const SendDetails = () => {
           <TextInput
             onChangeText={setTransactionMemo}
             placeholder={loc.send.details_note_placeholder}
-            placeholderTextColor="#81868e"
+            placeholderTextColor={colors.placeholderTextColor}
             value={transactionMemo}
             numberOfLines={1}
-            style={styles.memoText}
+            style={[styles.memoText, stylesHook.memoText]}
             editable={!isLoading}
             onSubmitEditing={Keyboard.dismiss}
             inputAccessoryViewID={DismissKeyboardInputAccessoryViewID}
@@ -1615,7 +1621,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   selectText: {
-    color: '#9aa0aa',
     fontSize: 14,
     marginRight: 8,
   },
@@ -1650,7 +1655,6 @@ const styles = StyleSheet.create({
     flex: 1,
     marginHorizontal: 8,
     minHeight: 33,
-    color: '#81868e',
   },
   fee: {
     flexDirection: 'row',

@@ -125,6 +125,7 @@ const ImportCustomDerivationPath: React.FC = () => {
       borderColor: colors.formBorder,
       borderBottomColor: colors.formBorder,
       backgroundColor: colors.inputBackgroundColor,
+      color: colors.placeholderTextColor,
     },
   });
 
@@ -173,7 +174,7 @@ const ImportCustomDerivationPath: React.FC = () => {
         autoCapitalize="none"
         placeholder={loc.send.details_note_placeholder}
         value={path}
-        placeholderTextColor="#81868e"
+        placeholderTextColor={colors.placeholderTextColor}
         style={[styles.pathInput, stylesHook.pathInput]}
         onChangeText={setPath}
       />
@@ -220,7 +221,6 @@ const styles = StyleSheet.create({
     marginVertical: 8,
     borderRadius: 4,
     paddingHorizontal: 8,
-    color: '#81868e',
   },
 });
 

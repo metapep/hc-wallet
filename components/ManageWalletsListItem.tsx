@@ -326,18 +326,18 @@ const WalletGroupComponent: React.FC<WalletGroupProps> = ({
     borderRadius: 10,
     overflow: 'hidden' as const,
     backgroundColor: colors.elevated,
-    shadowColor: '#000',
+    shadowColor: colors.textPrimary,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
     borderWidth: 1,
-    borderColor: primaryColor + '30',
+    borderColor: colors.borderDefault,
   };
 
   const headerStyle: ViewStyle = {
     padding: 12,
-    backgroundColor: primaryColor + '15', // Using translucent primary color as background
+    backgroundColor: colors.backgroundSurfaceSecondary,
     borderTopLeftRadius: 10,
     borderTopRightRadius: 10,
     borderTopWidth: Platform.OS === 'ios' ? 4 : 2,
@@ -352,7 +352,7 @@ const WalletGroupComponent: React.FC<WalletGroupProps> = ({
     borderLeftWidth: 1,
     borderRightWidth: 1,
     borderBottomWidth: 1,
-    borderColor: primaryColor + '20',
+    borderColor: colors.borderSubtle,
   };
 
   const childItemStyle = (): ViewStyle => ({
@@ -364,10 +364,10 @@ const WalletGroupComponent: React.FC<WalletGroupProps> = ({
   const sectionHeaderStyle: ViewStyle = {
     paddingHorizontal: 16,
     paddingVertical: 8,
-    backgroundColor: primaryColor + '10',
+    backgroundColor: colors.backgroundSurfaceSecondary,
     borderTopWidth: 1,
     borderBottomWidth: 1,
-    borderColor: primaryColor + '30',
+    borderColor: colors.borderSubtle,
   };
 
   const sectionHeaderTextStyle: TextStyle = {
@@ -376,7 +376,7 @@ const WalletGroupComponent: React.FC<WalletGroupProps> = ({
     fontSize: 14,
   };
 
-  const dividerStyle = [styles.itemDivider, { backgroundColor: primaryColor + '20' }];
+  const dividerStyle = [styles.itemDivider, { backgroundColor: colors.borderSubtle }];
 
   const onWalletPress = useCallback(() => {
     navigateToWallet(wallet);

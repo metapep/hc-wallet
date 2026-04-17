@@ -1,6 +1,7 @@
 import React, { useCallback, useMemo, useEffect, useState } from 'react';
 import { Text, Animated, StyleSheet, Platform, TextStyle } from 'react-native';
 import useBounceAnimation from '../hooks/useBounceAnimation';
+import { useTheme } from './themes';
 
 interface HighlightedTextProps {
   text: string;
@@ -28,6 +29,7 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
   caseSensitive = false,
   highlightOnlyFirstMatch = false,
 }) => {
+  const { colors } = useTheme();
   const internalBounceAnim = useBounceAnimation(query);
   const bounceAnim = externalBounceAnim || internalBounceAnim;
   const [queryKey, setQueryKey] = useState<string>('');
@@ -50,6 +52,10 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
     () => ({
       ...styles.highlight,
       ...(highlightStyle || {}),
+      backgroundColor: colors.accentInfoBackground,
+      color: colors.textPrimary,
+      borderColor: colors.borderDefault,
+      shadowColor: colors.textPrimary,
       fontSize: baseTextStyle.fontSize,
       fontFamily: baseTextStyle.fontFamily,
       fontWeight: baseTextStyle.fontWeight || '600',
@@ -57,7 +63,7 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
       letterSpacing: baseTextStyle.letterSpacing,
       transform: Platform.OS === 'ios' ? [{ scale: bounceAnim }] : undefined,
     }),
-    [bounceAnim, highlightStyle, baseTextStyle],
+    [bounceAnim, colors.accentInfoBackground, colors.borderDefault, colors.textPrimary, highlightStyle, baseTextStyle],
   );
 
   // Create a style for non-highlighted text parts that ensures it looks the same as original text
@@ -182,10 +188,6 @@ const styles = StyleSheet.create({
     marginHorizontal: 1,
     overflow: 'hidden',
     textDecorationLine: Platform.OS === 'android' ? 'underline' : 'none',
-    backgroundColor: '#FFF5C0',
-    color: '#000000',
-    borderColor: 'rgba(255, 255, 255, 0.5)',
-    shadowColor: '#000000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.2,
     shadowRadius: 1,

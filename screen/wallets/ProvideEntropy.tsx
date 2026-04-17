@@ -21,7 +21,7 @@ import { randomBytes } from '../../class/rng';
 import { FButton, FContainer } from '../../components/FloatButtons';
 import SafeArea from '../../components/SafeArea';
 import { Tabs } from '../../components/Tabs';
-import { BlueCurrentTheme, useTheme } from '../../components/themes';
+import { useTheme } from '../../components/themes';
 import loc from '../../loc';
 import { AddWalletStackParamList } from '../../navigation/AddWalletStack';
 
@@ -151,16 +151,25 @@ export const convertToBuffer = ({ entropy, bits }: { entropy: BN; bits: number }
   return new Uint8Array(arr2);
 };
 
-const Coin = ({ push }: { push: TPush }) => (
-  <View style={styles.coinRoot}>
-    <TouchableOpacity accessibilityRole="button" onPress={() => push(getEntropy(0, 2))} style={styles.coinBody}>
-      <Image style={styles.coinImage} source={require('../../img/coin1.png')} />
-    </TouchableOpacity>
-    <TouchableOpacity accessibilityRole="button" onPress={() => push(getEntropy(1, 2))} style={styles.coinBody}>
-      <Image style={styles.coinImage} source={require('../../img/coin2.png')} />
-    </TouchableOpacity>
-  </View>
-);
+const Coin = ({ push }: { push: TPush }) => {
+  const { colors } = useTheme();
+  const stylesHook = StyleSheet.create({
+    coinBody: {
+      borderColor: colors.borderDefault,
+    },
+  });
+
+  return (
+    <View style={styles.coinRoot}>
+      <TouchableOpacity accessibilityRole="button" onPress={() => push(getEntropy(0, 2))} style={[styles.coinBody, stylesHook.coinBody]}>
+        <Image style={styles.coinImage} source={require('../../img/coin1.png')} />
+      </TouchableOpacity>
+      <TouchableOpacity accessibilityRole="button" onPress={() => push(getEntropy(1, 2))} style={[styles.coinBody, stylesHook.coinBody]}>
+        <Image style={styles.coinImage} source={require('../../img/coin2.png')} />
+      </TouchableOpacity>
+    </View>
+  );
+};
 
 const diceIcon = (i: number): FontAwesome6IconName => {
   switch (i) {
@@ -185,13 +194,13 @@ const Dice = ({ push, sides }: { push: TPush; sides: number }) => {
   const diceWidth = width / 4;
   const stylesHook = StyleSheet.create({
     dice: {
-      borderColor: colors.buttonBackgroundColor,
+      borderColor: colors.borderDefault,
     },
     diceText: {
       color: colors.foregroundColor,
     },
     diceContainer: {
-      backgroundColor: colors.background,
+      backgroundColor: colors.backgroundPrimary,
     },
   });
 
@@ -201,7 +210,7 @@ const Dice = ({ push, sides }: { push: TPush; sides: number }) => {
         <TouchableOpacity accessibilityRole="button" key={i} onPress={() => push(getEntropy(i, sides))}>
           <View style={[styles.diceRoot, { width: diceWidth }]}>
             {sides === 6 ? (
-              <Icon style={styles.diceIcon} name={diceIcon(i + 1)} size={70} color="grey" type="font-awesome-6" />
+              <Icon style={styles.diceIcon} name={diceIcon(i + 1)} size={70} color={colors.textSecondary} type="font-awesome-6" />
             ) : (
               <View style={[styles.dice, stylesHook.dice]}>
                 <Text style={stylesHook.diceText}>{i + 1}</Text>
@@ -392,7 +401,6 @@ const styles = StyleSheet.create({
     aspectRatio: 1,
     borderWidth: 1,
     borderRadius: 5,
-    borderColor: BlueCurrentTheme.colors.lightButton,
     margin: 10,
     padding: 10,
     maxWidth: 100,
@@ -423,17 +431,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     aspectRatio: 1,
-    borderColor: BlueCurrentTheme.colors.buttonBackgroundColor,
   },
   diceIcon: {
     margin: 3,
     justifyContent: 'center',
     alignItems: 'center',
     aspectRatio: 1,
-    color: 'grey',
   },
   buttonsIcon: {
-    backgroundColor: 'transparent',
     transform: [{ rotate: '-45deg' }],
     alignItems: 'center',
   },

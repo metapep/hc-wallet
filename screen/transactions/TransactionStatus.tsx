@@ -129,6 +129,18 @@ const TransactionStatus: React.FC<TransactionStatusProps> = ({ transaction, txid
     iconRoot: {
       backgroundColor: colors.success,
     },
+    memoText: {
+      color: colors.buttonDisabledTextColor,
+    },
+    feeText: {
+      color: colors.accentSuccessText,
+    },
+    confirmationsText: {
+      color: colors.buttonDisabledTextColor,
+    },
+    cancelText: {
+      color: colors.accentErrorText,
+    },
   });
 
   const setTX = (value: any) => {
@@ -465,7 +477,7 @@ const TransactionStatus: React.FC<TransactionStatusProps> = ({ transaction, txid
       return (
         <>
           <TouchableOpacity accessibilityRole="button" style={styles.cancel}>
-            <Text onPress={navigateToRBFCancel} style={styles.cancelText}>
+            <Text onPress={navigateToRBFCancel} style={[styles.cancelText, stylesHook.cancelText]}>
               {loc.transactions.status_cancel}
             </Text>
           </TouchableOpacity>
@@ -503,7 +515,7 @@ const TransactionStatus: React.FC<TransactionStatusProps> = ({ transaction, txid
       if (txMetadata[tx.hash].memo) {
         return (
           <View style={styles.memo}>
-            <Text selectable style={styles.memoText}>
+            <Text selectable style={[styles.memoText, stylesHook.memoText]}>
               {txMetadata[tx.hash].memo}
             </Text>
           </View>
@@ -521,7 +533,7 @@ const TransactionStatus: React.FC<TransactionStatusProps> = ({ transaction, txid
 
     return (
       <View style={styles.memo}>
-        <Text selectable style={styles.memoText}>
+        <Text selectable style={[styles.memoText, stylesHook.memoText]}>
           {tx.value < 0
             ? loc.formatString(loc.transactions.to, {
                 counterparty,
@@ -641,7 +653,7 @@ const TransactionStatus: React.FC<TransactionStatusProps> = ({ transaction, txid
 
               {tx.fee && (
                 <View style={styles.fee}>
-                  <BlueText style={styles.feeText}>
+                  <BlueText style={[styles.feeText, stylesHook.feeText]}>
                     {`${loc.send.create_fee.toLowerCase()} `}
                     {formatBalanceWithoutSuffix(tx.fee, preferredBalanceUnit, true)}
                     {preferredBalanceUnit !== BitcoinUnit.LOCAL_CURRENCY ? ` ${preferredBalanceUnitLabel}` : ''}
@@ -650,7 +662,7 @@ const TransactionStatus: React.FC<TransactionStatusProps> = ({ transaction, txid
               )}
 
               <View style={styles.confirmations}>
-                <Text style={styles.confirmationsText}>
+                <Text style={[styles.confirmationsText, stylesHook.confirmationsText]}>
                   {loc.formatString(loc.transactions.confirmations_lowercase, {
                     confirmations: tx.confirmations > 6 ? '6+' : tx.confirmations,
                   })}
@@ -659,7 +671,7 @@ const TransactionStatus: React.FC<TransactionStatusProps> = ({ transaction, txid
               {eta ? (
                 <View style={styles.eta}>
                   <BlueSpacing10 />
-                  <Text style={styles.confirmationsText}>{eta}</Text>
+                  <Text style={[styles.confirmationsText, stylesHook.confirmationsText]}>{eta}</Text>
                 </View>
               ) : null}
             </BlueCard>
@@ -698,7 +710,6 @@ const styles = StyleSheet.create({
     marginVertical: 8,
   },
   memoText: {
-    color: '#9aa0aa',
     fontSize: 14,
   },
   iconRoot: {
@@ -733,7 +744,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '500',
     marginBottom: 4,
-    color: '#00c49f',
     alignSelf: 'center',
   },
   confirmations: {
@@ -742,7 +752,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   confirmationsText: {
-    color: '#9aa0aa',
     fontSize: 13,
   },
   eta: {
@@ -758,7 +767,6 @@ const styles = StyleSheet.create({
     marginVertical: 16,
   },
   cancelText: {
-    color: '#d0021b',
     fontSize: 15,
     fontWeight: '500',
     textAlign: 'center',

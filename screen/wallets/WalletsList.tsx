@@ -51,7 +51,11 @@ const WalletsList: React.FC = () => {
 
   const stylesHook = StyleSheet.create({
     walletsListWrapper: {
-      backgroundColor: colors.brandingColor,
+      backgroundColor: colors.backgroundPrimary,
+    },
+    walletsHeaderSpacer: {
+      height: 20,
+      backgroundColor: colors.backgroundPrimary,
     },
   });
 
@@ -180,16 +184,17 @@ const WalletsList: React.FC = () => {
     (section: { section: SectionData }) => {
       switch (section.section.key) {
         case WalletsListSections.WALLETS:
-          return isTotalBalanceEnabled ? (
+          return (
             <View style={stylesHook.walletsListWrapper}>
-              <TotalWalletsBalance />
+              {isTotalBalanceEnabled ? <TotalWalletsBalance /> : null}
+              <View style={stylesHook.walletsHeaderSpacer} />
             </View>
-          ) : null;
+          );
         default:
           return null;
       }
     },
-    [isTotalBalanceEnabled, stylesHook.walletsListWrapper],
+    [isTotalBalanceEnabled, stylesHook.walletsHeaderSpacer, stylesHook.walletsListWrapper],
   );
 
   const renderScanButton = useCallback(() => {

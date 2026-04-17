@@ -70,7 +70,7 @@ export const platformLayout = {
   cardShadow: isAndroid
     ? {}
     : {
-        shadowColor: '#000',
+        shadowColor: platformColors.text,
         shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.1,
         shadowRadius: 2,
@@ -81,14 +81,12 @@ export const getSettingsCardColor = (
   colors: { lightButton?: string; modal?: string; elevated?: string; background?: string },
   dark?: boolean,
 ): string =>
-  dark
-    ? (colors.modal ?? colors.elevated ?? colors.background ?? '#000000')
-    : (colors.lightButton ?? colors.modal ?? colors.elevated ?? colors.background ?? '#ffffff');
+  dark ? (colors.modal ?? colors.elevated ?? colors.background ?? platformColors.background) : (colors.lightButton ?? colors.modal ?? colors.elevated ?? colors.background ?? platformColors.background);
 
 export const getSettingsRowBackgroundColor = (
   colors: { lightButton?: string; modal?: string; elevated?: string; background?: string },
   dark?: boolean,
-): string => (isIOS && !dark ? (colors.background ?? '#ffffff') : getSettingsCardColor(colors, dark));
+): string => (isIOS && !dark ? (colors.background ?? platformColors.background) : getSettingsCardColor(colors, dark));
 
 export const getSettingsHeaderOptions = (
   title: string,
@@ -271,7 +269,7 @@ const resolveSettingsIconComponent = (type?: string): React.ComponentType<any> =
 
 const renderVectorIcon = (icon: IconProps) => {
   const IconComponent = resolveSettingsIconComponent(icon.type);
-  return <IconComponent name={icon.name} size={platformSizing.iconInnerSize} color={icon.color ?? 'black'} />;
+  return <IconComponent name={icon.name} size={platformSizing.iconInnerSize} color={icon.color ?? platformColors.text} />;
 };
 
 export interface SettingsListItemProps {
@@ -351,15 +349,27 @@ const usePlatformStyles = () => {
   }, [colors, dark]);
 };
 
-const getIconConfig = (name: SettingsIconName, dark: boolean): IconProps => {
-  const neutral = dark ? '#F3F4F6' : '#5F6672';
-  const primary = dark ? '#FF8B8B' : '#C60001';
-  const secondary = '#47E86A';
-  const accent = dark ? '#2A93A2' : '#055B69';
-  const neutralBg = 'rgba(95, 102, 114, 0.12)';
-  const accentBg = dark ? 'rgba(42, 147, 162, 0.2)' : 'rgba(5, 91, 105, 0.12)';
-  const primaryBg = dark ? 'rgba(198, 0, 1, 0.2)' : 'rgba(198, 0, 1, 0.12)';
-  const secondaryBg = 'rgba(71, 232, 106, 0.12)';
+const getIconConfig = (
+  name: SettingsIconName,
+  themeColors: {
+    textSecondary?: string;
+    accentErrorText?: string;
+    accentSuccessText?: string;
+    accentInfoText?: string;
+    backgroundSurfaceSecondary?: string;
+    accentInfoBackground?: string;
+    accentErrorBackground?: string;
+    accentSuccessBackground?: string;
+  },
+): IconProps => {
+  const neutral = themeColors.textSecondary ?? platformColors.secondaryText;
+  const primary = themeColors.accentErrorText ?? neutral;
+  const secondary = themeColors.accentSuccessText ?? neutral;
+  const accent = themeColors.accentInfoText ?? neutral;
+  const neutralBg = themeColors.backgroundSurfaceSecondary;
+  const accentBg = themeColors.accentInfoBackground ?? neutralBg;
+  const primaryBg = themeColors.accentErrorBackground ?? neutralBg;
+  const secondaryBg = themeColors.accentSuccessBackground ?? neutralBg;
 
   const configs: Record<SettingsIconName, { ios: IconProps; android: IconProps }> = {
     settings: {
@@ -514,7 +524,7 @@ export const SettingsListItem: React.FC<SettingsListItemProps> = ({
     : (themeColors.lightButton ?? themeColors.modal ?? themeColors.elevated ?? themeColors.background);
   const defaultItemBackgroundColor = isIOS && !dark ? themeColors.background : cardColor;
   const resolvedItemBackgroundColor = itemBackgroundColor ?? defaultItemBackgroundColor;
-  const resolvedIcon = leftIcon ?? (iconName ? getIconConfig(iconName, dark) : undefined);
+  const resolvedIcon = leftIcon ?? (iconName ? getIconConfig(iconName, themeColors) : undefined);
   const isSingle = position === 'single';
   const isFirst = position === 'first' || isSingle;
   const isLast = position === 'last' || isSingle;
@@ -547,8 +557,7 @@ export const SettingsListItem: React.FC<SettingsListItemProps> = ({
           paddingHorizontal: platformSizing.horizontalPadding,
           minHeight,
           borderBottomWidth: platformLayout.showBorderBottom && !isLast ? StyleSheet.hairlineWidth : 0,
-          borderBottomColor:
-            platformLayout.showBorderBottom && !isLast ? (themeColors.lightBorder ?? themeColors.borderTopColor) : 'transparent',
+          borderBottomColor: platformLayout.showBorderBottom && !isLast ? (themeColors.lightBorder ?? themeColors.borderTopColor) : themeColors.background,
           elevation: platformLayout.showElevation ? platformSizing.containerElevation : 0,
           marginVertical: isAndroid ? 0 : platformSizing.containerMarginVertical,
         },
@@ -603,7 +612,7 @@ export const SettingsListItem: React.FC<SettingsListItemProps> = ({
     {
       backgroundColor: dynamicStyles.container.backgroundColor,
       borderBottomWidth: 0,
-      borderBottomColor: 'transparent',
+      borderBottomColor: themeColors.background,
       borderRadius: 0,
       elevation: 0,
       marginVertical: 0,
@@ -714,8 +723,8 @@ export const SettingsListItem: React.FC<SettingsListItemProps> = ({
 
   if (isAndroid && platformLayout.rippleEffect && onPress) {
     return (
-      <TouchableNativeFeedback
-        background={TouchableNativeFeedback.Ripple(themeColors.androidRippleColor ?? '#2A2E36', false)}
+        <TouchableNativeFeedback
+        background={TouchableNativeFeedback.Ripple(themeColors.androidRippleColor, false)}
         useForeground
         onPress={onPress}
         disabled={disabled}

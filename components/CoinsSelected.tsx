@@ -3,12 +3,12 @@ import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Avatar from './Avatar';
 
 import loc from '../loc';
+import { useTheme } from './themes';
 
 const styles = StyleSheet.create({
   root: {
     height: 48,
     borderRadius: 8,
-    backgroundColor: '#3477F6',
     flexDirection: 'row',
   },
   labelContainer: {
@@ -17,7 +17,6 @@ const styles = StyleSheet.create({
     paddingLeft: 16,
   },
   labelText: {
-    color: 'white',
     fontWeight: 'bold',
   },
   buttonContainer: {
@@ -29,7 +28,6 @@ const styles = StyleSheet.create({
     width: 26,
     height: 26,
     borderRadius: 13,
-    backgroundColor: 'rgba(255, 255, 255, 0.32)',
   },
 });
 
@@ -39,15 +37,24 @@ interface CoinsSelectedProps {
   onClose: () => void;
 }
 
-const CoinsSelected: React.FC<CoinsSelectedProps> = ({ number, onContainerPress, onClose }) => (
-  <TouchableOpacity accessibilityRole="button" style={styles.root} onPress={onContainerPress}>
-    <View style={styles.labelContainer}>
-      <Text style={styles.labelText}>{loc.formatString(loc.cc.coins_selected, { number })}</Text>
-    </View>
-    <TouchableOpacity accessibilityRole="button" style={styles.buttonContainer} onPress={onClose}>
-      <Avatar rounded size={26} containerStyle={[styles.ball]} icon={{ name: 'close', size: 22, type: 'ionicons', color: 'white' }} />
+const CoinsSelected: React.FC<CoinsSelectedProps> = ({ number, onContainerPress, onClose }) => {
+  const { colors } = useTheme();
+
+  return (
+    <TouchableOpacity accessibilityRole="button" style={[styles.root, { backgroundColor: colors.accentPrimary }]} onPress={onContainerPress}>
+      <View style={styles.labelContainer}>
+        <Text style={[styles.labelText, { color: colors.backgroundSurface }]}>{loc.formatString(loc.cc.coins_selected, { number })}</Text>
+      </View>
+      <TouchableOpacity accessibilityRole="button" style={styles.buttonContainer} onPress={onClose}>
+        <Avatar
+          rounded
+          size={26}
+          containerStyle={[styles.ball, { backgroundColor: colors.backgroundSurfaceSecondary }]}
+          icon={{ name: 'close', size: 22, type: 'ionicons', color: colors.foregroundColor }}
+        />
+      </TouchableOpacity>
     </TouchableOpacity>
-  </TouchableOpacity>
-);
+  );
+};
 
 export default CoinsSelected;

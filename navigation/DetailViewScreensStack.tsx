@@ -50,7 +50,7 @@ import ReleaseNotes from '../screen/settings/ReleaseNotes';
 import SettingsTools from '../screen/settings/SettingsTools';
 import PromptPasswordConfirmationSheet from '../screen/PromptPasswordConfirmationSheet';
 import { useSizeClass, SizeClass } from '../blue_modules/sizeClass';
-import getWalletTransactionsOptions from './helpers/getWalletTransactionsOptions';
+import getWalletTransactionsOptions, { WalletTransactionsRouteProps } from './helpers/getWalletTransactionsOptions';
 import { isDesktop } from '../blue_modules/environment';
 import { LIGHTNING_ENABLED } from '../blue_modules/hashcash';
 import ManageWallets from '../screen/wallets/ManageWallets';
@@ -136,7 +136,11 @@ const DetailViewStackScreensStack = () => {
       screenOptions={{ headerShadowVisible: false, animationTypeForReplace: 'push' }}
     >
       <DetailViewStack.Screen name="WalletsList" component={WalletsList} options={navigationStyle(walletListScreenOptions)(theme)} />
-      <DetailViewStack.Screen name="WalletTransactions" component={WalletTransactions} options={getWalletTransactionsOptions} />
+      <DetailViewStack.Screen
+        name="WalletTransactions"
+        component={WalletTransactions}
+        options={({ route }) => getWalletTransactionsOptions({ route: route as WalletTransactionsRouteProps, theme })}
+      />
       <DetailViewStack.Screen
         name="WalletDetails"
         component={WalletDetails}

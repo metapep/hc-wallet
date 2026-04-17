@@ -116,12 +116,12 @@ const OutputList: React.FC<TOutputListProps> = ({
   }
 
   const oStyles = StyleSheet.create({
-    container: { borderBottomColor: colors.lightBorder, backgroundColor: 'transparent' },
-    avatar: { borderColor: 'white', borderWidth: 1, backgroundColor: color },
-    avatarSelected: { borderColor: 'white', borderWidth: 1, backgroundColor: colors.successColor },
+    container: { borderBottomColor: colors.lightBorder, backgroundColor: colors.background },
+    avatar: { borderColor: colors.backgroundSurface, borderWidth: 1, backgroundColor: color },
+    avatarSelected: { borderColor: colors.backgroundSurface, borderWidth: 1, backgroundColor: colors.successColor },
     amount: { fontWeight: 'bold', color: colors.foregroundColor },
     memo: { fontSize: 13, marginTop: 3, color: colors.alternativeTextColor },
-    containerSelected: { backgroundColor: colors.ballOutgoingExpired, borderBottomColor: 'rgba(0, 0, 0, 0)' },
+    containerSelected: { backgroundColor: colors.ballOutgoingExpired, borderBottomColor: colors.background },
   });
 
   return (
@@ -131,7 +131,7 @@ const OutputList: React.FC<TOutputListProps> = ({
         size={40}
         containerStyle={selected ? oStyles.avatarSelected : oStyles.avatar}
         onPress={selected ? onDeSelect : onSelect}
-        icon={selected ? { name: 'check', type: 'font-awesome-6', color: 'white', size: 18 } : undefined}
+        icon={selected ? { name: 'check', type: 'font-awesome-6', color: colors.backgroundSurface, size: 18 } : undefined}
       />
       <View style={styles.itemContent}>
         <Text style={oStyles.amount}>{amount}</Text>

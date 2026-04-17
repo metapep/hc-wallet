@@ -138,7 +138,7 @@ const SignVerify = () => {
         textAlignVertical="top"
         blurOnSubmit
         placeholder={loc.addresses.sign_placeholder_address}
-        placeholderTextColor="#81868e"
+        placeholderTextColor={colors.placeholderTextColor}
         value={address}
         onChangeText={t => setAddress(t.replace('\n', ''))}
         testID="Signature"
@@ -155,7 +155,7 @@ const SignVerify = () => {
         textAlignVertical="top"
         blurOnSubmit
         placeholder={loc.addresses.sign_placeholder_signature}
-        placeholderTextColor="#81868e"
+        placeholderTextColor={colors.placeholderTextColor}
         value={signature}
         onChangeText={t => setSignature(t.replace('\n', ''))}
         testID="Signature"
@@ -170,7 +170,7 @@ const SignVerify = () => {
       <TextInput
         multiline
         placeholder={loc.addresses.sign_placeholder_message}
-        placeholderTextColor="#81868e"
+        placeholderTextColor={colors.placeholderTextColor}
         value={message}
         onChangeText={setMessage}
         testID="Message"

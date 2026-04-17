@@ -59,7 +59,7 @@ const QuorumSelector: FC<QuorumSelectorProps> = ({ m, n, onMChange, onNChange, c
             name="keyboard-arrow-up"
             size={22}
             type="material"
-            color={n === m || m === 7 ? colors.buttonDisabledTextColor : '#007AFF'}
+            color={n === m || m === 7 ? colors.buttonDisabledTextColor : colors.accentPrimary}
           />
         </Pressable>
         <Text style={[styles.textM, { color: colors.outputValue }]}>{m}</Text>
@@ -69,12 +69,17 @@ const QuorumSelector: FC<QuorumSelectorProps> = ({ m, n, onMChange, onNChange, c
           disabled={m === 2}
           style={({ pressed }) => [pressed && styles.pressed, styles.chevron]}
         >
-          <Icon name="keyboard-arrow-down" size={22} type="material" color={m === 2 ? colors.buttonDisabledTextColor : '#007AFF'} />
+          <Icon
+            name="keyboard-arrow-down"
+            size={22}
+            type="material"
+            color={m === 2 ? colors.buttonDisabledTextColor : colors.accentPrimary}
+          />
         </Pressable>
       </View>
 
       <View style={styles.columnOf}>
-        <Text style={styles.textOf}>{loc.multisig.of}</Text>
+        <Text style={[styles.textOf, { color: colors.textSecondary }]}>{loc.multisig.of}</Text>
       </View>
 
       <View style={styles.column}>
@@ -84,7 +89,12 @@ const QuorumSelector: FC<QuorumSelectorProps> = ({ m, n, onMChange, onNChange, c
           onPress={increaseN}
           style={({ pressed }) => [pressed && styles.pressed, styles.chevron]}
         >
-          <Icon name="keyboard-arrow-up" size={22} type="material" color={n === 7 ? colors.buttonDisabledTextColor : '#007AFF'} />
+          <Icon
+            name="keyboard-arrow-up"
+            size={22}
+            type="material"
+            color={n === 7 ? colors.buttonDisabledTextColor : colors.accentPrimary}
+          />
         </Pressable>
         <Text style={[styles.textM, { color: colors.outputValue }]}>{n}</Text>
         <Pressable
@@ -94,7 +104,12 @@ const QuorumSelector: FC<QuorumSelectorProps> = ({ m, n, onMChange, onNChange, c
           style={({ pressed }) => [pressed && styles.pressed, styles.chevron]}
           testID="DecreaseN"
         >
-          <Icon name="keyboard-arrow-down" size={22} type="material" color={n === m ? colors.buttonDisabledTextColor : '#007AFF'} />
+          <Icon
+            name="keyboard-arrow-down"
+            size={22}
+            type="material"
+            color={n === m ? colors.buttonDisabledTextColor : colors.accentPrimary}
+          />
         </Pressable>
       </View>
     </View>
@@ -123,7 +138,7 @@ const FormatSelector: FC<FormatSelectorProps> = ({ format, onFormatChange, color
     (isSelected: boolean) => [
       styles.borderRadius6,
       styles.item,
-      isSelected ? { paddingHorizontal: 8, backgroundColor: colors.elevated } : { paddingHorizontal: 8, backgroundColor: 'transparent' },
+      isSelected ? { paddingHorizontal: 8, backgroundColor: colors.elevated } : { paddingHorizontal: 8 },
     ],
     [colors.elevated],
   );
@@ -174,6 +189,9 @@ const MultisigAdvanced: React.FC = () => {
       backgroundColor: colors.elevated,
       flex: 1,
     },
+    androidHeader: {
+      borderBottomColor: colors.borderSubtle,
+    },
     textHeader: {
       color: colors.outputValue,
     },
@@ -203,7 +221,7 @@ const MultisigAdvanced: React.FC = () => {
   return (
     <SafeArea style={stylesHook.root}>
       {Platform.OS === 'android' && (
-        <View style={styles.androidHeader}>
+        <View style={[styles.androidHeader, stylesHook.androidHeader]}>
           <View style={styles.androidHeaderContent}>
             <Pressable
               onPress={() => navigation.goBack()}
@@ -241,9 +259,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   androidHeader: {
-    backgroundColor: 'transparent',
     borderBottomWidth: 0.5,
-    borderBottomColor: '#e1e1e1',
   },
   androidHeaderContent: {
     flexDirection: 'row',
@@ -294,7 +310,6 @@ const styles = StyleSheet.create({
   },
   textOf: {
     fontSize: 30,
-    color: '#9AA0AA',
   },
   textHeader: {
     fontSize: 18,

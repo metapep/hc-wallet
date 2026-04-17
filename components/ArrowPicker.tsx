@@ -45,12 +45,12 @@ export const ArrowPicker = (props: ArrowPickerProps) => {
         }}
         style={({ pressed }) => [
           {
-            backgroundColor: pressed ? 'rgb(210, 230, 255)' : 'white',
+            backgroundColor: pressed ? colors.backgroundSurfaceSecondary : colors.backgroundSurface,
           },
           styles.wrapperCustom,
         ]}
       >
-        <Icon size={24} name="chevron-back" type="ionicons" />
+        <Icon size={24} name="chevron-back" type="ionicons" color={colors.foregroundColor} />
       </Pressable>
       <View style={{ width: 200 }}>
         <Text style={[styles.text, stylesHook.text]}>{props.isItemUnknown ? loc.send.fee_custom : keys[keyIndex]}</Text>
@@ -71,12 +71,12 @@ export const ArrowPicker = (props: ArrowPickerProps) => {
         }}
         style={({ pressed }) => [
           {
-            backgroundColor: pressed ? 'rgb(210, 230, 255)' : 'white',
+            backgroundColor: pressed ? colors.backgroundSurfaceSecondary : colors.backgroundSurface,
           },
           styles.wrapperCustom,
         ]}
       >
-        <Icon size={24} name="chevron-forward" type="ionicons" />
+        <Icon size={24} name="chevron-forward" type="ionicons" color={colors.foregroundColor} />
       </Pressable>
     </View>
   );

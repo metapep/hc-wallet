@@ -11,7 +11,7 @@ import SwiftUI
 
 extension Color {
   static let textColor = Color("TextColor")
-  static let textColorLightGray = Color(red: 0.6, green: 0.63, blue: 0.67)
+  static let textColorLightGray = Color(red: 0.31, green: 0.34, blue: 0.39)
   static let widgetBackground = Color("WidgetBackground")
   static let containerGreen = Color("ContainerGreen")
   static let containerRed = Color("ContainerRed")

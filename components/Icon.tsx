@@ -6,6 +6,7 @@ import FontAwesome6 from '@react-native-vector-icons/fontawesome6';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import MaterialDesignIcons from '@react-native-vector-icons/material-design-icons';
 import MaterialIcons from '@react-native-vector-icons/material-icons';
+import { platformColors } from './themes';
 
 export type FontAwesomeIconName = React.ComponentProps<typeof FontAwesome>['name'];
 export type FontAwesome6IconName = React.ComponentProps<typeof FontAwesome6>['name'];
@@ -72,12 +73,13 @@ const Icon = <T extends IconType = 'font-awesome'>({
   const isFa6 = type === 'font-awesome-6';
   const fa6IconStyle = isFa6 ? (typeof iconStyle === 'string' ? iconStyle : 'solid') : undefined;
   const mergedStyle = isFa6 ? style : [style, iconStyle];
+  const resolvedColor = color ?? platformColors.text;
 
   const content = (
     <IconComponent
       name={name}
       size={size}
-      color={color}
+      color={resolvedColor}
       style={mergedStyle}
       iconStyle={fa6IconStyle}
       accessibilityLabel={accessibilityLabel}
