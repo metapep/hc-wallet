@@ -131,19 +131,20 @@ const ReceiveDetails = () => {
 
     let newAddress;
     if (wallet.chain === Chain.ONCHAIN) {
-      try {
-        if (!isElectrumDisabled) newAddress = await Promise.race([wallet.getAddressAsync(), sleep(1000)]);
-      } catch (error) {
-        console.warn('Error fetching wallet address (ONCHAIN):', error);
-      }
-      if (newAddress === undefined) {
-        if ('_getExternalAddressByIndex' in wallet) {
-          newAddress = wallet._getExternalAddressByIndex(wallet.getNextFreeAddressIndex());
-        } else {
-          newAddress = wallet.getAddress();
-        }
+      if ('_getExternalAddressByIndex' in wallet) {
+        // Pin receive address for HD wallets to account external index 0 (m/.../0/0).
+        newAddress = wallet._getExternalAddressByIndex(0);
       } else {
-        saveToDisk(); // caching whatever getAddressAsync() generated internally
+        try {
+          if (!isElectrumDisabled) newAddress = await Promise.race([wallet.getAddressAsync(), sleep(1000)]);
+        } catch (error) {
+          console.warn('Error fetching wallet address (ONCHAIN):', error);
+        }
+        if (newAddress === undefined) {
+          newAddress = wallet.getAddress();
+        } else {
+          saveToDisk(); // caching whatever getAddressAsync() generated internally
+        }
       }
     } else {
       try {

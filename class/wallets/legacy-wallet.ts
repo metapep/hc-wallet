@@ -251,6 +251,8 @@ export class LegacyWallet extends AbstractWallet {
 
     // first: batch fetch for all addresses histories
     const histories = await BlueElectrum.multiGetHistoryByAddress(addresses2fetch);
+    this.setHistoryBackfillRequired(addresses2fetch.some(addr => BlueElectrum.wasAddressHistoryLimited(addr)));
+
     const txs: Record<
       string,
       {

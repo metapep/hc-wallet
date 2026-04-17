@@ -47,6 +47,7 @@ export class AbstractWallet {
   hideBalance: boolean;
   userHasSavedExport: boolean;
   _hideTransactionsInWalletsList: boolean;
+  historyBackfillRequired: boolean;
   _utxoMetadata: Record<string, UtxoMetadata>;
   use_with_hardware_wallet: boolean;
   masterFingerprint: number;
@@ -65,6 +66,7 @@ export class AbstractWallet {
     this.hideBalance = false;
     this.userHasSavedExport = false;
     this._hideTransactionsInWalletsList = false;
+    this.historyBackfillRequired = false;
     this._utxoMetadata = {};
     this.use_with_hardware_wallet = false;
     this.masterFingerprint = 0;
@@ -103,6 +105,14 @@ export class AbstractWallet {
 
   setHideTransactionsInWalletsList(value: boolean): void {
     this._hideTransactionsInWalletsList = value;
+  }
+
+  isHistoryBackfillRequired(): boolean {
+    return this.historyBackfillRequired === true;
+  }
+
+  setHistoryBackfillRequired(value: boolean): void {
+    this.historyBackfillRequired = value;
   }
 
   /**

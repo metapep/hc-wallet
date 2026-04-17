@@ -74,8 +74,8 @@ const ImportSpeed = () => {
         wallet.setPassphrase(passphrase);
       }
       await wallet.fetchBalance();
+      await addAndSaveWallet(wallet);
       navigation.getParent()?.goBack();
-      addAndSaveWallet(wallet);
     } catch (e: any) {
       presentAlert({ message: e.message });
     } finally {

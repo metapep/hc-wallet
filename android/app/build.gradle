@@ -105,8 +105,22 @@ android {
         }
     }
 
+    signingConfigs {
+        release {
+            if (project.hasProperty('HCASH_UPLOAD_STORE_FILE')) {
+                storeFile file(HCASH_UPLOAD_STORE_FILE)
+                storePassword HCASH_UPLOAD_STORE_PASSWORD
+                keyAlias HCASH_UPLOAD_KEY_ALIAS
+                keyPassword HCASH_UPLOAD_KEY_PASSWORD
+            }
+        }
+    }
+
     buildTypes {
         release {
+            if (project.hasProperty('HCASH_UPLOAD_STORE_FILE')) {
+                signingConfig signingConfigs.release
+            }
             minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
             proguardFile "${rootProject.projectDir}/../node_modules/detox/android/detox/proguard-rules-app.pro"

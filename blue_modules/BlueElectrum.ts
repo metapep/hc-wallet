@@ -111,14 +111,43 @@ const MAX_PREFERRED_PEER_FAILURES = 2;
 let latestBlock: { height: number; time: number } | { height: undefined; time: undefined } = { height: undefined, time: undefined };
 const txhashHeightCache: Record<string, number> = {};
 const scripthashHistoryCache: Record<string, ElectrumHistory[]> = {};
+const historyLimitByAddress: Record<string, boolean> = {};
 const blockTimestampCache: Record<number, number> = {};
 const pendingBlockTimestampRequests: Partial<Record<number, Promise<number | undefined>>> = {};
+const pendingExplorerAddressHistoryFetches: Partial<Record<string, Promise<ElectrumHistory[]>>> = {};
+let explorerHistoryFallbackContextCount = 0;
 const BLOCK_HEADER_TIMESTAMP_OFFSET = 68;
 const BLOCK_HEADER_TIMESTAMP_SIZE = 4;
 const ELECTRUM_HISTORY_ENTRY_SOFT_LIMIT = 1000;
 const EXPLORER_HISTORY_PAGE_SIZE = 25;
-const EXPLORER_HISTORY_MAX_PAGES = 400;
+const EXPLORER_HISTORY_MAX_PAGES = 8;
+const EXPLORER_HISTORY_FETCH_CONCURRENCY = 5;
+const ELECTRUM_LIMITED_ACTIVITY_FALLBACK_MAX_ENTRIES = 250;
+const USE_EXPLORER_HISTORY_SOURCE = true;
+const ELECTRUM_BALANCE_RPC_TIMEOUT_MS = 15000;
+const ELECTRUM_HISTORY_RPC_TIMEOUT_MS = 20000;
+const ELECTRUM_TRANSACTION_RPC_TIMEOUT_MS = 20000;
+const ELECTRUM_CONNECT_RPC_TIMEOUT_MS = 12000;
 let _realm: Realm | undefined;
+
+class ElectrumRequestTimeoutError extends Error {
+  constructor(operation: string, timeoutMs: number) {
+    super(`[ElectrumTimeout] ${operation} timed out after ${timeoutMs}ms`);
+    this.name = 'ElectrumRequestTimeoutError';
+  }
+}
+
+const withElectrumTimeout = async (operation: string, timeoutMs: number, fn: () => Promise<any>): Promise<any> => {
+  let timeoutHandle: NodeJS.Timeout | undefined;
+  try {
+    const timeoutPromise = new Promise<any>((_resolve, reject) => {
+      timeoutHandle = setTimeout(() => reject(new ElectrumRequestTimeoutError(operation, timeoutMs)), timeoutMs);
+    });
+    return await Promise.race<any>([fn(), timeoutPromise]);
+  } finally {
+    if (timeoutHandle) clearTimeout(timeoutHandle);
+  }
+};
 
 function bitcoinjs_crypto_sha256(buffer: Uint8Array): Uint8Array {
   return _sha256(buffer);
@@ -142,6 +171,18 @@ function extractBlockTimestampFromHeaderHex(headerHex?: string): number | undefi
   return view.getUint32(BLOCK_HEADER_TIMESTAMP_OFFSET, true);
 }
 
+function isConnectionLostError(error: unknown): boolean {
+  const message = String((error as Error)?.message ?? error ?? '').toLowerCase();
+  return (
+    message.includes('connection to server lost') ||
+    message.includes('not connected') ||
+    message.includes('socket hang up') ||
+    message.includes('broken pipe') ||
+    message.includes('econnreset') ||
+    message.includes('econnrefused')
+  );
+}
+
 async function getBlockTimestampByHeight(height?: number): Promise<number | undefined> {
   if (!mainClient || !height || height <= 0) return undefined;
 
@@ -157,7 +198,9 @@ async function getBlockTimestampByHeight(height?: number): Promise<number | unde
         return timestamp;
       }
     } catch (error) {
-      console.debug('Failed to fetch block header timestamp', height, String(error));
+      if (!isConnectionLostError(error)) {
+        console.debug('Failed to fetch block header timestamp', height, String(error));
+      }
     }
     return undefined;
   })();
@@ -313,7 +356,8 @@ async function getSavedPeer(): Promise<Peer | null> {
   }
 }
 
-export async function connectMain(): Promise<void> {
+export async function connectMain(options: { ignoreSavedPeer?: boolean; showErrorAlert?: boolean } = {}): Promise<void> {
+  const { ignoreSavedPeer = false, showErrorAlert = true } = options;
   if (await isDisabled()) {
     console.log('Electrum connection disabled by user. Skipping connectMain call');
     return;
@@ -328,7 +372,7 @@ export async function connectMain(): Promise<void> {
 
   let usingPeer = getNextPeer();
   let usingPreferredPeer = false;
-  const savedPeer = await getSavedPeer();
+  const savedPeer = ignoreSavedPeer ? null : await getSavedPeer();
   if (savedPeer && savedPeer.host && (savedPeer.tcp || savedPeer.ssl) && preferredPeerFailureCount < MAX_PREFERRED_PEER_FAILURES) {
     usingPeer = savedPeer;
     usingPreferredPeer = true;
@@ -352,10 +396,19 @@ export async function connectMain(): Promise<void> {
         // dropping `mainConnected` flag ensures there wont be reconnection race condition if several
         // errors triggered
         console.log('reconnecting after socket error');
-        setTimeout(connectMain, usingPeer.host.endsWith('.onion') ? 4000 : 500);
+        setTimeout(
+          () => {
+            connectMain({ ignoreSavedPeer, showErrorAlert }).catch(error => {
+              console.warn('Electrum reconnect attempt failed:', error);
+            });
+          },
+          usingPeer.host.endsWith('.onion') ? 4000 : 500,
+        );
       }
     };
-    const ver = await mainClient.initElectrum({ client: 'bluewallet', version: '1.4' });
+    const ver = await withElectrumTimeout('initElectrum', ELECTRUM_CONNECT_RPC_TIMEOUT_MS, () =>
+      mainClient.initElectrum({ client: 'bluewallet', version: '1.4' }),
+    );
     if (ver && ver[0]) {
       console.log('connected to ', ver);
       serverName = ver[0];
@@ -414,7 +467,7 @@ export async function connectMain(): Promise<void> {
         mainClient?.close();
         mainClient = undefined;
         await new Promise(resolve => setTimeout(resolve, 500));
-        return connectMain();
+        return connectMain({ ignoreSavedPeer, showErrorAlert });
       }
     }
 
@@ -423,11 +476,13 @@ export async function connectMain(): Promise<void> {
     mainClient?.close();
     mainClient = undefined;
     if (connectionAttempt >= 5) {
-      presentNetworkErrorAlert(usingPeer);
+      if (showErrorAlert) {
+        presentNetworkErrorAlert(usingPeer);
+      }
     } else {
       console.log('reconnection attempt #', connectionAttempt);
       await new Promise(resolve => setTimeout(resolve, 500)); // sleep
-      return connectMain();
+      return connectMain({ ignoreSavedPeer, showErrorAlert });
     }
   }
 }
@@ -616,7 +671,9 @@ export const getTransactionsByAddress = async function (address: string): Promis
   const script = bitcoin.address.toOutputScript(address, HASHCASH_NETWORK);
   const hash = bitcoinjs_crypto_sha256(script);
   const reversedHash = new Uint8Array(hash).reverse();
-  const history = await mainClient.blockchainScripthash_getHistory(uint8ArrayToHex(reversedHash));
+  const history = await withElectrumTimeout('blockchainScripthash_getHistory', ELECTRUM_HISTORY_RPC_TIMEOUT_MS, () =>
+    mainClient.blockchainScripthash_getHistory(uint8ArrayToHex(reversedHash)),
+  );
   for (const h of history || []) {
     if (h.tx_hash) txhashHeightCache[h.tx_hash] = h.height; // cache tx height
   }
@@ -833,7 +890,7 @@ export const multiGetBalanceByAddress = async (addresses: string[], batchsize: n
 
   const chunks = splitIntoChunks(addresses, batchsize);
   for (const chunk of chunks) {
-    const scripthashes = [];
+    const scripthashes: string[] = [];
     const scripthash2addr: Record<string, string> = {};
     for (const addr of chunk) {
       const script = bitcoin.address.toOutputScript(addr, HASHCASH_NETWORK);
@@ -843,13 +900,17 @@ export const multiGetBalanceByAddress = async (addresses: string[], batchsize: n
       scripthash2addr[reversedHash] = addr;
     }
 
-    let balances = [];
+    let balances: any[] = [];
 
     if (disableBatching) {
       const promises = [];
       const index2scripthash: Record<number, string> = {};
       for (let promiseIndex = 0; promiseIndex < scripthashes.length; promiseIndex++) {
-        promises.push(mainClient.blockchainScripthash_getBalance(scripthashes[promiseIndex]));
+        promises.push(
+          withElectrumTimeout('blockchainScripthash_getBalance', ELECTRUM_BALANCE_RPC_TIMEOUT_MS, () =>
+            mainClient.blockchainScripthash_getBalance(scripthashes[promiseIndex]),
+          ),
+        );
         index2scripthash[promiseIndex] = scripthashes[promiseIndex];
       }
       const promiseResults = await Promise.all(promises);
@@ -857,7 +918,9 @@ export const multiGetBalanceByAddress = async (addresses: string[], batchsize: n
         balances.push({ result: promiseResults[resultIndex], param: index2scripthash[resultIndex] });
       }
     } else {
-      balances = await mainClient.blockchainScripthash_getBalanceBatch(scripthashes);
+      balances = await withElectrumTimeout('blockchainScripthash_getBalanceBatch', ELECTRUM_BALANCE_RPC_TIMEOUT_MS, () =>
+        mainClient.blockchainScripthash_getBalanceBatch(scripthashes),
+      );
     }
 
     for (const bal of balances) {
@@ -877,7 +940,7 @@ export const multiGetUtxoByAddress = async function (addresses: string[], batchs
 
   const chunks = splitIntoChunks(addresses, batchsize);
   for (const chunk of chunks) {
-    const scripthashes = [];
+    const scripthashes: string[] = [];
     const scripthash2addr: Record<string, string> = {};
     for (const addr of chunk) {
       const script = bitcoin.address.toOutputScript(addr, HASHCASH_NETWORK);
@@ -887,11 +950,15 @@ export const multiGetUtxoByAddress = async function (addresses: string[], batchs
       scripthash2addr[reversedHash] = addr;
     }
 
-    let results = [];
+    let results: any[] = [];
 
     if (disableBatching) {
       const utxosResults = await Promise.allSettled(
-        scripthashes.map(scripthash => mainClient.blockchainScripthash_listunspent(scripthash)),
+        scripthashes.map(scripthash =>
+          withElectrumTimeout('blockchainScripthash_listunspent', ELECTRUM_BALANCE_RPC_TIMEOUT_MS, () =>
+            mainClient.blockchainScripthash_listunspent(scripthash),
+          ),
+        ),
       );
       for (let utxoIndex = 0; utxoIndex < utxosResults.length; utxoIndex++) {
         const scripthash = scripthashes[utxoIndex];
@@ -905,7 +972,9 @@ export const multiGetUtxoByAddress = async function (addresses: string[], batchs
         }
       }
     } else {
-      results = await mainClient.blockchainScripthash_listunspentBatch(scripthashes);
+      results = await withElectrumTimeout('blockchainScripthash_listunspentBatch', ELECTRUM_BALANCE_RPC_TIMEOUT_MS, () =>
+        mainClient.blockchainScripthash_listunspentBatch(scripthashes),
+      );
     }
 
     for (const utxos of results) {
@@ -942,6 +1011,27 @@ function isTooManyHistoryEntriesError(error: unknown): boolean {
   );
 }
 
+function isExplorerHistoryFallbackEnabled(): boolean {
+  return explorerHistoryFallbackContextCount > 0;
+}
+
+export async function withExplorerHistoryFallback<T>(fn: () => Promise<T>): Promise<T> {
+  explorerHistoryFallbackContextCount += 1;
+  try {
+    return await fn();
+  } finally {
+    explorerHistoryFallbackContextCount = Math.max(0, explorerHistoryFallbackContextCount - 1);
+  }
+}
+
+export function wasAddressHistoryLimited(address: string): boolean {
+  return historyLimitByAddress[address] === true;
+}
+
+export function isExplorerHistorySourceEnabled(): boolean {
+  return USE_EXPLORER_HISTORY_SOURCE;
+}
+
 function buildExplorerAddressHistoryUrl(address: string, lastSeenTxid?: string): string {
   const encodedAddress = encodeURIComponent(address);
   if (lastSeenTxid) {
@@ -951,52 +1041,153 @@ function buildExplorerAddressHistoryUrl(address: string, lastSeenTxid?: string):
 }
 
 async function fetchAddressHistoryFromExplorer(address: string): Promise<ElectrumHistory[]> {
-  const history: ElectrumHistory[] = [];
-  const seenTxids = new Set<string>();
-  let lastSeenTxid: string | undefined;
-
-  for (let page = 0; page < EXPLORER_HISTORY_MAX_PAGES; page++) {
-    const url = buildExplorerAddressHistoryUrl(address, lastSeenTxid);
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error(`Explorer history request failed with HTTP ${response.status}`);
-    }
-
-    const payload = (await response.json()) as Array<{
-      txid?: string;
-      status?: { confirmed?: boolean; block_height?: number };
-    }>;
-
-    if (!Array.isArray(payload) || payload.length === 0) break;
-
-    for (const tx of payload) {
-      if (!tx || typeof tx.txid !== 'string' || seenTxids.has(tx.txid)) continue;
-      seenTxids.add(tx.txid);
-      const height = tx.status?.confirmed && typeof tx.status?.block_height === 'number' ? tx.status.block_height : 0;
-      history.push({ tx_hash: tx.txid, height, address });
-      if (tx.txid) txhashHeightCache[tx.txid] = height;
-    }
-
-    const tailTxid = payload[payload.length - 1]?.txid;
-    if (payload.length < EXPLORER_HISTORY_PAGE_SIZE || typeof tailTxid !== 'string' || tailTxid === lastSeenTxid) {
-      break;
-    }
-    lastSeenTxid = tailTxid;
+  if (pendingExplorerAddressHistoryFetches[address]) {
+    return pendingExplorerAddressHistoryFetches[address];
   }
 
-  return history;
+  const inFlightFetch = (async () => {
+    const history: ElectrumHistory[] = [];
+    const seenTxids = new Set<string>();
+    let lastSeenTxid: string | undefined;
+
+    for (let page = 0; page < EXPLORER_HISTORY_MAX_PAGES; page++) {
+      const url = buildExplorerAddressHistoryUrl(address, lastSeenTxid);
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`Explorer history request failed with HTTP ${response.status}`);
+      }
+
+      const payload = (await response.json()) as Array<{
+        txid?: string;
+        status?: { confirmed?: boolean; block_height?: number };
+      }>;
+
+      if (!Array.isArray(payload) || payload.length === 0) break;
+
+      for (const tx of payload) {
+        if (!tx || typeof tx.txid !== 'string' || seenTxids.has(tx.txid)) continue;
+        seenTxids.add(tx.txid);
+        const height = tx.status?.confirmed && typeof tx.status?.block_height === 'number' ? tx.status.block_height : 0;
+        history.push({ tx_hash: tx.txid, height, address });
+        if (tx.txid) txhashHeightCache[tx.txid] = height;
+      }
+
+      const tailTxid = payload[payload.length - 1]?.txid;
+      if (payload.length < EXPLORER_HISTORY_PAGE_SIZE || typeof tailTxid !== 'string' || tailTxid === lastSeenTxid) {
+        break;
+      }
+      lastSeenTxid = tailTxid;
+    }
+
+    return history;
+  })().finally(() => {
+    delete pendingExplorerAddressHistoryFetches[address];
+  });
+
+  pendingExplorerAddressHistoryFetches[address] = inFlightFetch;
+  return inFlightFetch;
+}
+
+async function fetchLimitedAddressActivityFromElectrum(address: string, scripthash: string): Promise<ElectrumHistory[]> {
+  if (!mainClient) return [];
+
+  const txidToHistory = new Map<string, ElectrumHistory>();
+
+  try {
+    const utxos = await withElectrumTimeout('blockchainScripthash_listunspent', ELECTRUM_BALANCE_RPC_TIMEOUT_MS, () =>
+      mainClient.blockchainScripthash_listunspent(scripthash),
+    );
+    if (Array.isArray(utxos)) {
+      for (const utxo of utxos) {
+        if (!utxo || typeof utxo.tx_hash !== 'string') continue;
+        const height = typeof utxo.height === 'number' ? utxo.height : 0;
+        const existing = txidToHistory.get(utxo.tx_hash);
+        if (!existing || height > existing.height) {
+          txidToHistory.set(utxo.tx_hash, { tx_hash: utxo.tx_hash, height, address });
+        }
+      }
+    }
+  } catch (error) {
+    console.warn('fetchLimitedAddressActivityFromElectrum(): failed to fetch listunspent for', address, getErrorMessage(error));
+  }
+
+  try {
+    const mempool = await withElectrumTimeout('blockchainScripthash_getMempool', ELECTRUM_HISTORY_RPC_TIMEOUT_MS, () =>
+      mainClient.blockchainScripthash_getMempool(scripthash),
+    );
+    if (Array.isArray(mempool)) {
+      for (const item of mempool) {
+        if (!item || typeof item.tx_hash !== 'string') continue;
+        txidToHistory.set(item.tx_hash, { tx_hash: item.tx_hash, height: 0, address });
+      }
+    }
+  } catch (error) {
+    console.warn('fetchLimitedAddressActivityFromElectrum(): failed to fetch mempool for', address, getErrorMessage(error));
+  }
+
+  const limitedActivity = [...txidToHistory.values()]
+    .sort((a, b) => (b.height ?? 0) - (a.height ?? 0))
+    .slice(0, ELECTRUM_LIMITED_ACTIVITY_FALLBACK_MAX_ENTRIES);
+
+  for (const entry of limitedActivity) {
+    if (entry.tx_hash) txhashHeightCache[entry.tx_hash] = entry.height;
+  }
+
+  return limitedActivity;
 }
 
 export const multiGetHistoryByAddress = async function (
   addresses: string[],
   batchsize: number = 100,
 ): Promise<Record<string, ElectrumHistory[]>> {
-  if (!mainClient) throw new Error('Electrum client is not connected');
+  if (!USE_EXPLORER_HISTORY_SOURCE && !mainClient) throw new Error('Electrum client is not connected');
   const ret: Record<string, ElectrumHistory[]> = {};
+
+  if (USE_EXPLORER_HISTORY_SOURCE) {
+    const chunks = splitIntoChunks(addresses, batchsize);
+    for (const chunk of chunks) {
+      const concurrentAddressChunks = splitIntoChunks(chunk, EXPLORER_HISTORY_FETCH_CONCURRENCY);
+      for (const concurrentAddressChunk of concurrentAddressChunks) {
+        const historyFetches = concurrentAddressChunk.map(async address => {
+          historyLimitByAddress[address] = false;
+
+          const script = bitcoin.address.toOutputScript(address, HASHCASH_NETWORK);
+          const hash = bitcoinjs_crypto_sha256(script);
+          const scripthash = uint8ArrayToHex(new Uint8Array(hash).reverse());
+          try {
+            const explorerHistory = await fetchAddressHistoryFromExplorer(address);
+            ret[address] = explorerHistory.slice(0);
+            scripthashHistoryCache[scripthash] = explorerHistory.slice(0);
+            for (const result of explorerHistory) {
+              if (result.tx_hash) txhashHeightCache[result.tx_hash] = result.height;
+            }
+          } catch (error) {
+            const cachedHistory = scripthashHistoryCache[scripthash];
+            if (cachedHistory) {
+              console.warn(
+                'multiGetHistoryByAddress(): explorer history request failed; using cached history for',
+                address,
+                getErrorMessage(error),
+              );
+              ret[address] = cachedHistory.slice(0);
+              return;
+            }
+            throw error;
+          }
+        });
+        await Promise.all(historyFetches);
+      }
+    }
+    return ret;
+  }
 
   const chunks = splitIntoChunks(addresses, batchsize);
   for (const chunk of chunks) {
-    const scripthashes = [];
+    for (const address of chunk) {
+      historyLimitByAddress[address] = false;
+    }
+
+    const scripthashes: string[] = [];
     const scripthash2addr: Record<string, string> = {};
     for (const addr of chunk) {
       const script = bitcoin.address.toOutputScript(addr, HASHCASH_NETWORK);
@@ -1006,10 +1197,16 @@ export const multiGetHistoryByAddress = async function (
       scripthash2addr[reversedHash] = addr;
     }
 
-    let results = [];
+    let results: any[] = [];
 
     if (disableBatching) {
-      const histories = await Promise.allSettled(scripthashes.map(scripthash => mainClient.blockchainScripthash_getHistory(scripthash)));
+      const histories = await Promise.allSettled(
+        scripthashes.map(scripthash =>
+          withElectrumTimeout('blockchainScripthash_getHistory', ELECTRUM_HISTORY_RPC_TIMEOUT_MS, () =>
+            mainClient.blockchainScripthash_getHistory(scripthash),
+          ),
+        ),
+      );
       for (let historyIndex = 0; historyIndex < histories.length; historyIndex++) {
         const scripthash = scripthashes[historyIndex];
         const historyResult = histories[historyIndex];
@@ -1018,16 +1215,21 @@ export const multiGetHistoryByAddress = async function (
         } else {
           const errorMessage = getErrorMessage(historyResult.reason);
           const cachedHistory = scripthashHistoryCache[scripthash];
+          const address = scripthash2addr[scripthash];
           if (cachedHistory) {
+            if (isTooManyHistoryEntriesError(errorMessage) && address) {
+              historyLimitByAddress[address] = true;
+            }
             console.warn('multiGetHistoryByAddress():', errorMessage, '; using cached history for', scripthash2addr[scripthash]);
             results.push({ result: cachedHistory, param: scripthash });
             continue;
           }
-          if (isTooManyHistoryEntriesError(errorMessage)) {
+          if (isTooManyHistoryEntriesError(errorMessage) && isExplorerHistoryFallbackEnabled()) {
             try {
-              const address = scripthash2addr[scripthash];
               if (!address) throw new Error('No address mapped for scripthash');
+              historyLimitByAddress[address] = true;
               const explorerHistory = await fetchAddressHistoryFromExplorer(address);
+              historyLimitByAddress[address] = false;
               console.warn(
                 'multiGetHistoryByAddress():',
                 errorMessage,
@@ -1045,27 +1247,53 @@ export const multiGetHistoryByAddress = async function (
               );
             }
           }
+          if (isTooManyHistoryEntriesError(errorMessage) && address) {
+            historyLimitByAddress[address] = true;
+            const limitedActivity = await fetchLimitedAddressActivityFromElectrum(address, scripthash);
+            if (limitedActivity.length > 0) {
+              console.warn(
+                'multiGetHistoryByAddress():',
+                errorMessage,
+                '; using limited Electrum activity fallback for',
+                address,
+                `(${limitedActivity.length} entries)`,
+              );
+              scripthashHistoryCache[scripthash] = limitedActivity.slice(0);
+              results.push({ result: limitedActivity, param: scripthash });
+              continue;
+            }
+            console.warn('multiGetHistoryByAddress():', errorMessage, '; returning empty history for', address);
+            results.push({ result: [], param: scripthash });
+            continue;
+          }
           throw new Error(errorMessage);
         }
       }
     } else {
-      results = await mainClient.blockchainScripthash_getHistoryBatch(scripthashes);
+      results = await withElectrumTimeout('blockchainScripthash_getHistoryBatch', ELECTRUM_HISTORY_RPC_TIMEOUT_MS, () =>
+        mainClient.blockchainScripthash_getHistoryBatch(scripthashes),
+      );
     }
 
     for (const history of results) {
       if (history.error) {
         const errorMessage = getErrorMessage(history.error);
         const cachedHistory = scripthashHistoryCache[history.param];
+        const address = scripthash2addr[history.param];
         if (cachedHistory) {
+          if (isTooManyHistoryEntriesError(errorMessage) && address) {
+            historyLimitByAddress[address] = true;
+          }
           console.warn('multiGetHistoryByAddress():', errorMessage, '; using cached history for', scripthash2addr[history.param]);
           ret[scripthash2addr[history.param]] = cachedHistory.slice(0);
           continue;
         }
-        if (isTooManyHistoryEntriesError(errorMessage)) {
+        if (isTooManyHistoryEntriesError(errorMessage) && isExplorerHistoryFallbackEnabled()) {
           try {
-            const address = scripthash2addr[history.param];
             if (!address) throw new Error('No address mapped for scripthash');
+            historyLimitByAddress[address] = true;
             const explorerHistory = await fetchAddressHistoryFromExplorer(address);
+            historyLimitByAddress[address] = false;
             console.warn(
               'multiGetHistoryByAddress():',
               errorMessage,
@@ -1084,12 +1312,34 @@ export const multiGetHistoryByAddress = async function (
             );
           }
         }
+        if (isTooManyHistoryEntriesError(errorMessage) && address) {
+          historyLimitByAddress[address] = true;
+          const limitedActivity = await fetchLimitedAddressActivityFromElectrum(address, history.param);
+          if (limitedActivity.length > 0) {
+            console.warn(
+              'multiGetHistoryByAddress():',
+              errorMessage,
+              '; using limited Electrum activity fallback for',
+              address,
+              `(${limitedActivity.length} entries)`,
+            );
+            ret[address] = limitedActivity.slice(0);
+            scripthashHistoryCache[history.param] = limitedActivity.slice(0);
+            continue;
+          }
+          console.warn('multiGetHistoryByAddress():', errorMessage, '; returning empty history for', address);
+          ret[address] = [];
+          continue;
+        }
         throw new Error(errorMessage);
       }
 
       let historyResult = (history.result || []) as ElectrumHistory[];
       const address = scripthash2addr[history.param];
-      if (address && historyResult.length >= ELECTRUM_HISTORY_ENTRY_SOFT_LIMIT) {
+      if (address) {
+        historyLimitByAddress[address] = false;
+      }
+      if (address && historyResult.length >= ELECTRUM_HISTORY_ENTRY_SOFT_LIMIT && isExplorerHistoryFallbackEnabled()) {
         try {
           const explorerHistory = await fetchAddressHistoryFromExplorer(address);
           if (explorerHistory.length > historyResult.length) {
@@ -1120,6 +1370,120 @@ export const multiGetHistoryByAddress = async function (
   return ret;
 };
 
+type ExplorerTxStatus = {
+  confirmed?: boolean;
+  block_height?: number;
+  block_hash?: string;
+  block_time?: number;
+};
+
+type ExplorerTx = {
+  txid: string;
+  version?: number;
+  size?: number;
+  weight?: number;
+  locktime?: number;
+  status?: ExplorerTxStatus;
+  vin?: Array<{
+    txid?: string;
+    vout?: number;
+    sequence?: number;
+    scriptsig?: string;
+    scriptsig_asm?: string;
+    witness?: string[];
+    prevout?: {
+      scriptpubkey_address?: string;
+      value?: number;
+    } | null;
+  }>;
+  vout?: Array<{
+    value?: number;
+    scriptpubkey?: string;
+    scriptpubkey_asm?: string;
+    scriptpubkey_type?: string;
+    scriptpubkey_address?: string | null;
+  }>;
+};
+
+function explorerSatsToCoin(value?: number): number {
+  return new BigNumber(value ?? 0).dividedBy(100000000).toNumber();
+}
+
+function explorerTxToElectrumTransaction(tx: ExplorerTx): ElectrumTransaction {
+  const txid = tx.txid;
+  const blockHeight = tx.status?.confirmed && typeof tx.status?.block_height === 'number' ? tx.status.block_height : 0;
+  const confirmations = blockHeight > 0 ? Math.max(1, estimateCurrentBlockheight() - blockHeight + 1) : 0;
+  const blockTime = typeof tx.status?.block_time === 'number' ? tx.status.block_time : 0;
+
+  return {
+    txid,
+    hash: txid,
+    version: typeof tx.version === 'number' ? tx.version : 0,
+    size: typeof tx.size === 'number' ? tx.size : 0,
+    vsize: typeof tx.weight === 'number' ? Math.ceil(tx.weight / 4) : typeof tx.size === 'number' ? tx.size : 0,
+    weight: typeof tx.weight === 'number' ? tx.weight : 0,
+    locktime: typeof tx.locktime === 'number' ? tx.locktime : 0,
+    vin: (tx.vin || []).map(input => ({
+      txid: input?.txid || '',
+      vout: typeof input?.vout === 'number' ? input.vout : 0,
+      scriptSig: {
+        asm: input?.scriptsig_asm || '',
+        hex: input?.scriptsig || '',
+      },
+      txinwitness: Array.isArray(input?.witness) ? input.witness : [],
+      sequence: typeof input?.sequence === 'number' ? input.sequence : 0,
+      addresses: input?.prevout?.scriptpubkey_address ? [input.prevout.scriptpubkey_address] : undefined,
+      value: input?.prevout?.value !== undefined ? explorerSatsToCoin(input.prevout.value) : undefined,
+    })),
+    vout: (tx.vout || []).map((output, index) => ({
+      value: explorerSatsToCoin(output?.value),
+      n: index,
+      scriptPubKey: {
+        asm: output?.scriptpubkey_asm || '',
+        hex: output?.scriptpubkey || '',
+        reqSigs: 1,
+        type: output?.scriptpubkey_type || 'nonstandard',
+        addresses: output?.scriptpubkey_address ? [output.scriptpubkey_address] : [],
+      },
+    })),
+    blockhash: tx.status?.block_hash || '',
+    confirmations,
+    time: blockTime,
+    blocktime: blockTime,
+  };
+}
+
+async function fetchTransactionByTxidFromExplorer<T extends boolean>(
+  txid: string,
+  verbose: T,
+): Promise<T extends true ? ElectrumTransaction : string> {
+  const encodedTxid = encodeURIComponent(txid);
+  const url = verbose ? `${DEFAULT_BLOCK_EXPLORER_API_BASE}/tx/${encodedTxid}` : `${DEFAULT_BLOCK_EXPLORER_API_BASE}/tx/${encodedTxid}/hex`;
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`Explorer transaction request failed with HTTP ${response.status} for ${txid}`);
+  }
+
+  if (!verbose) {
+    const txHex = (await response.text()).trim();
+    return txHex as unknown as T extends true ? ElectrumTransaction : string;
+  }
+
+  const payload = (await response.json()) as ExplorerTx;
+  return explorerTxToElectrumTransaction(payload) as T extends true ? ElectrumTransaction : string;
+}
+
+async function fetchChunkTransactionResultsFromExplorer<T extends boolean>(
+  chunk: string[],
+  verbose: T,
+): Promise<Array<{ param: string; result: T extends true ? ElectrumTransaction : string }>> {
+  const fetches = chunk.map(async txid => {
+    const result = await fetchTransactionByTxidFromExplorer(txid, verbose);
+    return { param: txid, result };
+  });
+  return Promise.all(fetches);
+}
+
 // if verbose === true ? Record<string, ElectrumTransaction> : Record<string, string>
 type MultiGetTransactionByTxidResult<T extends boolean> = T extends true ? Record<string, ElectrumTransaction> : Record<string, string>;
 
@@ -1132,7 +1496,7 @@ export async function multiGetTransactionByTxid<T extends boolean>(
   txids = txids.filter(txid => !!txid); // failsafe: removing 'undefined' or other falsy stuff from txids array
   // this value is fine-tuned so althrough wallets in test suite will occasionally
   // throw 'response too large (over 1,000,000 bytes', test suite will pass
-  if (!mainClient) throw new Error('Electrum client is not connected');
+  if (!mainClient && !USE_EXPLORER_HISTORY_SOURCE) throw new Error('Electrum client is not connected');
   const ret: MultiGetTransactionByTxidResult<T> = {};
   txids = [...new Set(txids)]; // deduplicate just for any case
 
@@ -1164,9 +1528,16 @@ export async function multiGetTransactionByTxid<T extends boolean>(
   for (const chunk of chunks) {
     const chunkBlockHeights = [...new Set(chunk.map(txid => txhashHeightCache[txid]).filter(height => height > 0))];
     await Promise.all(chunkBlockHeights.map(height => getBlockTimestampByHeight(height)));
-    let results = [];
+    let results: Array<{ param: string; result: ElectrumTransaction | string; error?: { code?: number } }> = [];
 
-    if (disableBatching) {
+    if (!mainClient && USE_EXPLORER_HISTORY_SOURCE) {
+      try {
+        const explorerResults = await fetchChunkTransactionResultsFromExplorer(chunk, verbose);
+        results = explorerResults;
+      } catch (error) {
+        throw new Error(getErrorMessage(error));
+      }
+    } else if (disableBatching) {
       try {
         // in case of ElectrumPersonalServer it might not track some transactions (like source transactions for our transactions)
         // so we wrap it in try-catch. note, when `Promise.all` fails we will get _zero_ results, but we have a fallback for that
@@ -1175,7 +1546,11 @@ export async function multiGetTransactionByTxid<T extends boolean>(
         for (let promiseIndex = 0; promiseIndex < chunk.length; promiseIndex++) {
           const txid = chunk[promiseIndex];
           index2txid[promiseIndex] = txid;
-          promises.push(mainClient.blockchainTransaction_get(txid, verbose));
+          promises.push(
+            withElectrumTimeout('blockchainTransaction_get', ELECTRUM_TRANSACTION_RPC_TIMEOUT_MS, () =>
+              mainClient.blockchainTransaction_get(txid, verbose),
+            ),
+          );
         }
 
         const transactionResults = await Promise.all(promises);
@@ -1190,15 +1565,31 @@ export async function multiGetTransactionByTxid<T extends boolean>(
           results.push({ result: tx, param: txid });
         }
       } catch (error: any) {
-        if (String(error?.message ?? error).startsWith('verbose transactions are currently unsupported')) {
+        const errorMessage = getErrorMessage(error);
+        if (isConnectionLostError(error) && USE_EXPLORER_HISTORY_SOURCE) {
+          console.warn('multiGetTransactionByTxid(): connection lost while fetching batch; falling back to explorer for chunk');
+          mainConnected = false;
+          mainClient?.close();
+          mainClient = undefined;
+          const explorerResults = await fetchChunkTransactionResultsFromExplorer(chunk, verbose);
+          results = explorerResults;
+        } else if (errorMessage.startsWith('verbose transactions are currently unsupported')) {
           // electrs-esplora. cant use verbose, so fetching txs one by one and decoding locally
           for (const txid of chunk) {
             try {
-              let tx = await mainClient.blockchainTransaction_get(txid, false);
+              let tx = await withElectrumTimeout('blockchainTransaction_get', ELECTRUM_TRANSACTION_RPC_TIMEOUT_MS, () =>
+                mainClient.blockchainTransaction_get(txid, false),
+              );
               tx = await decodeTxHexWithChainMetadata(tx, { txidHint: txid });
               results.push({ result: tx, param: txid });
             } catch (err) {
-              console.log(err);
+              if (isConnectionLostError(err) && USE_EXPLORER_HISTORY_SOURCE) {
+                const explorerResult = await fetchTransactionByTxidFromExplorer(txid, verbose);
+                results.push({ result: explorerResult, param: txid });
+                continue;
+              }
+              if (isConnectionLostError(err)) throw err;
+              console.warn('multiGetTransactionByTxid():', getErrorMessage(err));
             }
           }
         } else {
@@ -1206,7 +1597,9 @@ export async function multiGetTransactionByTxid<T extends boolean>(
           // fail and only non-tracked by EPS transactions will be omitted
           for (const txid of chunk) {
             try {
-              let tx = await mainClient.blockchainTransaction_get(txid, verbose);
+              let tx = await withElectrumTimeout('blockchainTransaction_get', ELECTRUM_TRANSACTION_RPC_TIMEOUT_MS, () =>
+                mainClient.blockchainTransaction_get(txid, verbose),
+              );
               if (typeof tx === 'string' && verbose) {
                 // apparently electrum server (EPS?) didnt recognize VERBOSE parameter, and  sent us plain txhex instead of decoded tx.
                 // lets decode it manually on our end then:
@@ -1214,22 +1607,47 @@ export async function multiGetTransactionByTxid<T extends boolean>(
               }
               results.push({ result: tx, param: txid });
             } catch (err) {
-              console.log(err);
+              if (isConnectionLostError(err) && USE_EXPLORER_HISTORY_SOURCE) {
+                const explorerResult = await fetchTransactionByTxidFromExplorer(txid, verbose);
+                results.push({ result: explorerResult, param: txid });
+                continue;
+              }
+              if (isConnectionLostError(err)) throw err;
+              console.warn('multiGetTransactionByTxid():', getErrorMessage(err));
             }
           }
         }
       }
     } else {
-      results = await mainClient.blockchainTransaction_getBatch(chunk, verbose);
+      try {
+        results = await withElectrumTimeout('blockchainTransaction_getBatch', ELECTRUM_TRANSACTION_RPC_TIMEOUT_MS, () =>
+          mainClient.blockchainTransaction_getBatch(chunk, verbose),
+        );
+      } catch (error) {
+        if (isConnectionLostError(error) && USE_EXPLORER_HISTORY_SOURCE) {
+          console.warn('multiGetTransactionByTxid(): batch request lost connection; falling back to explorer for chunk');
+          mainConnected = false;
+          mainClient?.close();
+          mainClient = undefined;
+          const explorerResults = await fetchChunkTransactionResultsFromExplorer(chunk, verbose);
+          results = explorerResults;
+        } else {
+          throw error;
+        }
+      }
     }
 
     for (const txdata of results) {
       if (txdata.error && txdata.error.code === -32600) {
         // response too large
         // lets do single call, that should go through okay:
-        txdata.result = await mainClient.blockchainTransaction_get(txdata.param, false);
+        const txHex = await withElectrumTimeout('blockchainTransaction_get', ELECTRUM_TRANSACTION_RPC_TIMEOUT_MS, () =>
+          mainClient.blockchainTransaction_get(txdata.param, false),
+        );
         // since we used VERBOSE=false, server sent us plain txhex which we must decode on our end:
-        txdata.result = await decodeTxHexWithChainMetadata(txdata.result, { txidHint: txdata.param });
+        txdata.result = await decodeTxHexWithChainMetadata(typeof txHex === 'string' ? txHex : String(txHex), {
+          txidHint: txdata.param,
+        });
       }
       ret[txdata.param] = txdata.result;
       // @ts-ignore: hex property

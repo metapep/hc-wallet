@@ -157,7 +157,8 @@ export class WatchOnlyWallet extends LegacyWallet {
     if (this.secret.startsWith('xpub') || this.secret.startsWith('ypub') || this.secret.startsWith('zpub')) {
       if (!this._hdWalletInstance) this.init();
       if (!this._hdWalletInstance) throw new Error('Internal error: _hdWalletInstance is not initialized');
-      return this._hdWalletInstance.fetchTransactions();
+      await this._hdWalletInstance.fetchTransactions();
+      this.setHistoryBackfillRequired(this._hdWalletInstance.isHistoryBackfillRequired());
     } else {
       // return LegacyWallet.prototype.fetchBalance.call(this);
       return super.fetchTransactions();

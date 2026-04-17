@@ -384,6 +384,8 @@ export class AbstractHDElectrumWallet extends AbstractHDWallet {
 
     // first: batch fetch for all addresses histories
     const histories = await BlueElectrum.multiGetHistoryByAddress(addresses2fetch);
+    this.setHistoryBackfillRequired(addresses2fetch.some(address => BlueElectrum.wasAddressHistoryLimited(address)));
+
     const txs: Record<string, ElectrumHistory> = {};
     for (const history of Object.values(histories)) {
       for (const tx of history as ElectrumHistory[]) {

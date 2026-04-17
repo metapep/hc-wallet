@@ -65,11 +65,16 @@ const ImportWalletDiscovery: React.FC = () => {
   });
 
   const saveWallet = useCallback(
-    (wallet: TWallet | THDWalletForWatchOnly) => {
+    async (wallet: TWallet | THDWalletForWatchOnly) => {
       if (importing.current) return;
       importing.current = true;
-      addAndSaveWallet(wallet);
-      navigation.getParent()?.goBack();
+      try {
+        await addAndSaveWallet(wallet);
+        navigation.getParent()?.goBack();
+      } catch (error: any) {
+        importing.current = false;
+        presentAlert({ title: loc.errors.error, message: error?.message || 'Failed to import wallet' });
+      }
     },
     [addAndSaveWallet, navigation],
   );

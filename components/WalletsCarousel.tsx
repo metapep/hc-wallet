@@ -33,55 +33,72 @@ import { WalletTransactionsStatus } from './Context/StorageProvider';
 import { Transaction, TWallet } from '../class/wallets/types';
 import { BlueSpacing10 } from './BlueSpacing';
 import { useLocale } from '@react-navigation/native';
+import { getBalanceDisplayParts } from '../blue_modules/balanceDisplay';
 
 // Horizontal carousel shows a small peek of the next card; adjust overlap to control that spacing.
 const CARD_OVERLAP = 24;
 
 interface NewWalletPanelProps {
   onPress: () => void;
+  fullWidth?: boolean;
 }
 
 const nStyles = StyleSheet.create({
   container: {
-    borderRadius: 10,
-    minHeight: Platform.OS === 'ios' ? 164 : 181,
+    borderRadius: 12,
+    minHeight: 120,
     justifyContent: 'center',
-    alignItems: 'flex-start',
+  },
+  containerFullWidth: {
+    minHeight: 120,
+  },
+  rowContent: {
+    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  textContent: {
+    flex: 1,
+    paddingRight: 10,
   },
   addAWAllet: {
     fontWeight: '600',
-    fontSize: 24,
-    marginBottom: 4,
+    fontSize: 18,
+    marginBottom: 2,
   },
   addLine: {
-    fontSize: 13,
+    fontSize: 12,
   },
   button: {
-    marginTop: 12,
-    paddingHorizontal: 32,
-    paddingVertical: 12,
+    paddingHorizontal: 24,
+    paddingVertical: 9,
     borderRadius: 8,
-  },
-  buttonStandout: {
-    backgroundColor: '#09090B',
+    alignSelf: 'center',
   },
   buttonText: {
     fontWeight: '500',
   },
+  fullWidth: {
+    width: '100%',
+  },
 });
 
-const NewWalletPanel: React.FC<NewWalletPanelProps> = ({ onPress }) => {
-  const { colors } = useTheme();
+const NewWalletPanel: React.FC<NewWalletPanelProps> = ({ onPress, fullWidth = false }) => {
+  const { colors, dark } = useTheme();
   const { width } = useWindowDimensions();
   const itemWidth = width * 0.82 > 375 ? 375 : width * 0.82;
-  const { isLarge } = useSizeClass();
+  const createButtonText = loc.wallets.list_create_a_button === 'Add now' ? 'Create' : 'Create';
   const nStylesHooks = StyleSheet.create({
-    container: isLarge
-      ? {
-          paddingHorizontal: 24,
-          marginVertical: 16,
-        }
-      : { paddingVertical: 16, paddingHorizontal: 24 },
+    container: {
+      paddingVertical: 10,
+      paddingHorizontal: 12,
+    },
+    button: {
+      backgroundColor: colors.buttonBackgroundColor,
+      borderWidth: 1,
+      borderColor: dark ? '#FFFFFF' : '#000000',
+    },
   });
 
   const scale = useSharedValue(1);
@@ -105,7 +122,7 @@ const NewWalletPanel: React.FC<NewWalletPanelProps> = ({ onPress }) => {
       onPress={onPress}
       testID="CreateAWallet"
       style={({ pressed }) => [
-        isLarge ? {} : { width: itemWidth * 1.2 },
+        fullWidth ? nStyles.fullWidth : { width: itemWidth * 1.2 },
         {
           opacity: pressed ? 0.9 : 1.0,
         },
@@ -116,16 +133,21 @@ const NewWalletPanel: React.FC<NewWalletPanelProps> = ({ onPress }) => {
       <Animated.View
         style={[
           nStyles.container,
+          fullWidth && nStyles.containerFullWidth,
           nStylesHooks.container,
           { backgroundColor: colors.borderTopColor },
-          isLarge ? {} : { width: itemWidth },
+          fullWidth ? nStyles.fullWidth : { width: itemWidth },
           animatedScaleStyle,
         ]}
       >
-        <Text style={[nStyles.addAWAllet, { color: colors.foregroundColor }]}>{loc.wallets.list_create_a_wallet}</Text>
-        <Text style={[nStyles.addLine, { color: colors.alternativeTextColor }]}>{loc.wallets.list_create_a_wallet_text}</Text>
-        <View style={[nStyles.button, nStyles.buttonStandout]}>
-          <Text style={[nStyles.buttonText, { color: colors.foregroundColor }]}>{loc.wallets.list_create_a_button}</Text>
+        <View style={nStyles.rowContent}>
+          <View style={nStyles.textContent}>
+            <Text style={[nStyles.addAWAllet, { color: colors.foregroundColor }]}>Add a Wallet</Text>
+            <Text style={[nStyles.addLine, { color: colors.alternativeTextColor }]}>{loc.wallets.list_create_a_wallet_text}</Text>
+          </View>
+          <View style={[nStyles.button, nStylesHooks.button]}>
+            <Text style={[nStyles.buttonText, { color: colors.buttonTextColor }]}>{createButtonText}</Text>
+          </View>
         </View>
       </Animated.View>
     </Pressable>
@@ -150,24 +172,38 @@ interface WalletCarouselItemProps {
   isDraggingActive?: boolean;
   dragActiveScale?: number;
   sizeVariant?: 'default' | 'compact';
+  showLatestTransaction?: boolean;
 }
 
 const iStyles = StyleSheet.create({
   root: { paddingRight: 20 },
   rootLargeDevice: { marginVertical: 20 },
+  rootVerticalListItem: { marginBottom: 16 },
+  rootFullWidth: { width: '100%' },
+  pressableFullWidth: { width: '100%' },
   grad: {
     borderRadius: 12,
     minHeight: 164,
+  },
+  gradBalanceOnly: {
+    minHeight: 120,
   },
   gradCompact: {
     borderRadius: 10,
     minHeight: 132,
   },
+  gradCompactBalanceOnly: {
+    minHeight: 96,
+  },
   gradContent: {
-    padding: 15,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    flex: 1,
   },
   gradContentCompact: {
-    padding: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    flex: 1,
   },
   balanceContainer: {
     height: 40,
@@ -188,6 +224,14 @@ const iStyles = StyleSheet.create({
     right: 4,
     bottom: 4,
   },
+  imageBalanceOnly: {
+    width: 80,
+    height: 76,
+  },
+  imageBalanceOnlyCompact: {
+    width: 62,
+    height: 58,
+  },
   br: {
     backgroundColor: 'transparent',
   },
@@ -198,6 +242,32 @@ const iStyles = StyleSheet.create({
   labelCompact: {
     fontSize: 16,
   },
+  labelBalanceOnly: {
+    marginTop: 0,
+    fontWeight: '400',
+    fontSize: 24,
+    lineHeight: 27,
+  },
+  balanceOnlyRow: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  balanceOnlyLeftColumn: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  balanceOnlyValueContainer: {
+    marginTop: 2,
+  },
+  balanceOnlyRightColumn: {
+    width: 80,
+    justifyContent: 'center',
+    alignItems: 'flex-end',
+  },
+  balanceOnlyRightColumnCompact: {
+    width: 62,
+  },
   balance: {
     backgroundColor: 'transparent',
     fontWeight: 'bold',
@@ -206,6 +276,25 @@ const iStyles = StyleSheet.create({
   balanceCompact: {
     fontSize: 25,
     lineHeight: 30,
+  },
+  balanceLineHeight: {
+    lineHeight: 34,
+  },
+  balanceCompactLineHeight: {
+    lineHeight: 28,
+  },
+  balanceSuperscript: {
+    fontSize: 11,
+    lineHeight: 11,
+    fontWeight: '700',
+    position: 'relative',
+    top: -10,
+    includeFontPadding: false,
+  },
+  balanceSuperscriptCompact: {
+    fontSize: 9,
+    lineHeight: 9,
+    top: -7,
   },
   latestTx: {
     backgroundColor: 'transparent',
@@ -236,6 +325,9 @@ const iStyles = StyleSheet.create({
       },
     }),
     borderWidth: 1.5,
+  },
+  shadowContainerFullWidth: {
+    width: '100%',
   },
   shadowContainerCompact: {
     ...Platform.select({
@@ -273,6 +365,7 @@ export const WalletCarouselItem: React.FC<WalletCarouselItemProps> = React.memo(
     isDraggingActive = false,
     dragActiveScale = 1.02,
     sizeVariant = 'default',
+    showLatestTransaction = true,
   }: WalletCarouselItemProps) => {
     const walletLabel = item.getLabel ? item.getLabel() : '';
     const pressScale = useSharedValue(1.0);
@@ -287,10 +380,13 @@ export const WalletCarouselItem: React.FC<WalletCarouselItemProps> = React.memo(
     const itemWidth = width * 0.82 > 375 ? 375 : width * 0.82;
     const { sizeClass } = useSizeClass();
     const isCompact = sizeVariant === 'compact';
+    const isBalanceOnlyCard = !showLatestTransaction;
     const { direction } = useLocale();
     const previousBalance = useRef<string | undefined>(undefined);
-    const balance = !item.hideBalance && formatBalance(Number(item.getBalance()), item.getPreferredBalanceUnit(), true);
-    const safeBalance = balance || undefined;
+    const formattedBalance = !item.hideBalance ? formatBalance(Number(item.getBalance()), item.getPreferredBalanceUnit(), true) : '';
+    const homeBalanceDisplay = isBalanceOnlyCard ? getBalanceDisplayParts(formattedBalance, 4, 8) : undefined;
+    const displayBalance = isBalanceOnlyCard ? `${homeBalanceDisplay?.numeric ?? ''}${homeBalanceDisplay?.suffix ?? ''}` : formattedBalance;
+    const safeBalance = displayBalance || undefined;
 
     const animatePressScale = useCallback(
       (toValue: number) => {
@@ -382,24 +478,28 @@ export const WalletCarouselItem: React.FC<WalletCarouselItemProps> = React.memo(
         image = require('../img/icon.png');
     }
 
-    let latestTransactionText;
-
-    if (walletTransactionUpdateStatus === WalletTransactionsStatus.ALL || walletTransactionUpdateStatus === item.getID()) {
-      latestTransactionText = loc.transactions.updating;
-    } else if (item.getBalance() !== 0 && item.getLatestTransactionTime() === 0) {
-      latestTransactionText = loc.wallets.pull_to_refresh;
-    } else if (item.getTransactions().find((tx: Transaction) => tx.confirmations === 0)) {
-      latestTransactionText = loc.transactions.pending;
-    } else {
-      latestTransactionText = transactionTimeToReadable(item.getLatestTransactionTime());
+    let latestTransactionText: string | undefined;
+    if (showLatestTransaction) {
+      if (walletTransactionUpdateStatus === WalletTransactionsStatus.ALL || walletTransactionUpdateStatus === item.getID()) {
+        latestTransactionText = loc.transactions.updating;
+      } else if (item.getBalance() !== 0 && item.getLatestTransactionTime() === 0) {
+        latestTransactionText = loc.wallets.pull_to_refresh;
+      } else if (item.getTransactions().find((tx: Transaction) => tx.confirmations === 0)) {
+        latestTransactionText = loc.transactions.pending;
+      } else {
+        latestTransactionText = transactionTimeToReadable(item.getLatestTransactionTime());
+      }
     }
 
     return (
       <Animated.View
         style={[
-          sizeClass === SizeClass.Large || !horizontal
-            ? [iStyles.rootLargeDevice, customStyle]
-            : [iStyles.root, { width: itemWidth }, customStyle],
+          horizontal
+            ? sizeClass === SizeClass.Large
+              ? [iStyles.rootLargeDevice, customStyle]
+              : [iStyles.root, { width: itemWidth }, customStyle]
+            : [iStyles.rootVerticalListItem, customStyle],
+          !horizontal && iStyles.rootFullWidth,
           animatedCardStyle,
         ]}
       >
@@ -414,10 +514,12 @@ export const WalletCarouselItem: React.FC<WalletCarouselItemProps> = React.memo(
           onPress={handlePress}
           delayHoverIn={0}
           delayHoverOut={0}
+          style={!horizontal ? iStyles.pressableFullWidth : undefined}
         >
           <View
             style={[
               iStyles.shadowContainer,
+              !horizontal && iStyles.shadowContainerFullWidth,
               isCompact && iStyles.shadowContainerCompact,
               {
                 backgroundColor: colors.background,
@@ -426,65 +528,132 @@ export const WalletCarouselItem: React.FC<WalletCarouselItemProps> = React.memo(
               },
             ]}
           >
-            <LinearGradient colors={['#000000', '#000000']} style={[iStyles.grad, isCompact && iStyles.gradCompact]}>
+            <LinearGradient
+              colors={['#000000', '#000000']}
+              style={[
+                iStyles.grad,
+                isCompact && iStyles.gradCompact,
+                isBalanceOnlyCard && iStyles.gradBalanceOnly,
+                isCompact && isBalanceOnlyCard && iStyles.gradCompactBalanceOnly,
+              ]}
+            >
               <View style={[iStyles.gradContent, isCompact && iStyles.gradContentCompact]}>
-                <ImageBackground source={image} style={[iStyles.image, isCompact && iStyles.imageCompact]} />
-                <Text style={iStyles.br} />
                 {!isPlaceHolder && (
                   <>
-                    <Text
-                      numberOfLines={1}
-                      style={[
-                        iStyles.label,
-                        isCompact && iStyles.labelCompact,
-                        { color: colors.inverseForegroundColor, writingDirection: direction },
-                      ]}
-                    >
-                      {renderHighlightedText ? renderHighlightedText(walletLabel, searchQuery || '') : walletLabel}
-                    </Text>
-                    <View style={[iStyles.balanceContainer, isCompact && iStyles.balanceContainerCompact]}>
-                      {item.hideBalance ? (
-                        <>
-                          <BlueSpacing10 />
-                          <BlurredBalanceView />
-                        </>
-                      ) : (
-                        <Animated.Text
+                    {isBalanceOnlyCard ? (
+                      <View style={iStyles.balanceOnlyRow}>
+                        <View style={iStyles.balanceOnlyLeftColumn}>
+                          <Text
+                            numberOfLines={1}
+                            style={[
+                              iStyles.label,
+                              isCompact && iStyles.labelCompact,
+                              iStyles.labelBalanceOnly,
+                              isCompact && iStyles.balanceCompact,
+                              iStyles.balanceLineHeight,
+                              isCompact && iStyles.balanceCompactLineHeight,
+                              { color: colors.inverseForegroundColor, writingDirection: direction },
+                            ]}
+                          >
+                            {renderHighlightedText ? renderHighlightedText(walletLabel, searchQuery || '') : walletLabel}
+                          </Text>
+                          <View style={iStyles.balanceOnlyValueContainer}>
+                            {item.hideBalance ? (
+                              <>
+                                <BlueSpacing10 />
+                                <BlurredBalanceView />
+                              </>
+                            ) : (
+                              <Animated.Text
+                                numberOfLines={1}
+                                adjustsFontSizeToFit
+                                key={`${displayBalance}`} // force component recreation on balance change. To fix right-to-left languages, like Farsi
+                                style={[
+                                  iStyles.balance,
+                                  isCompact && iStyles.balanceCompact,
+                                  iStyles.balanceLineHeight,
+                                  isCompact && iStyles.balanceCompactLineHeight,
+                                  { color: colors.inverseForegroundColor, writingDirection: direction },
+                                  animatedBalanceStyle,
+                                ]}
+                              >
+                                {homeBalanceDisplay?.numeric}
+                                {homeBalanceDisplay && homeBalanceDisplay.hiddenDecimals > 0 ? (
+                                  <Text style={[iStyles.balanceSuperscript, isCompact && iStyles.balanceSuperscriptCompact]}>
+                                    {homeBalanceDisplay.hiddenDecimals}
+                                  </Text>
+                                ) : null}
+                                {homeBalanceDisplay?.suffix}
+                              </Animated.Text>
+                            )}
+                          </View>
+                        </View>
+                        <View style={[iStyles.balanceOnlyRightColumn, isCompact && iStyles.balanceOnlyRightColumnCompact]}>
+                          <ImageBackground
+                            source={image}
+                            style={[iStyles.imageBalanceOnly, isCompact && iStyles.imageBalanceOnlyCompact]}
+                          />
+                        </View>
+                      </View>
+                    ) : (
+                      <>
+                        <ImageBackground source={image} style={[iStyles.image, isCompact && iStyles.imageCompact]} />
+                        <Text style={iStyles.br} />
+                        <Text
                           numberOfLines={1}
-                          adjustsFontSizeToFit
-                          key={`${balance}`} // force component recreation on balance change. To fix right-to-left languages, like Farsi
                           style={[
-                            iStyles.balance,
-                            isCompact && iStyles.balanceCompact,
+                            iStyles.label,
+                            isCompact && iStyles.labelCompact,
                             { color: colors.inverseForegroundColor, writingDirection: direction },
-                            animatedBalanceStyle,
                           ]}
                         >
-                          {`${balance} `}
-                        </Animated.Text>
-                      )}
-                    </View>
-                    <Text style={iStyles.br} />
-                    <Text
-                      numberOfLines={1}
-                      style={[
-                        iStyles.latestTx,
-                        isCompact && iStyles.latestTxCompact,
-                        { color: colors.inverseForegroundColor, writingDirection: direction },
-                      ]}
-                    >
-                      {loc.wallets.list_latest_transaction}
-                    </Text>
-                    <Text
-                      numberOfLines={1}
-                      style={[
-                        iStyles.latestTxTime,
-                        isCompact && iStyles.latestTxTimeCompact,
-                        { color: colors.inverseForegroundColor, writingDirection: direction },
-                      ]}
-                    >
-                      {latestTransactionText}
-                    </Text>
+                          {renderHighlightedText ? renderHighlightedText(walletLabel, searchQuery || '') : walletLabel}
+                        </Text>
+                        <View style={[iStyles.balanceContainer, isCompact && iStyles.balanceContainerCompact]}>
+                          {item.hideBalance ? (
+                            <>
+                              <BlueSpacing10 />
+                              <BlurredBalanceView />
+                            </>
+                          ) : (
+                            <Animated.Text
+                              numberOfLines={1}
+                              adjustsFontSizeToFit
+                              key={`${displayBalance}`} // force component recreation on balance change. To fix right-to-left languages, like Farsi
+                              style={[
+                                iStyles.balance,
+                                isCompact && iStyles.balanceCompact,
+                                { color: colors.inverseForegroundColor, writingDirection: direction },
+                                animatedBalanceStyle,
+                              ]}
+                            >
+                              {`${displayBalance} `}
+                            </Animated.Text>
+                          )}
+                        </View>
+                        <Text style={iStyles.br} />
+                        <Text
+                          numberOfLines={1}
+                          style={[
+                            iStyles.latestTx,
+                            isCompact && iStyles.latestTxCompact,
+                            { color: colors.inverseForegroundColor, writingDirection: direction },
+                          ]}
+                        >
+                          {loc.wallets.list_latest_transaction}
+                        </Text>
+                        <Text
+                          numberOfLines={1}
+                          style={[
+                            iStyles.latestTxTime,
+                            isCompact && iStyles.latestTxTimeCompact,
+                            { color: colors.inverseForegroundColor, writingDirection: direction },
+                          ]}
+                        >
+                          {latestTransactionText}
+                        </Text>
+                      </>
+                    )}
                   </>
                 )}
               </View>
@@ -508,6 +677,7 @@ interface WalletsCarouselProps extends Partial<FlatListProps<any>> {
   searchQuery?: string;
   renderHighlightedText?: (text: string, query: string) => React.ReactElement;
   animateChanges?: boolean;
+  showLatestTransaction?: boolean;
 }
 
 type FlatListRefType = FlatList<any> & {
@@ -542,7 +712,9 @@ const WalletsCarousel = forwardRef<FlatListRefType, WalletsCarouselProps>((props
     renderHighlightedText,
     isFlatList = true,
     animateChanges = false,
+    showLatestTransaction = true,
   } = props;
+  const isFullWidthLayout = !horizontal;
 
   const { width } = useWindowDimensions();
   const itemWidth = React.useMemo(() => (width * 0.82 > 375 ? 375 : width * 0.82), [width]);
@@ -740,6 +912,7 @@ const WalletsCarousel = forwardRef<FlatListRefType, WalletsCarouselProps>((props
           renderHighlightedText={renderHighlightedText}
           isNewWallet={animateChanges && newWalletsMap.current[item.getID()]}
           animationsEnabled={animateChanges}
+          showLatestTransaction={showLatestTransaction}
         />
       );
 
@@ -759,6 +932,7 @@ const WalletsCarousel = forwardRef<FlatListRefType, WalletsCarouselProps>((props
       searchQuery,
       renderHighlightedText,
       animateChanges,
+      showLatestTransaction,
       layoutTransition,
       enteringTransition,
       exitingTransition,
@@ -806,6 +980,7 @@ const WalletsCarousel = forwardRef<FlatListRefType, WalletsCarouselProps>((props
             renderHighlightedText={props.renderHighlightedText}
             isNewWallet={animateChanges && newWalletsMap.current[item.getID()]}
             animationsEnabled={animateChanges}
+            showLatestTransaction={showLatestTransaction}
           />
         </View>
       );
@@ -827,6 +1002,7 @@ const WalletsCarousel = forwardRef<FlatListRefType, WalletsCarouselProps>((props
     props.searchQuery,
     props.renderHighlightedText,
     animateChanges,
+    showLatestTransaction,
     layoutTransition,
     enteringTransition,
     exitingTransition,
@@ -886,7 +1062,7 @@ const WalletsCarousel = forwardRef<FlatListRefType, WalletsCarouselProps>((props
   ) : (
     <View style={cStyles.contentLargeScreen}>
       {renderNonFlatListWallets()}
-      {onNewWalletPress && <NewWalletPanel onPress={onNewWalletPress} />}
+      {onNewWalletPress && <NewWalletPanel onPress={onNewWalletPress} fullWidth={isFullWidthLayout} />}
     </View>
   );
 });

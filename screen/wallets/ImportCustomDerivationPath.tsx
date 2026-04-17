@@ -8,6 +8,7 @@ import { HDLegacyP2PKHWallet, HDSegwitBech32Wallet, HDSegwitP2SHWallet, HDTaproo
 import { isTestnetExtendedPrivateKey, validateBip32 } from '../../class/wallet-import';
 import { TWallet } from '../../class/wallets/types';
 import Button from '../../components/Button';
+import presentAlert from '../../components/Alert';
 import SafeArea from '../../components/SafeArea';
 import { useTheme } from '../../components/themes';
 import WalletToImport from '../../components/WalletToImport';
@@ -127,12 +128,17 @@ const ImportCustomDerivationPath: React.FC = () => {
     },
   });
 
-  const saveWallet = (type: string) => {
+  const saveWallet = async (type: string) => {
     if (importing.current) return;
     importing.current = true;
     if (wallets[path] === WRONG_PATH) return;
-    addAndSaveWallet(wallets[path][type]);
-    navigation.getParent()?.goBack();
+    try {
+      await addAndSaveWallet(wallets[path][type]);
+      navigation.getParent()?.goBack();
+    } catch (error: any) {
+      importing.current = false;
+      presentAlert({ title: loc.errors.error, message: error?.message || 'Failed to import wallet' });
+    }
   };
 
   const renderItem = ({ item }: { item: TItem }) => {

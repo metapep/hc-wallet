@@ -368,7 +368,8 @@ export const removeTrailingZeros = (value: number | string): string => {
  */
 export function formatBalance(balance: number, toUnit: string, withFormatting = false): string {
   if (toUnit === undefined) {
-    return balance + ' ' + loc.units[BitcoinUnit.BTC];
+    const value = new BigNumber(balance).toFixed(8);
+    return removeTrailingZeros(value) + ' ' + loc.units[BitcoinUnit.BTC];
   }
   if (toUnit === BitcoinUnit.BTC) {
     const value = new BigNumber(balance).dividedBy(100000000).toFixed(8);
@@ -390,7 +391,8 @@ export function formatBalance(balance: number, toUnit: string, withFormatting = 
  */
 export function formatBalanceWithoutSuffix(balance = 0, toUnit: string, withFormatting = false): string | number {
   if (toUnit === undefined) {
-    return balance;
+    const value = new BigNumber(balance).toFixed(8);
+    return removeTrailingZeros(value);
   }
   if (toUnit === BitcoinUnit.BTC) {
     const value = new BigNumber(balance).dividedBy(100000000).toFixed(8);

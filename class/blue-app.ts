@@ -789,6 +789,7 @@ export class BlueApp {
       for (const wallet of this.wallets) {
         if (c++ === index) {
           try {
+            wallet.setHistoryBackfillRequired(false);
             await wallet.fetchTransactions();
 
             if ('fetchPendingTransactions' in wallet) {
@@ -797,6 +798,7 @@ export class BlueApp {
             }
           } catch (error) {
             if (isTooManyHistoryEntriesError(error)) {
+              wallet.setHistoryBackfillRequired(true);
               console.warn(
                 '[fetchWalletTransactions] Electrum history limit reached for wallet; preserving existing transactions and skipping refresh',
                 wallet.getLabel(),
@@ -810,6 +812,7 @@ export class BlueApp {
     } else {
       for (const wallet of this.wallets) {
         try {
+          wallet.setHistoryBackfillRequired(false);
           await wallet.fetchTransactions();
           if ('fetchPendingTransactions' in wallet) {
             await wallet.fetchPendingTransactions();
@@ -817,6 +820,7 @@ export class BlueApp {
           }
         } catch (error) {
           if (isTooManyHistoryEntriesError(error)) {
+            wallet.setHistoryBackfillRequired(true);
             console.warn(
               '[fetchWalletTransactions] Electrum history limit reached for wallet; preserving existing transactions and skipping refresh',
               wallet.getLabel(),

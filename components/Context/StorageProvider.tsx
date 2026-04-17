@@ -12,11 +12,33 @@ import { BitcoinUnit } from '../../models/bitcoinUnits';
 import { navigationRef } from '../../NavigationService';
 import { getScanWasBBQR } from '../../helpers/scan-qr.ts';
 import { setWalletIdMustUseBBQR } from '../../blue_modules/ur';
+import {
+  SyncRequest,
+  TransactionRowVM,
+  TransactionSyncCoordinator,
+  WalletPageCursor,
+  WalletPageResult,
+} from '../../class/transaction-sync-coordinator';
 
 const BlueApp = BlueAppClass.getInstance();
 
 // hashmap of timestamps we _started_ refetching some wallet
 const _lastTimeTriedToRefetchWallet: { [walletID: string]: number } = {};
+const REFRESH_CONNECT_TIMEOUT_MS = 12000;
+const REFRESH_BALANCE_TIMEOUT_MS = 15000;
+const REFRESH_TX_TIMEOUT_MS = 20000;
+const REFRESH_TX_BACKFILL_TIMEOUT_MS = 180000;
+const REFRESH_RETRY_DELAY_MS = 5000;
+
+class RefreshTimeoutError extends Error {
+  constructor(label: string, timeoutMs: number) {
+    super(`${label} timed out after ${timeoutMs}ms`);
+    this.name = 'RefreshTimeoutError';
+  }
+}
+
+const isRefreshTimeoutError = (error: unknown): error is RefreshTimeoutError =>
+  error instanceof RefreshTimeoutError || (error as Error)?.name === 'RefreshTimeoutError';
 
 interface StorageContextType {
   wallets: TWallet[];
@@ -34,6 +56,12 @@ interface StorageContextType {
   walletsInitialized: boolean;
   setWalletsInitialized: (initialized: boolean) => void;
   refreshAllWalletTransactions: (lastSnappedTo?: number, showUpdateStatusIndicator?: boolean) => Promise<void>;
+  requestTransactionSync: (request: SyncRequest) => Promise<void>;
+  getHomeFeed: () => TransactionRowVM[];
+  getWalletPage: (walletId: string, cursor?: WalletPageCursor, pageSize?: number) => WalletPageResult;
+  subscribeHomeFeed: (listener: (rows: TransactionRowVM[]) => void) => () => void;
+  subscribeWalletFeed: (walletId: string, listener: (walletId: string, revision: string, rows: TransactionRowVM[]) => void) => () => void;
+  prefetchNextWalletPage: (walletId: string, cursor?: WalletPageCursor, pageSize?: number) => void;
   resetWallets: () => void;
   walletTransactionUpdateStatus: WalletTransactionsStatus | string;
   setWalletTransactionUpdateStatus: (status: WalletTransactionsStatus | string) => void;
@@ -310,93 +338,419 @@ export const StorageProvider = ({ children }: { children: React.ReactNode }) => 
     }
   }, [walletsInitialized]);
 
-  // Add a refresh lock to prevent concurrent refreshes
+  type RefreshRequest = {
+    walletIndexes: number[];
+    explorerFallbackWalletIndexes: number[];
+    useExtendedTxTimeout: boolean;
+    showUpdateStatusIndicator: boolean;
+    allowRetry: boolean;
+  };
+
   const refreshingRef = useRef<boolean>(false);
+  const pendingRefreshRequestRef = useRef<RefreshRequest | null>(null);
+  const refreshQueueDrainResolversRef = useRef<Array<() => void>>([]);
+  const refreshRunIdRef = useRef(0);
+  const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (retryTimerRef.current) {
+        clearTimeout(retryTimerRef.current);
+      }
+    };
+  }, []);
+
+  const withTimeout = useCallback(async function withTimeout<T>(label: string, timeoutMs: number, fn: () => Promise<T>): Promise<T> {
+    let timeoutHandle: ReturnType<typeof setTimeout> | undefined;
+    try {
+      return await Promise.race([
+        fn(),
+        new Promise<never>((_resolve, reject) => {
+          timeoutHandle = setTimeout(() => reject(new RefreshTimeoutError(label, timeoutMs)), timeoutMs);
+        }),
+      ]);
+    } finally {
+      if (timeoutHandle) clearTimeout(timeoutHandle);
+    }
+  }, []);
+
+  const mergeRefreshRequests = useCallback((existing: RefreshRequest | null, incoming: RefreshRequest): RefreshRequest => {
+    if (!existing) return incoming;
+    const walletIndexes = [...new Set([...existing.walletIndexes, ...incoming.walletIndexes])].sort((a, b) => a - b);
+    const explorerFallbackWalletIndexes = [
+      ...new Set([...existing.explorerFallbackWalletIndexes, ...incoming.explorerFallbackWalletIndexes]),
+    ].sort((a, b) => a - b);
+    return {
+      walletIndexes,
+      explorerFallbackWalletIndexes,
+      useExtendedTxTimeout: existing.useExtendedTxTimeout || incoming.useExtendedTxTimeout,
+      showUpdateStatusIndicator: existing.showUpdateStatusIndicator || incoming.showUpdateStatusIndicator,
+      allowRetry: existing.allowRetry || incoming.allowRetry,
+    };
+  }, []);
+
+  const connectAndPingElectrum = useCallback(
+    async (runId: number, ignoreSavedPeer: boolean = false): Promise<void> => {
+      if (runId !== refreshRunIdRef.current) return;
+      await withTimeout('connect/ping', REFRESH_CONNECT_TIMEOUT_MS, async () => {
+        await BlueElectrum.connectMain({ ignoreSavedPeer, showErrorAlert: false });
+        await BlueElectrum.waitTillConnected();
+        if (!(await BlueElectrum.ping())) {
+          console.warn('[refreshAllWalletTransactions] ping failed, reconnecting...');
+          await BlueElectrum.connectMain({ ignoreSavedPeer, showErrorAlert: false });
+          await BlueElectrum.waitTillConnected();
+          if (!(await BlueElectrum.ping())) {
+            throw new Error('Electrum ping failed after reconnect');
+          }
+        }
+      });
+    },
+    [withTimeout],
+  );
+
+  const refreshWalletByIndex = useCallback(
+    async (
+      walletIndex: number,
+      runId: number,
+      useExplorerHistoryFallback: boolean = false,
+      useExtendedTxTimeout: boolean = false,
+    ): Promise<{ hasSuccessfulUpdate: boolean; hasFailure: boolean; shouldRetry: boolean }> => {
+      const wallet = BlueApp.getWallets()[walletIndex];
+      const walletLabel = wallet ? `${wallet.getLabel()} (${wallet.getID()})` : `#${walletIndex}`;
+      let hasSuccessfulUpdate = false;
+      let hasFailure = false;
+      let shouldRetry = true;
+
+      const runStage = async (
+        stage: 'balance' | 'transactions',
+        timeoutMs: number,
+        runner: () => Promise<void>,
+        options: { requireElectrumConnection?: boolean } = {},
+      ) => {
+        const { requireElectrumConnection = true } = options;
+        if (runId !== refreshRunIdRef.current) return;
+
+        if (requireElectrumConnection) {
+          try {
+            await connectAndPingElectrum(runId);
+          } catch (error) {
+            hasFailure = true;
+            if (isRefreshTimeoutError(error)) {
+              console.warn(`[refreshAllWalletTransactions] connect timed out for wallet ${walletLabel}`, error);
+              BlueElectrum.forceDisconnect();
+            } else {
+              console.warn(`[refreshAllWalletTransactions] connect failed for wallet ${walletLabel}`, error);
+            }
+            return;
+          }
+        }
+
+        if (runId !== refreshRunIdRef.current) return;
+
+        try {
+          await withTimeout(`${stage}:${walletLabel}`, timeoutMs, runner);
+          hasSuccessfulUpdate = true;
+          if (runId === refreshRunIdRef.current) {
+            setWallets([...BlueApp.getWallets()]);
+          }
+        } catch (error) {
+          hasFailure = true;
+          if (isRefreshTimeoutError(error)) {
+            console.warn(`[refreshAllWalletTransactions] ${stage} timed out for wallet ${walletLabel}`, error);
+            BlueElectrum.forceDisconnect();
+            if (stage === 'transactions') {
+              // Transactions stage timeout can keep long explorer pagination alive in background.
+              // Skip immediate retry to avoid doubling network load.
+              shouldRetry = false;
+            }
+          } else {
+            console.warn(`[refreshAllWalletTransactions] ${stage} failed for wallet ${walletLabel}`, error);
+          }
+        }
+      };
+
+      await runStage('balance', REFRESH_BALANCE_TIMEOUT_MS, async () => {
+        await BlueApp.fetchWalletBalances(walletIndex);
+      });
+      const txStageTimeoutMs = useExtendedTxTimeout ? REFRESH_TX_BACKFILL_TIMEOUT_MS : REFRESH_TX_TIMEOUT_MS;
+      await runStage(
+        'transactions',
+        txStageTimeoutMs,
+        async () => {
+          if (useExplorerHistoryFallback) {
+            await BlueElectrum.withExplorerHistoryFallback(async () => {
+              await BlueApp.fetchWalletTransactions(walletIndex);
+            });
+            return;
+          }
+          await BlueApp.fetchWalletTransactions(walletIndex);
+        },
+        { requireElectrumConnection: !BlueElectrum.isExplorerHistorySourceEnabled() },
+      );
+
+      const walletAfterTx = BlueApp.getWallets()[walletIndex];
+      if (!hasFailure && walletAfterTx?.isHistoryBackfillRequired()) {
+        // The server capped history for this wallet. Keep current cached rows and avoid retry loops.
+        shouldRetry = false;
+        console.warn(
+          `[refreshAllWalletTransactions] history limited by server for wallet ${walletLabel}; keeping cached transactions without alternate-peer retry`,
+        );
+      }
+
+      return { hasSuccessfulUpdate, hasFailure, shouldRetry };
+    },
+    [connectAndPingElectrum, withTimeout],
+  );
+
+  const processRefreshRequests = useCallback(
+    async (initialRequest: RefreshRequest) => {
+      let request: RefreshRequest | null = initialRequest;
+
+      try {
+        while (request) {
+          refreshingRef.current = true;
+          const runId = ++refreshRunIdRef.current;
+          let hasSuccessfulUpdates = false;
+          const failedWalletIndexes = new Set<number>();
+
+          try {
+            if (request.showUpdateStatusIndicator) {
+              setWalletTransactionUpdateStatus(WalletTransactionsStatus.ALL);
+            }
+
+            if (typeof BlueApp.fetchSenderPaymentCodes === 'function' && request.walletIndexes.length > 0) {
+              try {
+                const senderPaymentCodesIndex = request.walletIndexes.length === 1 ? request.walletIndexes[0] : undefined;
+                await withTimeout('fetchSenderPaymentCodes', REFRESH_TX_TIMEOUT_MS, async () => {
+                  await BlueApp.fetchSenderPaymentCodes(senderPaymentCodesIndex);
+                });
+              } catch (error) {
+                if (isRefreshTimeoutError(error)) {
+                  console.warn('[refreshAllWalletTransactions] fetchSenderPaymentCodes timed out', error);
+                  BlueElectrum.forceDisconnect();
+                } else {
+                  console.warn('[refreshAllWalletTransactions] fetchSenderPaymentCodes failed', error);
+                }
+              }
+            } else {
+              console.warn('[refreshAllWalletTransactions] fetchSenderPaymentCodes is not available');
+            }
+
+            for (const walletIndex of request.walletIndexes) {
+              if (runId !== refreshRunIdRef.current) {
+                console.debug('[refreshAllWalletTransactions] Stale refresh run detected, aborting run', runId);
+                break;
+              }
+              const result = await refreshWalletByIndex(
+                walletIndex,
+                runId,
+                request.explorerFallbackWalletIndexes.includes(walletIndex),
+                request.useExtendedTxTimeout,
+              );
+              if (result.hasSuccessfulUpdate) hasSuccessfulUpdates = true;
+              if (result.hasFailure && result.shouldRetry) failedWalletIndexes.add(walletIndex);
+            }
+
+            if (hasSuccessfulUpdates && runId === refreshRunIdRef.current) {
+              await saveToDisk();
+            }
+          } catch (error) {
+            if (isRefreshTimeoutError(error)) {
+              console.warn('[refreshAllWalletTransactions] refresh run timed out', error);
+              BlueElectrum.forceDisconnect();
+            } else {
+              console.warn('[refreshAllWalletTransactions] refresh run failed', error);
+            }
+          } finally {
+            if (runId === refreshRunIdRef.current) {
+              setWalletTransactionUpdateStatus(WalletTransactionsStatus.NONE);
+            }
+            refreshingRef.current = false;
+          }
+
+          const pendingRequest = pendingRefreshRequestRef.current;
+          pendingRefreshRequestRef.current = null;
+          if (pendingRequest) {
+            console.debug('[refreshAllWalletTransactions] Processing queued refresh request');
+            request = pendingRequest;
+            continue;
+          }
+
+          if (request.allowRetry && failedWalletIndexes.size > 0) {
+            const retryWalletIndexes = [...failedWalletIndexes];
+            console.warn('[refreshAllWalletTransactions] Scheduling one-time retry for wallets:', retryWalletIndexes);
+            if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
+            retryTimerRef.current = setTimeout(() => {
+              retryTimerRef.current = null;
+              const retryRequest: RefreshRequest = {
+                walletIndexes: retryWalletIndexes,
+                explorerFallbackWalletIndexes: [],
+                useExtendedTxTimeout: false,
+                showUpdateStatusIndicator: false,
+                allowRetry: false,
+              };
+              if (refreshingRef.current) {
+                pendingRefreshRequestRef.current = mergeRefreshRequests(pendingRefreshRequestRef.current, retryRequest);
+                return;
+              }
+              processRefreshRequests(retryRequest).catch(error => {
+                console.warn('[refreshAllWalletTransactions] queued retry failed', error);
+              });
+            }, REFRESH_RETRY_DELAY_MS);
+          }
+
+          request = null;
+        }
+      } finally {
+        const drainResolvers = refreshQueueDrainResolversRef.current;
+        refreshQueueDrainResolversRef.current = [];
+        drainResolvers.forEach(resolve => resolve());
+      }
+    },
+    [mergeRefreshRequests, refreshWalletByIndex, saveToDisk, withTimeout],
+  );
+
+  const enqueueRefreshRequest = useCallback(
+    async (request: RefreshRequest) => {
+      if (request.walletIndexes.length === 0) return;
+      if (refreshingRef.current) {
+        pendingRefreshRequestRef.current = mergeRefreshRequests(pendingRefreshRequestRef.current, request);
+        console.debug('[refreshAllWalletTransactions] Refresh already in progress, request queued');
+        await new Promise<void>(resolve => {
+          refreshQueueDrainResolversRef.current.push(resolve);
+        });
+        return;
+      }
+
+      await processRefreshRequests(request);
+    },
+    [mergeRefreshRequests, processRefreshRequests],
+  );
+
+  const transactionSyncCoordinatorRef = useRef<TransactionSyncCoordinator | null>(null);
+
+  const getTransactionSyncCoordinator = useCallback(() => {
+    if (transactionSyncCoordinatorRef.current) {
+      return transactionSyncCoordinatorRef.current;
+    }
+
+    transactionSyncCoordinatorRef.current = new TransactionSyncCoordinator({
+      getWallets: () => BlueApp.getWallets(),
+      performSync: async (request: SyncRequest) => {
+        const walletsList = BlueApp.getWallets();
+        const requestedWalletIds = request.walletIds && request.walletIds.length > 0 ? request.walletIds : walletsList.map(w => w.getID());
+        const walletIndexes = requestedWalletIds
+          .map(walletId => walletsList.findIndex(wallet => wallet.getID() === walletId))
+          .filter(index => index >= 0);
+        if (walletIndexes.length === 0) return;
+
+        await enqueueRefreshRequest({
+          walletIndexes,
+          explorerFallbackWalletIndexes: [],
+          useExtendedTxTimeout: false,
+          showUpdateStatusIndicator: request.priority === 'high',
+          allowRetry: true,
+        });
+      },
+      loadSnapshot: async storageKey => {
+        try {
+          return await BlueApp.getItem(storageKey);
+        } catch {
+          return null;
+        }
+      },
+      saveSnapshot: async (storageKey, serialized) => {
+        try {
+          await BlueApp.setItem(storageKey, serialized);
+        } catch (error) {
+          console.warn('[StorageProvider] Failed to persist transaction head snapshot', error);
+        }
+      },
+    });
+
+    transactionSyncCoordinatorRef.current.initialize().catch(error => {
+      console.warn('[StorageProvider] Failed to initialize transaction sync coordinator', error);
+    });
+    return transactionSyncCoordinatorRef.current;
+  }, [enqueueRefreshRequest]);
+
+  useEffect(() => {
+    return () => {
+      transactionSyncCoordinatorRef.current?.dispose();
+      transactionSyncCoordinatorRef.current = null;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!walletsInitialized) return;
+    const coordinator = getTransactionSyncCoordinator();
+    coordinator.hydrateFromWallets(BlueApp.getWallets());
+  }, [wallets, walletsInitialized, getTransactionSyncCoordinator]);
+
+  const requestTransactionSync = useCallback(
+    async (request: SyncRequest) => {
+      const coordinator = getTransactionSyncCoordinator();
+      await coordinator.requestSync(request);
+    },
+    [getTransactionSyncCoordinator],
+  );
+
+  const getHomeFeed = useCallback(() => {
+    return getTransactionSyncCoordinator().getHomeFeed();
+  }, [getTransactionSyncCoordinator]);
+
+  const getWalletPage = useCallback(
+    (walletId: string, cursor?: WalletPageCursor, pageSize: number = 25) => {
+      return getTransactionSyncCoordinator().getWalletPage(walletId, cursor, pageSize);
+    },
+    [getTransactionSyncCoordinator],
+  );
+
+  const subscribeHomeFeed = useCallback(
+    (listener: (rows: TransactionRowVM[]) => void) => {
+      return getTransactionSyncCoordinator().subscribeHomeFeed(listener);
+    },
+    [getTransactionSyncCoordinator],
+  );
+
+  const subscribeWalletFeed = useCallback(
+    (walletId: string, listener: (walletId: string, revision: string, rows: TransactionRowVM[]) => void) => {
+      return getTransactionSyncCoordinator().subscribeWalletFeed(walletId, listener);
+    },
+    [getTransactionSyncCoordinator],
+  );
+
+  const prefetchNextWalletPage = useCallback(
+    (walletId: string, cursor?: WalletPageCursor, pageSize: number = 25) => {
+      getTransactionSyncCoordinator().prefetchNextWalletPage(walletId, cursor, pageSize);
+    },
+    [getTransactionSyncCoordinator],
+  );
 
   const refreshAllWalletTransactions = useCallback(
     async (lastSnappedTo?: number, showUpdateStatusIndicator: boolean = true) => {
-      if (refreshingRef.current) {
-        console.debug('[refreshAllWalletTransactions] Refresh already in progress');
-        return;
-      }
-      console.debug('[refreshAllWalletTransactions] Starting refresh');
-      refreshingRef.current = true;
+      const walletsList = BlueApp.getWallets();
+      const walletIds =
+        typeof lastSnappedTo === 'number'
+          ? walletsList[lastSnappedTo]
+            ? [walletsList[lastSnappedTo].getID()]
+            : []
+          : walletsList.map(wallet => wallet.getID());
 
-      const TIMEOUT_DURATION = 30000;
-      let refreshTimeout;
-      const timeoutPromise = new Promise<never>(
-        (_resolve, reject) =>
-          (refreshTimeout = setTimeout(() => {
-            console.debug('[refreshAllWalletTransactions] Timeout reached');
-            reject(new Error('Timeout reached'));
-          }, TIMEOUT_DURATION)),
-      );
+      if (walletIds.length === 0) return;
 
-      try {
-        if (showUpdateStatusIndicator) {
-          console.debug('[refreshAllWalletTransactions] Setting wallet transaction status to ALL');
-          setWalletTransactionUpdateStatus(WalletTransactionsStatus.ALL);
-        }
-        console.debug('[refreshAllWalletTransactions] Waiting for connectivity...');
-        await BlueElectrum.connectMain();
-        await BlueElectrum.waitTillConnected();
-        if (!(await BlueElectrum.ping())) {
-          // above `waitTillConnected` is not reliable, as app might have returned from long sleep, so it thinks its
-          // connected but actually socket is closed. thus, we ping, and if it fails - we wait again (reconnection code
-          // should pick up)
-          console.log('[refreshAllWalletTransactions] ping failed, waiting for connection...');
-          await BlueElectrum.connectMain();
-          await BlueElectrum.waitTillConnected();
-        }
-
-        console.debug('[refreshAllWalletTransactions] Connected to Electrum');
-
-        // Restore fetch payment codes timing measurement
-        if (typeof BlueApp.fetchSenderPaymentCodes === 'function') {
-          const codesStart = Date.now();
-          console.debug('[refreshAllWalletTransactions] Fetching sender payment codes');
-          await BlueApp.fetchSenderPaymentCodes(lastSnappedTo);
-          const codesEnd = Date.now();
-          console.debug('[refreshAllWalletTransactions] fetch payment codes took', (codesEnd - codesStart) / 1000, 'sec');
-        } else {
-          console.warn('[refreshAllWalletTransactions] fetchSenderPaymentCodes is not available');
-        }
-
-        console.debug('[refreshAllWalletTransactions] Fetching wallet balances and transactions');
-        await Promise.race([
-          (async () => {
-            const balanceStart = Date.now();
-            await BlueApp.fetchWalletBalances(lastSnappedTo);
-            const balanceEnd = Date.now();
-            console.debug('[refreshAllWalletTransactions] fetch balance took', (balanceEnd - balanceStart) / 1000, 'sec');
-
-            const txStart = Date.now();
-            await BlueApp.fetchWalletTransactions(lastSnappedTo);
-            const txEnd = Date.now();
-            console.debug('[refreshAllWalletTransactions] fetch tx took', (txEnd - txStart) / 1000, 'sec');
-
-            clearTimeout(refreshTimeout);
-
-            console.debug('[refreshAllWalletTransactions] Saving data to disk');
-            await saveToDisk();
-          })(),
-          timeoutPromise,
-        ]);
-        console.debug('[refreshAllWalletTransactions] Refresh completed successfully');
-      } catch (error) {
-        console.error('[refreshAllWalletTransactions] Error:', error);
-      } finally {
-        console.debug('[refreshAllWalletTransactions] Resetting wallet transaction status and refresh lock');
-        setWalletTransactionUpdateStatus(WalletTransactionsStatus.NONE);
-        refreshingRef.current = false;
-      }
+      await requestTransactionSync({
+        scope: typeof lastSnappedTo === 'number' ? 'wallet' : 'all',
+        walletIds,
+        reason: typeof lastSnappedTo === 'number' ? 'wallet-focus-refresh' : 'all-wallets-refresh',
+        priority: showUpdateStatusIndicator ? 'high' : 'normal',
+      });
     },
-    [saveToDisk],
+    [requestTransactionSync],
   );
 
   const fetchAndSaveWalletTransactions = useCallback(
     async (walletID: string) => {
-      const index = wallets.findIndex(wallet => wallet.getID() === walletID);
       let noErr = true;
       try {
         if (Date.now() - (_lastTimeTriedToRefetchWallet[walletID] || 0) < 5000) {
@@ -405,19 +759,13 @@ export const StorageProvider = ({ children }: { children: React.ReactNode }) => 
         }
         _lastTimeTriedToRefetchWallet[walletID] = Date.now();
 
-        await BlueElectrum.connectMain();
-        await BlueElectrum.waitTillConnected();
         setWalletTransactionUpdateStatus(walletID);
-
-        const balanceStart = Date.now();
-        await BlueApp.fetchWalletBalances(index);
-        const balanceEnd = Date.now();
-        console.debug('[fetchAndSaveWalletTransactions] fetch balance took', (balanceEnd - balanceStart) / 1000, 'sec');
-
-        const txStart = Date.now();
-        await BlueApp.fetchWalletTransactions(index);
-        const txEnd = Date.now();
-        console.debug('[fetchAndSaveWalletTransactions] fetch tx took', (txEnd - txStart) / 1000, 'sec');
+        await requestTransactionSync({
+          scope: 'wallet',
+          walletIds: [walletID],
+          reason: 'single-wallet-refresh',
+          priority: 'high',
+        });
       } catch (err) {
         noErr = false;
         console.error('[fetchAndSaveWalletTransactions] Error:', err);
@@ -426,7 +774,7 @@ export const StorageProvider = ({ children }: { children: React.ReactNode }) => 
       }
       if (noErr) await saveToDisk();
     },
-    [saveToDisk, wallets],
+    [requestTransactionSync, saveToDisk],
   );
 
   const addAndSaveWallet = useCallback(
@@ -455,7 +803,13 @@ export const StorageProvider = ({ children }: { children: React.ReactNode }) => 
         message: w.type === WatchOnlyWallet.type ? loc.wallets.import_success_watchonly : loc.wallets.import_success,
       });
 
-      await w.fetchBalance();
+      try {
+        await w.fetchBalance();
+        setWallets([...BlueApp.getWallets()]);
+        await saveToDisk();
+      } catch (error) {
+        console.warn('[addAndSaveWallet] Failed to fetch or persist imported wallet balance:', error);
+      }
       try {
         await majorTomToGroundControl(w.getAllExternalAddresses(), [], []);
       } catch (error) {
@@ -523,6 +877,12 @@ export const StorageProvider = ({ children }: { children: React.ReactNode }) => 
       walletsInitialized,
       setWalletsInitialized,
       refreshAllWalletTransactions,
+      requestTransactionSync,
+      getHomeFeed,
+      getWalletPage,
+      subscribeHomeFeed,
+      subscribeWalletFeed,
+      prefetchNextWalletPage,
       sleep: BlueApp.sleep,
       createFakeStorage: BlueApp.createFakeStorage,
       resetWallets,
@@ -546,6 +906,12 @@ export const StorageProvider = ({ children }: { children: React.ReactNode }) => 
       walletsInitialized,
       setWalletsInitialized,
       refreshAllWalletTransactions,
+      requestTransactionSync,
+      getHomeFeed,
+      getWalletPage,
+      subscribeHomeFeed,
+      subscribeWalletFeed,
+      prefetchNextWalletPage,
       resetWallets,
       walletTransactionUpdateStatus,
       handleWalletDeletion,

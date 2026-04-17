@@ -157,7 +157,7 @@ const WalletsAddMultisigStep2 = () => {
       await w.fetchBalance();
     }
 
-    addAndSaveWallet(w);
+    await addAndSaveWallet(w);
 
     triggerHapticFeedback(HapticFeedbackTypes.NotificationSuccess);
     navigation.getParent()?.goBack();
