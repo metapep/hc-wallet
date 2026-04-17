@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useFocusEffect, useRoute, RouteProp } from '@react-navigation/native';
-import { Alert, findNodeHandle, Image, StyleSheet, View } from 'react-native';
+import { Alert, findNodeHandle, Image, StyleSheet, Text, View } from 'react-native';
 import { getClipboardContent } from '../../blue_modules/clipboard';
 import { isDesktop } from '../../blue_modules/environment';
 import * as fs from '../../blue_modules/fs';
@@ -22,6 +22,7 @@ import { useSettings } from '../../hooks/context/useSettings';
 import useMenuElements from '../../hooks/useMenuElements';
 import SafeAreaSectionList from '../../components/SafeAreaSectionList';
 import { scanQrHelper } from '../../helpers/scan-qr.ts';
+import { ACTIVE_HCASH_PROFILE } from '../../blue_modules/hashcash';
 
 const WalletsListSections = { WALLETS: 'WALLETS' } as const;
 
@@ -44,6 +45,7 @@ const WalletsList: React.FC = () => {
   const walletActionButtonsRef = useRef<any>(null);
   const walletsRef = useRef(wallets);
   const didInitialLoadRef = useRef(false);
+  const showDevnetBanner = ACTIVE_HCASH_PROFILE === 'dev';
 
   useEffect(() => {
     walletsRef.current = wallets;
@@ -56,6 +58,26 @@ const WalletsList: React.FC = () => {
     walletsHeaderSpacer: {
       height: 20,
       backgroundColor: colors.backgroundPrimary,
+    },
+    devnetBanner: {
+      marginTop: 12,
+      marginHorizontal: 16,
+      marginBottom: 4,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: colors.redText,
+      backgroundColor: colors.redBG,
+      paddingHorizontal: 10,
+      paddingVertical: 8,
+    },
+    devnetBannerText: {
+      color: colors.redText,
+      fontSize: 12,
+      fontWeight: '500',
+      textAlign: 'center',
+    },
+    devnetBannerTextBold: {
+      fontWeight: '700',
     },
   });
 
@@ -186,6 +208,13 @@ const WalletsList: React.FC = () => {
         case WalletsListSections.WALLETS:
           return (
             <View style={stylesHook.walletsListWrapper}>
+              {showDevnetBanner ? (
+                <View style={stylesHook.devnetBanner}>
+                  <Text style={stylesHook.devnetBannerText}>
+                    <Text style={stylesHook.devnetBannerTextBold}>Devnet Mode</Text> Funds Not Real / May Reset
+                  </Text>
+                </View>
+              ) : null}
               {isTotalBalanceEnabled ? <TotalWalletsBalance /> : null}
               <View style={stylesHook.walletsHeaderSpacer} />
             </View>
@@ -194,7 +223,15 @@ const WalletsList: React.FC = () => {
           return null;
       }
     },
-    [isTotalBalanceEnabled, stylesHook.walletsHeaderSpacer, stylesHook.walletsListWrapper],
+    [
+      isTotalBalanceEnabled,
+      showDevnetBanner,
+      stylesHook.devnetBanner,
+      stylesHook.devnetBannerText,
+      stylesHook.devnetBannerTextBold,
+      stylesHook.walletsHeaderSpacer,
+      stylesHook.walletsListWrapper,
+    ],
   );
 
   const renderScanButton = useCallback(() => {
