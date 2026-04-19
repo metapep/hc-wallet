@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo } from 'react';
-import { Image, Keyboard, Platform, StyleSheet, Text, View } from 'react-native';
+import { Keyboard, Platform, StyleSheet, Text, View } from 'react-native';
 import Clipboard from '@react-native-clipboard/clipboard';
 import ToolTipMenu from './TooltipMenu';
 import loc from '../loc';
@@ -10,6 +10,7 @@ import RNQRGenerator from 'rn-qr-generator';
 import { CommonToolTipActions } from '../typings/CommonToolTipActions';
 import { useSettings } from '../hooks/context/useSettings';
 import { scanQrHelper } from '../helpers/scan-qr.ts';
+import Icon from './Icon';
 
 interface AddressInputScanButtonProps {
   isLoading?: boolean;
@@ -26,7 +27,7 @@ export const AddressInputScanButton = ({
   testID = 'BlueAddressInputScanQrButton',
   beforePress,
 }: AddressInputScanButtonProps) => {
-  const { colors, scanImage } = useTheme();
+  const { colors } = useTheme();
   const { isClipboardGetContentEnabled } = useSettings();
 
   const stylesHook = StyleSheet.create({
@@ -144,7 +145,7 @@ export const AddressInputScanButton = ({
     >
       {type === 'default' ? (
         <View style={styles.scanContent}>
-          <Image source={scanImage} accessible={false} />
+          <Icon name="qrcode" type="font-awesome" size={14} color={colors.inverseForegroundColor} />
           <Text numberOfLines={1} style={[styles.scanText, stylesHook.scanText]} accessible={false}>
             {loc.send.details_scan}
           </Text>

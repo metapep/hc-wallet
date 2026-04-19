@@ -108,7 +108,24 @@ const ImportWalletDiscovery: React.FC = () => {
         }
       } catch (e) {}
 
-      setWallets(w => [...w, { wallet, subtitle: subtitle || '', id }]);
+      setWallets(previousWallets => {
+        const existingIndex = previousWallets.findIndex(entry => entry.id === id);
+        if (existingIndex === -1) {
+          return [...previousWallets, { wallet, subtitle: subtitle || '', id }];
+        }
+
+        // Keep one row per discovered wallet id; enrich subtitle if later callback has more data.
+        if (!previousWallets[existingIndex].subtitle && subtitle) {
+          const nextWallets = [...previousWallets];
+          nextWallets[existingIndex] = {
+            ...nextWallets[existingIndex],
+            subtitle,
+          };
+          return nextWallets;
+        }
+
+        return previousWallets;
+      });
     };
 
     const onPassword = async (title: string, subtitle: string) => {
@@ -165,7 +182,6 @@ const ImportWalletDiscovery: React.FC = () => {
 
   const renderItem = ({ item, index }: { item: WalletEntry; index: number }) => (
     <WalletToImport
-      key={item.id}
       title={item.wallet.typeReadable}
       subtitle={item.subtitle}
       active={selected === index}

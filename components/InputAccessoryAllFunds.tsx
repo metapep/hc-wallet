@@ -2,7 +2,6 @@ import React from 'react';
 import { InputAccessoryView, Keyboard, Platform, StyleSheet, Text, View } from 'react-native';
 import { BlueButtonLink } from '../BlueComponents';
 import loc from '../loc';
-import { BitcoinUnit } from '../models/bitcoinUnits';
 import { useTheme } from './themes';
 
 interface InputAccessoryAllFundsProps {
@@ -10,6 +9,8 @@ interface InputAccessoryAllFundsProps {
   canUseAll: boolean;
   onUseAllPressed: () => void;
 }
+
+const CHAIN_UNIT_LABEL = 'HCASH';
 
 const InputAccessoryAllFunds: React.FC<InputAccessoryAllFundsProps> = ({ balance, canUseAll, onUseAllPressed }) => {
   const { colors } = useTheme();
@@ -31,10 +32,10 @@ const InputAccessoryAllFunds: React.FC<InputAccessoryAllFundsProps> = ({ balance
       <View style={styles.left}>
         <Text style={[styles.totalLabel, stylesHook.totalLabel]}>{loc.send.input_total}</Text>
         {canUseAll ? (
-          <BlueButtonLink onPress={onUseAllPressed} style={styles.totalCan} title={`${balance} ${BitcoinUnit.BTC}`} />
+          <BlueButtonLink onPress={onUseAllPressed} style={styles.totalCan} title={`${balance} ${CHAIN_UNIT_LABEL}`} />
         ) : (
           <Text style={[styles.totalCanNot, stylesHook.totalCanNot]}>
-            {balance} {BitcoinUnit.BTC}
+            {balance} {CHAIN_UNIT_LABEL}
           </Text>
         )}
       </View>

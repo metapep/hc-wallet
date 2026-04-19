@@ -937,6 +937,22 @@ export const multiGetBalanceByAddress = async (addresses: string[], batchsize: n
 export const multiGetUtxoByAddress = async function (addresses: string[], batchsize: number = 100): Promise<Record<string, Utxo[]>> {
   if (!mainClient) throw new Error('Electrum client is not connected');
   const ret: Record<string, any> = {};
+  type UtxoBatchResult = {
+    result?: Utxo[];
+    param: string;
+    error?: unknown;
+    synthetic?: boolean;
+    historyLimited?: boolean;
+  };
+  const toErrorMessage = (error: unknown): string => String((error as Error)?.message ?? error ?? 'Unknown utxo error');
+  const isHistoryLimitError = (error: unknown): boolean => {
+    const message = toErrorMessage(error).toLowerCase();
+    return (
+      message.includes('too many history entries') ||
+      message.includes('history of > 1000 transactions') ||
+      message.includes('history limit reached')
+    );
+  };
 
   const chunks = splitIntoChunks(addresses, batchsize);
   for (const chunk of chunks) {
@@ -950,7 +966,7 @@ export const multiGetUtxoByAddress = async function (addresses: string[], batchs
       scripthash2addr[reversedHash] = addr;
     }
 
-    let results: any[] = [];
+    let results: UtxoBatchResult[] = [];
 
     if (disableBatching) {
       const utxosResults = await Promise.allSettled(
@@ -964,22 +980,74 @@ export const multiGetUtxoByAddress = async function (addresses: string[], batchs
         const scripthash = scripthashes[utxoIndex];
         const utxoResult = utxosResults[utxoIndex];
         if (utxoResult.status === 'fulfilled') {
-          results.push({ result: utxoResult.value, param: scripthash });
+          results.push({ result: utxoResult.value, param: scripthash, synthetic: false });
         } else {
-          const errorMessage = String((utxoResult.reason as Error)?.message ?? utxoResult.reason ?? 'Unknown utxo error');
+          const errorMessage = toErrorMessage(utxoResult.reason);
+          const historyLimited = isHistoryLimitError(utxoResult.reason);
+          if (isHistoryLimitError(errorMessage)) {
+            historyLimitByAddress[scripthash2addr[scripthash]] = true;
+          }
           console.warn('multiGetUtxoByAddress():', errorMessage, '; using empty list for', scripthash2addr[scripthash]);
-          results.push({ result: [], param: scripthash });
+          results.push({ result: [], param: scripthash, error: utxoResult.reason, synthetic: true, historyLimited });
         }
       }
     } else {
-      results = await withElectrumTimeout('blockchainScripthash_listunspentBatch', ELECTRUM_BALANCE_RPC_TIMEOUT_MS, () =>
-        mainClient.blockchainScripthash_listunspentBatch(scripthashes),
-      );
+      try {
+        const batchResults = await withElectrumTimeout('blockchainScripthash_listunspentBatch', ELECTRUM_BALANCE_RPC_TIMEOUT_MS, () =>
+          mainClient.blockchainScripthash_listunspentBatch(scripthashes),
+        );
+        results = batchResults;
+      } catch (batchError) {
+        const batchErrorMessage = toErrorMessage(batchError);
+        console.warn('multiGetUtxoByAddress(): batch listunspent failed, retrying per address:', batchErrorMessage);
+        const utxosResults = await Promise.allSettled(
+          scripthashes.map(scripthash =>
+            withElectrumTimeout('blockchainScripthash_listunspent', ELECTRUM_BALANCE_RPC_TIMEOUT_MS, () =>
+              mainClient.blockchainScripthash_listunspent(scripthash),
+            ),
+          ),
+        );
+        for (let utxoIndex = 0; utxoIndex < utxosResults.length; utxoIndex++) {
+          const scripthash = scripthashes[utxoIndex];
+          const utxoResult = utxosResults[utxoIndex];
+          if (utxoResult.status === 'fulfilled') {
+            results.push({ result: utxoResult.value, param: scripthash, synthetic: false });
+          } else {
+            const errorMessage = toErrorMessage(utxoResult.reason);
+            const historyLimited = isHistoryLimitError(utxoResult.reason);
+            if (isHistoryLimitError(errorMessage)) {
+              historyLimitByAddress[scripthash2addr[scripthash]] = true;
+            }
+            console.warn('multiGetUtxoByAddress():', errorMessage, '; using empty list for', scripthash2addr[scripthash]);
+            results.push({ result: [], param: scripthash, error: utxoResult.reason, synthetic: true, historyLimited });
+          }
+        }
+      }
     }
 
     for (const utxos of results) {
-      ret[scripthash2addr[utxos.param]] = utxos.result;
-      for (const utxo of ret[scripthash2addr[utxos.param]]) {
+      const address = scripthash2addr[utxos.param];
+      if (!address) {
+        continue;
+      }
+      const errorMessage = toErrorMessage(utxos.error);
+      const hasHistoryLimitError = utxos.historyLimited === true || isHistoryLimitError(utxos.error);
+      if (utxos.error || !Array.isArray(utxos.result)) {
+        if (hasHistoryLimitError) {
+          historyLimitByAddress[address] = true;
+        }
+        console.warn('multiGetUtxoByAddress():', errorMessage, '; using empty list for', address);
+        ret[address] = [];
+        continue;
+      }
+
+      if (utxos.synthetic && hasHistoryLimitError) {
+        historyLimitByAddress[address] = true;
+      } else if (!utxos.synthetic) {
+        historyLimitByAddress[address] = false;
+      }
+      ret[address] = utxos.result;
+      for (const utxo of ret[address]) {
         utxo.address = scripthash2addr[utxos.param];
         utxo.txid = utxo.tx_hash;
         utxo.vout = utxo.tx_pos;
@@ -1867,6 +1935,27 @@ export const estimateCurrentBlockheight = function (): number {
   const baseTs = 1587570465609; // uS
   const baseHeight = 627179;
   return Math.floor(baseHeight + (+new Date() - baseTs) / 1000 / 60 / 9.93);
+};
+
+export const getLatestKnownBlockHeight = async function (): Promise<number> {
+  if (!mainClient) return estimateCurrentBlockheight();
+  try {
+    const header = await withElectrumTimeout('blockchainHeaders_subscribe', ELECTRUM_HISTORY_RPC_TIMEOUT_MS, () =>
+      mainClient.blockchainHeaders_subscribe(),
+    );
+    if (header && typeof header.height === 'number' && header.height > 0) {
+      const headerTimestamp = extractBlockTimestampFromHeaderHex(extractHeaderHex(header));
+      latestBlock = {
+        height: header.height,
+        time: headerTimestamp ?? Math.floor(+new Date() / 1000),
+      };
+      if (headerTimestamp) blockTimestampCache[header.height] = headerTimestamp;
+      return header.height;
+    }
+  } catch (error) {
+    console.warn('getLatestKnownBlockHeight(): failed to refresh block height', getErrorMessage(error));
+  }
+  return estimateCurrentBlockheight();
 };
 
 export const calculateBlockTime = function (height: number): number {

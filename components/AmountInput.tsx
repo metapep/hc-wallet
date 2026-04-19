@@ -81,6 +81,10 @@ type AmountInputProps = Omit<TextInputProps, 'onChangeText' | 'value'> & {
    * When true, shows ≈ prefix for maxSendableAmount (indicates estimate).
    */
   isMaxAmountEstimate?: boolean;
+  /**
+   * Enables local-currency conversions and LOCAL_CURRENCY unit switching.
+   */
+  allowLocalCurrency?: boolean;
 };
 
 export const AmountInput: React.FC<AmountInputProps> = props => {
@@ -95,6 +99,7 @@ export const AmountInput: React.FC<AmountInputProps> = props => {
     isLoading = false,
     maxSendableAmount,
     isMaxAmountEstimate,
+    allowLocalCurrency = true,
     ...otherProps
   } = props;
   const [isRateBeingUpdatedLocal, setIsRateBeingUpdatedLocal] = useState(false);
@@ -112,16 +117,19 @@ export const AmountInput: React.FC<AmountInputProps> = props => {
   }, [unit]);
 
   const secondaryDisplayCurrency = useMemo(() => {
+    if (!allowLocalCurrency) {
+      return '';
+    }
     if (amount === BitcoinUnit.MAX) {
       return '';
     }
     switch (unit) {
       case BitcoinUnit.BTC: {
         const sat = new BigNumber(amount).multipliedBy(100000000).toNumber();
-        return formatBalanceWithoutSuffix(sat, BitcoinUnit.LOCAL_CURRENCY, false);
+        return String(formatBalanceWithoutSuffix(sat, BitcoinUnit.LOCAL_CURRENCY, false));
       }
       case BitcoinUnit.SATS:
-        return formatBalanceWithoutSuffix(Number(amount), BitcoinUnit.LOCAL_CURRENCY, false);
+        return String(formatBalanceWithoutSuffix(Number(amount), BitcoinUnit.LOCAL_CURRENCY, false));
       case BitcoinUnit.LOCAL_CURRENCY: {
         let res: string = '';
         if (conversionCache[amount + BitcoinUnit.LOCAL_CURRENCY]) {
@@ -135,9 +143,15 @@ export const AmountInput: React.FC<AmountInputProps> = props => {
         return `${res} ${loc.units[BitcoinUnit.BTC]}`;
       }
     }
-  }, [amount, unit]);
+    return '';
+  }, [allowLocalCurrency, amount, unit]);
 
   useEffect(() => {
+    if (!allowLocalCurrency) {
+      setOutdatedRefreshRate(undefined);
+      return;
+    }
+
     (async () => {
       if (await isRateOutdated()) {
         LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
@@ -145,9 +159,10 @@ export const AmountInput: React.FC<AmountInputProps> = props => {
         setOutdatedRefreshRate(recent);
       }
     })();
-  }, []);
+  }, [allowLocalCurrency]);
 
   const updateRate = useCallback(async () => {
+    if (!allowLocalCurrency) return;
     try {
       await updateExchangeRate();
     } finally {
@@ -159,21 +174,29 @@ export const AmountInput: React.FC<AmountInputProps> = props => {
         setOutdatedRefreshRate(undefined);
       }
     }
-  }, []);
+  }, [allowLocalCurrency]);
 
   const changeAmountUnit = useCallback(() => {
     let previousUnit = unit;
     let newUnit;
-    // cycle through units BTC -> SAT -> LOCAL_CURRENCY -> BTC
-    if (previousUnit === BitcoinUnit.BTC) {
-      newUnit = BitcoinUnit.SATS;
-    } else if (previousUnit === BitcoinUnit.SATS) {
-      newUnit = BitcoinUnit.LOCAL_CURRENCY;
-    } else if (previousUnit === BitcoinUnit.LOCAL_CURRENCY) {
-      newUnit = BitcoinUnit.BTC;
+
+    if (!allowLocalCurrency) {
+      if (previousUnit === BitcoinUnit.LOCAL_CURRENCY) {
+        previousUnit = BitcoinUnit.BTC;
+      }
+      newUnit = previousUnit === BitcoinUnit.SATS ? BitcoinUnit.BTC : BitcoinUnit.SATS;
     } else {
-      newUnit = BitcoinUnit.BTC;
-      previousUnit = BitcoinUnit.SATS;
+      // cycle through units BTC -> SAT -> LOCAL_CURRENCY -> BTC
+      if (previousUnit === BitcoinUnit.BTC) {
+        newUnit = BitcoinUnit.SATS;
+      } else if (previousUnit === BitcoinUnit.SATS) {
+        newUnit = BitcoinUnit.LOCAL_CURRENCY;
+      } else if (previousUnit === BitcoinUnit.LOCAL_CURRENCY) {
+        newUnit = BitcoinUnit.BTC;
+      } else {
+        newUnit = BitcoinUnit.BTC;
+        previousUnit = BitcoinUnit.SATS;
+      }
     }
 
     /**
@@ -207,7 +230,7 @@ export const AmountInput: React.FC<AmountInputProps> = props => {
     }
     onChangeText(newInputValue);
     onAmountUnitChange(newUnit);
-  }, [amount, onChangeText, onAmountUnitChange, unit]);
+  }, [allowLocalCurrency, amount, onChangeText, onAmountUnitChange, unit]);
 
   const handleTextInputOnPress = useCallback(() => {
     textInputRef?.current?.focus();
@@ -216,16 +239,26 @@ export const AmountInput: React.FC<AmountInputProps> = props => {
   const handleChangeText = useCallback(
     (text: string) => {
       text = text.trim();
-      if (unit !== BitcoinUnit.LOCAL_CURRENCY) {
+      if (!allowLocalCurrency || unit !== BitcoinUnit.LOCAL_CURRENCY) {
         text = text.replace(',', '.');
-        const split = text.split('.');
-        if (split.length >= 2) {
-          text = `${parseInt(split[0], 10)}.${split[1]}`;
+        if (unit === BitcoinUnit.BTC) {
+          text = text.replace(/[^0-9.]/g, '');
+          const firstDotIndex = text.indexOf('.');
+          if (firstDotIndex !== -1) {
+            const integerPart = text.slice(0, firstDotIndex);
+            const decimalPart = text.slice(firstDotIndex + 1).replace(/\./g, '');
+            text = `${integerPart}.${decimalPart}`;
+          }
+          if (text.startsWith('.')) {
+            text = `0${text}`;
+          }
+          const [integerPartRaw = '0', decimalPart] = text.split('.');
+          const integerPartNormalized = integerPartRaw.replace(/^0+(?=\d)/, '');
+          text = decimalPart !== undefined ? `${integerPartNormalized}.${decimalPart}` : integerPartNormalized;
         } else {
-          text = `${parseInt(split[0], 10)}`;
+          text = text.replace(/[^0-9]/g, '');
+          text = text.replace(/^0+(?=\d)/, '');
         }
-
-        text = unit === BitcoinUnit.BTC ? text.replace(/[^0-9.]/g, '') : text.replace(/[^0-9]/g, '');
       } else {
         text = text.replace(/,/gi, '.');
         if (text.split('.').length > 2) {
@@ -247,12 +280,9 @@ export const AmountInput: React.FC<AmountInputProps> = props => {
         text = text.replace(/[^\d.,-]/g, ''); // remove all but numbers, dots & commas
         text = text.replace(/(\..*)\./g, '$1');
       }
-      if (text.startsWith('.')) {
-        text = '0.';
-      }
       onChangeText(text);
     },
-    [onChangeText, unit],
+    [allowLocalCurrency, onChangeText, unit],
   );
 
   const resetAmount = useCallback(async () => {
@@ -291,7 +321,7 @@ export const AmountInput: React.FC<AmountInputProps> = props => {
         {!disabled && <View style={[styles.center, stylesHook.center]} />}
         <View style={styles.flex}>
           <View style={styles.container}>
-            {unit === BitcoinUnit.LOCAL_CURRENCY && amount !== BitcoinUnit.MAX && (
+            {allowLocalCurrency && unit === BitcoinUnit.LOCAL_CURRENCY && amount !== BitcoinUnit.MAX && (
               <Text style={[styles.localCurrency, stylesHook.localCurrency]}>{getCurrencySymbol() + ' '}</Text>
             )}
             {amount !== BitcoinUnit.MAX ? (
@@ -326,11 +356,13 @@ export const AmountInput: React.FC<AmountInputProps> = props => {
               <Text style={[styles.cryptoCurrency, stylesHook.cryptoCurrency]}>{' ' + loc.units[unit]}</Text>
             )}
           </View>
-          <View style={styles.secondaryRoot}>
-            <Text style={[styles.secondaryText, { color: colors.buttonDisabledTextColor }]} selectable>
-              {secondaryDisplayCurrency}
-            </Text>
-          </View>
+          {secondaryDisplayCurrency.length > 0 && (
+            <View style={styles.secondaryRoot}>
+              <Text style={[styles.secondaryText, { color: colors.buttonDisabledTextColor }]} selectable>
+                {secondaryDisplayCurrency}
+              </Text>
+            </View>
+          )}
         </View>
         {!disabled && amount !== BitcoinUnit.MAX && (
           <TouchableOpacity
@@ -344,7 +376,7 @@ export const AmountInput: React.FC<AmountInputProps> = props => {
           </TouchableOpacity>
         )}
       </View>
-      {outdatedRefreshRate && (
+      {allowLocalCurrency && outdatedRefreshRate && (
         <View style={styles.outdatedRateContainer}>
           <Badge badgeStyle={[styles.warningBadge, { backgroundColor: colors.accentErrorText }]} />
           <View style={styles.spacing8} />

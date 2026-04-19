@@ -25,9 +25,10 @@ import {
   View,
 } from 'react-native';
 import RNFS from 'react-native-fs';
-import { btcToSatoshi, fiatToBTC } from '../../blue_modules/currency';
+import { btcToSatoshi } from '../../blue_modules/currency';
 import * as fs from '../../blue_modules/fs';
 import triggerHapticFeedback, { HapticFeedbackTypes } from '../../blue_modules/hapticFeedback';
+import { getLatestKnownBlockHeight, multiGetTransactionByTxid, wasAddressHistoryLimited } from '../../blue_modules/BlueElectrum';
 import { BlueText } from '../../BlueComponents';
 import { HDSegwitBech32Wallet, MultisigHDWallet, WatchOnlyWallet } from '../../class';
 import { ContactList } from '../../class/contact-list';
@@ -75,6 +76,123 @@ export interface IFee {
 type NavigationProps = NativeStackNavigationProp<SendDetailsStackParamList, 'SendDetails'>;
 type RouteProps = RouteProp<SendDetailsStackParamList, 'SendDetails'>;
 
+const normalizeSendUnit = (unit?: BitcoinUnit): BitcoinUnit => {
+  return unit === BitcoinUnit.SATS ? BitcoinUnit.SATS : BitcoinUnit.BTC;
+};
+
+const COINBASE_MATURITY_CONFIRMATIONS = 100;
+
+const isAllZeroTxid = (txid: string): boolean => /^0+$/.test(txid);
+
+const isCoinbaseTransaction = (tx: any): boolean => {
+  const vin0 = tx?.vin?.[0];
+  if (!vin0) return false;
+
+  const vinTxid = typeof vin0.txid === 'string' ? vin0.txid.toLowerCase() : '';
+  if (vinTxid.length === 64 && isAllZeroTxid(vinTxid)) return true;
+  if (vin0.vout === 4294967295) return true;
+  if (typeof vin0.coinbase === 'string' && vin0.coinbase.length > 0) return true;
+  if (vin0.is_coinbase === true) return true;
+
+  return false;
+};
+
+const getUtxoConfirmations = (utxo: CreateTransactionUtxo): number | undefined => {
+  const maybeConfirmations = (utxo as CreateTransactionUtxo & { confirmations?: unknown }).confirmations;
+  return typeof maybeConfirmations === 'number' ? maybeConfirmations : undefined;
+};
+
+const getUtxoHeight = (utxo: CreateTransactionUtxo): number | undefined => {
+  const maybeHeight = (utxo as CreateTransactionUtxo & { height?: unknown }).height;
+  return typeof maybeHeight === 'number' ? maybeHeight : undefined;
+};
+
+const getTransactionConfirmations = (tx: unknown): number | undefined => {
+  const maybeConfirmations = (tx as { confirmations?: unknown })?.confirmations;
+  return typeof maybeConfirmations === 'number' ? maybeConfirmations : undefined;
+};
+
+const toAmountSats = (amount: string | number | 'MAX' | undefined, unit: BitcoinUnit): number | string => {
+  if (amount === BitcoinUnit.MAX) return BitcoinUnit.MAX;
+  const amountText = String(amount ?? '').trim();
+  if (amountText.length === 0) return 0;
+
+  if (unit === BitcoinUnit.BTC) {
+    const sats = btcToSatoshi(amountText);
+    return Number.isFinite(sats) ? sats : 0;
+  }
+
+  const sats = parseInt(amountText.replace(/[^\d-]/g, ''), 10);
+  return Number.isFinite(sats) ? sats : 0;
+};
+
+const filterImmatureCoinbaseUtxos = async (
+  candidateUtxos: CreateTransactionUtxo[],
+): Promise<{ utxos: CreateTransactionUtxo[]; removedImmatureCoinbaseCount: number }> => {
+  const lowConfirmations = candidateUtxos.filter(utxo => {
+    if (!utxo?.txid) return false;
+    const confirmations = getUtxoConfirmations(utxo);
+    if (typeof confirmations !== 'number') return false;
+    return confirmations >= 0 && confirmations < COINBASE_MATURITY_CONFIRMATIONS;
+  });
+
+  if (lowConfirmations.length === 0) {
+    return { utxos: candidateUtxos, removedImmatureCoinbaseCount: 0 };
+  }
+
+  const txidsToInspect = [...new Set(lowConfirmations.map(utxo => utxo.txid))];
+  if (txidsToInspect.length === 0) {
+    return { utxos: candidateUtxos, removedImmatureCoinbaseCount: 0 };
+  }
+
+  let txMap: Record<string, any> = {};
+  try {
+    txMap = await multiGetTransactionByTxid(txidsToInspect, true);
+  } catch (error) {
+    console.log('filterImmatureCoinbaseUtxos: failed to inspect txids', error);
+    return { utxos: candidateUtxos, removedImmatureCoinbaseCount: 0 };
+  }
+
+  const immatureCoinbaseTxids = new Set(
+    txidsToInspect.filter(txid => {
+      const tx = txMap[txid];
+      return isCoinbaseTransaction(tx);
+    }),
+  );
+
+  if (immatureCoinbaseTxids.size === 0) {
+    return { utxos: candidateUtxos, removedImmatureCoinbaseCount: 0 };
+  }
+
+  let latestBlockHeight: number | undefined;
+  try {
+    latestBlockHeight = await getLatestKnownBlockHeight();
+  } catch (error) {
+    console.log('filterImmatureCoinbaseUtxos: failed to get latest block height', error);
+  }
+
+  let removedImmatureCoinbaseCount = 0;
+  const spendableUtxos = candidateUtxos.filter(utxo => {
+    const isCoinbaseUtxo = !!utxo.txid && immatureCoinbaseTxids.has(utxo.txid);
+    if (!isCoinbaseUtxo) return true;
+
+    let confirmations = getTransactionConfirmations(txMap[utxo.txid]) ?? getUtxoConfirmations(utxo);
+    const utxoHeight = getUtxoHeight(utxo);
+    if (typeof confirmations !== 'number' && typeof utxoHeight === 'number' && utxoHeight > 0 && typeof latestBlockHeight === 'number') {
+      confirmations = Math.max(0, latestBlockHeight - utxoHeight + 1);
+    }
+
+    const isImmatureCoinbase = typeof confirmations !== 'number' || confirmations < COINBASE_MATURITY_CONFIRMATIONS;
+    if (isImmatureCoinbase) {
+      removedImmatureCoinbaseCount += 1;
+      return false;
+    }
+    return true;
+  });
+
+  return { utxos: spendableUtxos, removedImmatureCoinbaseCount };
+};
+
 const SendDetails = () => {
   const { wallets, sleep, txMetadata, saveToDisk } = useStorage();
   const navigation = useExtendedNavigation<NavigationProps>();
@@ -82,8 +200,8 @@ const SendDetails = () => {
   const selectedDataProcessor = useRef<ToolTipAction | undefined>(undefined);
   const setParams = navigation.setParams;
   const route = useRoute<RouteProps>();
-  const feeUnit = route.params?.feeUnit ?? BitcoinUnit.BTC;
-  const amountUnit = route.params?.amountUnit ?? BitcoinUnit.BTC;
+  const feeUnit = normalizeSendUnit(route.params?.feeUnit ?? BitcoinUnit.BTC);
+  const amountUnit = normalizeSendUnit(route.params?.amountUnit ?? BitcoinUnit.BTC);
   const frozenBalance = route.params?.frozenBalance ?? 0;
   const transactionMemo = route.params?.transactionMemo;
   const utxos = route.params?.utxos;
@@ -239,7 +357,8 @@ const SendDetails = () => {
     }
     const newWallet = (routeParams.walletID && wallets.find(w => w.getID() === routeParams.walletID)) || suitable[0];
     setWallet(newWallet);
-    setParams({ feeUnit: newWallet.getPreferredBalanceUnit(), amountUnit: newWallet.getPreferredBalanceUnit() });
+    const preferredUnit = normalizeSendUnit(newWallet.getPreferredBalanceUnit());
+    setParams({ feeUnit: preferredUnit, amountUnit: preferredUnit });
 
     // we are ready!
     setIsLoading(false);
@@ -279,14 +398,21 @@ const SendDetails = () => {
       utxos: null,
       isTransactionReplaceable: wallet.type === HDSegwitBech32Wallet.type && !routeParams.isTransactionReplaceable ? true : undefined,
     });
-    // update wallet UTXO
+    // Refresh per-address balances first; HD wallet UTXO discovery depends on these indexes.
     wallet
-      .fetchUtxo()
-      .then(() => {
-        // we need to re-calculate fees
-        setDumb(v => !v);
+      .fetchBalance()
+      .catch(e => {
+        console.log('fetchBalance before fetchUtxo error', e);
       })
-      .catch(e => console.log('fetchUtxo error', e));
+      .finally(() => {
+        wallet
+          .fetchUtxo()
+          .then(() => {
+            // we need to re-calculate fees
+            setDumb(v => !v);
+          })
+          .catch(e => console.log('fetchUtxo error', e));
+      });
   }, [wallet]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // recalc fees in effect so we don't block render
@@ -603,8 +729,24 @@ const SendDetails = () => {
     const change = await getChangeAddressAsync();
     assert(change, 'Could not get change address');
     const requestedSatPerByte = Number(feeRate);
-    const lutxo: CreateTransactionUtxo[] = utxos || (wallet?.getUtxo() ?? []);
-    console.log({ requestedSatPerByte, lutxo: lutxo.length });
+    const routeProvidedUtxo = Array.isArray(utxos) ? utxos : null;
+    let lutxo: CreateTransactionUtxo[] = routeProvidedUtxo || (wallet?.getUtxo() ?? []);
+
+    // If send screen is opened before wallet UTXO sync settles, do one last synchronous refresh.
+    if (!routeProvidedUtxo && lutxo.length === 0 && Number(wallet.getBalance()) > 0) {
+      try {
+        await wallet.fetchBalance();
+        await wallet.fetchUtxo();
+        lutxo = wallet.getUtxo() ?? [];
+      } catch (error) {
+        console.log('createPsbtTransaction: failed to refresh spendable UTXOs', error);
+      }
+    }
+
+    const { utxos: spendableUtxos, removedImmatureCoinbaseCount } = await filterImmatureCoinbaseUtxos(lutxo);
+    lutxo = spendableUtxos;
+
+    console.log({ requestedSatPerByte, lutxo: lutxo.length, removedImmatureCoinbaseCount });
 
     const targets: CreateTransactionTarget[] = [];
     for (const transaction of addresses) {
@@ -625,6 +767,33 @@ const SendDetails = () => {
 
     const targetsOrig = JSON.parse(JSON.stringify(targets));
     // preserving original since it will be mutated
+
+    const hasSpendableUtxo = Array.isArray(lutxo) && lutxo.length > 0;
+    const hasVisibleBalance = Number(wallet.getBalance()) > 0;
+    const candidateAddresses = new Set<string>();
+    for (const address of wallet.getAllExternalAddresses?.() || []) {
+      if (address) candidateAddresses.add(address);
+    }
+    const currentAddress = wallet.getAddress?.();
+    if (currentAddress) candidateAddresses.add(currentAddress);
+    const limitedHistoryAddress = Array.from(candidateAddresses).find(address => wasAddressHistoryLimited(address));
+    if (!hasSpendableUtxo && hasVisibleBalance && limitedHistoryAddress) {
+      throw new Error(
+        'Cannot load spendable UTXOs for this wallet on the current Electrum server (address history limit reached). ' +
+          'Use a higher-limit Electrum server for this address.',
+      );
+    }
+    if (!hasSpendableUtxo && hasVisibleBalance && removedImmatureCoinbaseCount > 0) {
+      throw new Error(
+        `Mining reward outputs are not spendable yet. Coinbase rewards need ${COINBASE_MATURITY_CONFIRMATIONS} confirmations before spending.`,
+      );
+    }
+    if (!hasSpendableUtxo && hasVisibleBalance) {
+      throw new Error(
+        'Wallet balance is available, but no spendable UTXOs were returned by Electrum. ' +
+          'Please refresh and verify Electrum listunspent access for this wallet.',
+      );
+    }
 
     // without forcing `HDSegwitBech32Wallet` i had a weird ts error, complaining about last argument (fp)
     const { tx, outputs, psbt, fee } = (wallet as HDSegwitBech32Wallet)?.createTransaction(
@@ -1069,15 +1238,11 @@ const SendDetails = () => {
     ActionSheet.showActionSheetWithOptions(options, buttonIndex => {
       if (buttonIndex === 1) {
         Keyboard.dismiss();
-        setAddresses(addrs => {
-          addrs[scrollIndex.current].amount = BitcoinUnit.MAX;
-          addrs[scrollIndex.current].amountSats = BitcoinUnit.MAX;
-          return [...addrs];
-        });
-        setAddresses(addrs => {
-          addrs[scrollIndex.current].unit = BitcoinUnit.BTC;
-          return [...addrs];
-        });
+        setAddresses(prev =>
+          prev.map((entry, index) =>
+            index === scrollIndex.current ? { ...entry, amount: BitcoinUnit.MAX, amountSats: BitcoinUnit.MAX, unit: BitcoinUnit.BTC } : entry,
+          ),
+        );
       }
     });
   }, [frozenBalance]);
@@ -1386,48 +1551,31 @@ const SendDetails = () => {
             isLoading={isLoading}
             amount={item.amount ? item.amount.toString() : undefined}
             onAmountUnitChange={(unit: BitcoinUnit) => {
-              setAddresses(addrs => {
-                const addr = addrs[index];
-
-                switch (unit) {
-                  case BitcoinUnit.SATS:
-                    addr.amountSats = parseInt(String(addr.amount), 10);
-                    break;
-                  case BitcoinUnit.BTC:
-                    addr.amountSats = btcToSatoshi(String(addr.amount));
-                    break;
-                  case BitcoinUnit.LOCAL_CURRENCY:
-                    // also accounting for cached fiat->sat conversion to avoid rounding error
-                    addr.amountSats = AmountInput.getCachedSatoshis(String(addr.amount)) || btcToSatoshi(fiatToBTC(Number(addr.amount)));
-                    break;
-                }
-
-                addrs[index] = addr;
-                return [...addrs];
-              });
-              setAddresses(addrs => {
-                addrs[index].unit = unit;
-                return [...addrs];
-              });
+              const normalizedUnit = normalizeSendUnit(unit);
+              setAddresses(prev =>
+                prev.map((entry, entryIndex) =>
+                  entryIndex === index
+                    ? {
+                        ...entry,
+                        unit: normalizedUnit,
+                        amountSats: toAmountSats(entry.amount as string | number | 'MAX' | undefined, normalizedUnit),
+                      }
+                    : entry,
+                ),
+              );
             }}
             onChangeText={(text: string) => {
-              setAddresses(addrs => {
-                item.amount = text;
-                switch (item.unit || amountUnit) {
-                  case BitcoinUnit.BTC:
-                    item.amountSats = btcToSatoshi(item.amount);
-                    break;
-                  case BitcoinUnit.LOCAL_CURRENCY:
-                    item.amountSats = btcToSatoshi(fiatToBTC(Number(item.amount)));
-                    break;
-                  case BitcoinUnit.SATS:
-                  default:
-                    item.amountSats = parseInt(text, 10);
-                    break;
-                }
-                addrs[index] = item;
-                return [...addrs];
-              });
+              setAddresses(prev =>
+                prev.map((entry, entryIndex) =>
+                  entryIndex === index
+                    ? {
+                        ...entry,
+                        amount: text,
+                        amountSats: toAmountSats(text, normalizeSendUnit(entry.unit || amountUnit)),
+                      }
+                    : entry,
+                ),
+              );
             }}
             unit={item.unit || amountUnit}
             editable={isEditable}
@@ -1435,6 +1583,7 @@ const SendDetails = () => {
             inputAccessoryViewID={InputAccessoryAllFundsAccessoryViewID}
             maxSendableAmount={index === scrollIndex.current ? maxSendableAmount : null}
             isMaxAmountEstimate={!(item.address && wallet?.isAddressValid(item.address))}
+            allowLocalCurrency={false}
           />
         </View>
 

@@ -12,7 +12,7 @@ import { useTheme } from '../../components/themes';
 import Button from '../../components/Button';
 import triggerHapticFeedback, { HapticFeedbackTypes } from '../../blue_modules/hapticFeedback';
 import SafeArea from '../../components/SafeArea';
-import { satoshiToBTC, satoshiToLocalCurrency } from '../../blue_modules/currency';
+import { satoshiToBTC } from '../../blue_modules/currency';
 import * as BlueElectrum from '../../blue_modules/BlueElectrum';
 import { unlockWithBiometrics, useBiometrics } from '../../hooks/useBiometrics';
 import { TWallet, CreateTransactionTarget } from '../../class/wallets/types';
@@ -94,9 +94,6 @@ const Confirm: React.FC = () => {
     transactionDetailsSubtitle: {
       color: colors.feeText,
     },
-    transactionAmountFiat: {
-      color: colors.feeText,
-    },
     txDetails: {
       backgroundColor: colors.lightButton,
     },
@@ -122,6 +119,26 @@ const Confirm: React.FC = () => {
       color: colors.alternativeTextColor2,
     },
   });
+
+  const getReadableErrorMessage = (error: unknown): string => {
+    if (typeof error === 'string') return error;
+    if (error instanceof Error && error.message) return error.message;
+    if (error && typeof error === 'object') {
+      const maybeMessage = (error as { message?: unknown; error?: unknown }).message;
+      if (typeof maybeMessage === 'string' && maybeMessage.length > 0) return maybeMessage;
+      const maybeNestedError = (error as { error?: unknown }).error;
+      if (typeof maybeNestedError === 'string' && maybeNestedError.length > 0) return maybeNestedError;
+      if (maybeNestedError && typeof maybeNestedError === 'object') {
+        const nestedMessage = (maybeNestedError as { message?: unknown }).message;
+        if (typeof nestedMessage === 'string' && nestedMessage.length > 0) return nestedMessage;
+      }
+      try {
+        const serialized = JSON.stringify(error);
+        if (serialized && serialized !== '{}') return serialized;
+      } catch (_) {}
+    }
+    return loc.errors.broadcast;
+  };
 
   const HeaderRightButton = useMemo(
     () => (
@@ -238,6 +255,8 @@ const Confirm: React.FC = () => {
         fee: Number(fee),
         amount,
         txid,
+        walletID: wallet.getID(),
+        walletType: wallet.type,
       });
 
       dispatch({ type: ActionType.SET_LOADING, payload: false });
@@ -248,7 +267,7 @@ const Confirm: React.FC = () => {
       triggerHapticFeedback(HapticFeedbackTypes.NotificationError);
       dispatch({ type: ActionType.SET_LOADING, payload: false });
       dispatch({ type: ActionType.SET_BUTTON_DISABLED, payload: false });
-      presentAlert({ message: error.message });
+      presentAlert({ title: loc.errors.error, message: getReadableErrorMessage(error) });
     }
   };
 
@@ -294,9 +313,6 @@ const Confirm: React.FC = () => {
           </Text>
           <Text style={[styles.valueUnit, stylesHook.valueValue]}>{' ' + loc.units[BitcoinUnit.BTC]}</Text>
         </View>
-        <Text style={[styles.transactionAmountFiat, stylesHook.transactionAmountFiat]}>
-          {item.value && satoshiToLocalCurrency(item.value)}
-        </Text>
         <BlueCard>
           <Text style={[styles.transactionDetailsTitle, stylesHook.transactionDetailsTitle]}>{loc.send.create_to}</Text>
           <Text testID="TransactionAddress" style={[styles.transactionDetailsSubtitle, stylesHook.transactionDetailsSubtitle]}>
@@ -346,7 +362,7 @@ const Confirm: React.FC = () => {
       <View style={styles.cardBottom}>
         <BlueCard>
           <Text style={[styles.cardText, stylesHook.cardText]} testID="TransactionFee">
-            {loc.send.create_fee}: {formatBalance(feeSatoshi, BitcoinUnit.BTC)} ({satoshiToLocalCurrency(feeSatoshi)})
+            {loc.send.create_fee}: {formatBalance(feeSatoshi, BitcoinUnit.BTC)}
           </Text>
           {state.isLoading ? (
             <ActivityIndicator />
@@ -375,12 +391,6 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     fontSize: 15,
     marginBottom: 20,
-  },
-  transactionAmountFiat: {
-    fontWeight: '500',
-    fontSize: 15,
-    marginVertical: 8,
-    textAlign: 'center',
   },
   valueWrap: {
     flexDirection: 'row',

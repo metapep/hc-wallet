@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Clipboard from '@react-native-clipboard/clipboard';
-import { ImageBackground, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ImageBackground, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 import LinearGradient from 'react-native-linear-gradient';
 import { LightningArkWallet, LightningCustodianWallet, MultisigHDWallet } from '../class';
@@ -220,8 +220,8 @@ const TransactionsNavigationHeader: React.FC<TransactionsNavigationHeaderProps> 
                     key={`wallet-balance-text-${wallet.getID?.() ?? ''}-${safeBalance ?? ''}`} // force recreation on balance change for RTL correctness
                     testID="WalletBalance"
                     numberOfLines={1}
-                    minimumFontScale={0.5}
-                    adjustsFontSizeToFit
+                    minimumFontScale={Platform.OS === 'ios' ? 0.5 : undefined}
+                    adjustsFontSizeToFit={Platform.OS === 'ios'}
                     style={[styles.walletBalanceText, stylesHook.walletBalanceText, animatedBalanceTextStyle]}
                   >
                     {balanceParts.numeric}
@@ -280,6 +280,7 @@ const styles = StyleSheet.create({
   walletBalance: {
     flexShrink: 1,
     marginRight: 6,
+    overflow: 'visible',
   },
   manageFundsButton: {
     marginTop: 14,
@@ -299,11 +300,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingRight: 10, // Ensure there's some padding to the right
+    overflow: 'visible',
   },
   walletBalanceText: {
     fontWeight: 'bold',
     fontSize: 36,
+    lineHeight: 44,
     flexShrink: 1, // Allow the text to shrink if there's not enough space
+    includeFontPadding: Platform.OS === 'android',
   },
   walletBalanceSuperscript: {
     fontSize: 12,

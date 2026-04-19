@@ -87,6 +87,7 @@ const WalletTransactions: React.FC<WalletTransactionsProps> = ({ route }: { rout
   const [nextCursor, setNextCursor] = useState<WalletPageCursor | undefined>(undefined);
   const [lockedRevision, setLockedRevision] = useState<string>('');
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [isPullToRefreshing, setIsPullToRefreshing] = useState(false);
   const navigation = useExtendedNavigation();
   const { setOptions, navigate } = navigation;
   const theme = useTheme();
@@ -133,9 +134,6 @@ const WalletTransactions: React.FC<WalletTransactionsProps> = ({ route }: { rout
     gradientBackground: {
       backgroundColor: headerHeight > 0 ? WalletGradient.headerColorFor(wallet.type) : colors.background,
       height: headerHeight > 0 ? headerHeight : '30%',
-    },
-    transactionsLoadingInlineText: {
-      color: colors.buttonDisabledTextColor,
     },
     emptyTxs: {
       color: colors.buttonDisabledTextColor,
@@ -257,6 +255,16 @@ const WalletTransactions: React.FC<WalletTransactionsProps> = ({ route }: { rout
     },
     [isElectrumDisabled, loadFirstPage, requestTransactionSync, setLoadingState, walletID],
   );
+
+  const handlePullToRefresh = useCallback(async () => {
+    if (isElectrumDisabled || isLoadingRef.current) return;
+    setIsPullToRefreshing(true);
+    try {
+      await refreshTransactions(true);
+    } finally {
+      setIsPullToRefreshing(false);
+    }
+  }, [isElectrumDisabled, refreshTransactions]);
 
   useEffect(() => {
     initialAutoRefreshWalletRef.current = null;
@@ -619,12 +627,6 @@ const WalletTransactions: React.FC<WalletTransactionsProps> = ({ route }: { rout
             <View style={styles.listHeaderTextRow}>
               <Text style={[styles.listHeaderText, stylesHook.listHeaderText]}>{loc.transactions.list_title}</Text>
             </View>
-            {isLoading && (
-              <View style={styles.transactionsLoadingInline}>
-                <ActivityIndicator style={styles.transactionsLoadingInlineSpinner} />
-                <Text style={[styles.transactionsLoadingInlineText, stylesHook.transactionsLoadingInlineText]}>Loading transactions...</Text>
-              </View>
-            )}
           </View>
           <View style={stylesHook.backgroundContainer}>
             {wallet.type === WatchOnlyWallet.type && wallet.isWatchOnlyWarningVisible && (
@@ -646,10 +648,8 @@ const WalletTransactions: React.FC<WalletTransactionsProps> = ({ route }: { rout
       measureHeaderHeight,
       stylesHook.backgroundContainer,
       stylesHook.listHeaderText,
-      stylesHook.transactionsLoadingInlineText,
       saveToDisk,
       isBiometricUseCapableAndEnabled,
-      isLoading,
       navigateToViewEditCosigners,
       onManageFundsPressed,
       navigate,
@@ -686,11 +686,11 @@ const WalletTransactions: React.FC<WalletTransactionsProps> = ({ route }: { rout
         ListHeaderComponent={ListHeaderComponent}
         ListEmptyComponent={
           <ScrollView style={[styles.emptyTxsContainer, stylesHook.backgroundContainer]} contentContainerStyle={styles.scrollViewContent}>
-            {isLoading ? (
+            {isLoading && !isPullToRefreshing ? (
               <View style={styles.loadingStateContainer}>
                 <ActivityIndicator style={styles.loadingStateSpinner} />
                 <Text numberOfLines={0} style={[styles.emptyTxs, stylesHook.emptyTxs]} testID="TransactionsListEmpty">
-                  {loc.transactions.updating}
+                  Loading transactions...
                 </Text>
               </View>
             ) : (
@@ -705,7 +705,7 @@ const WalletTransactions: React.FC<WalletTransactionsProps> = ({ route }: { rout
         }
         refreshControl={
           !isDesktop && !isElectrumDisabled ? (
-            <RefreshControl refreshing={isLoading} onRefresh={() => refreshTransactions(true)} tintColor={colors.msSuccessCheck} />
+            <RefreshControl refreshing={isPullToRefreshing} onRefresh={handlePullToRefresh} tintColor={colors.msSuccessCheck} />
           ) : undefined
         }
       />
@@ -775,19 +775,6 @@ export default WalletTransactions;
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   scrollViewContent: { flex: 1, justifyContent: 'center', paddingHorizontal: 16, paddingBottom: 500 },
-  transactionsLoadingInline: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    marginHorizontal: 16,
-    marginTop: -4,
-    marginBottom: 12,
-  },
-  transactionsLoadingInlineSpinner: {
-    marginRight: 8,
-  },
-  transactionsLoadingInlineText: {
-    fontSize: 14,
-  },
   loadingStateContainer: {
     alignItems: 'center',
     justifyContent: 'center',

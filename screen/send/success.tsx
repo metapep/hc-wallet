@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { RouteProp, useRoute } from '@react-navigation/native';
+import { CommonActions, RouteProp, useRoute } from '@react-navigation/native';
 import BigNumber from 'bignumber.js';
 import LottieView from 'lottie-react-native';
 import { StyleSheet, Text, View } from 'react-native';
@@ -13,7 +13,7 @@ import HandOffComponent from '../../components/HandOffComponent';
 import { HandOffActivityType } from '../../components/types';
 import { useSettings } from '../../hooks/context/useSettings';
 import { SendDetailsStackParamList } from '../../navigation/SendDetailsStackParamList.ts';
-import { popToTop } from '../../NavigationService.ts';
+import { navigationRef, popToTop } from '../../NavigationService.ts';
 
 type RouteProps = RouteProp<SendDetailsStackParamList, 'Success'>;
 
@@ -21,7 +21,7 @@ const Success = () => {
   const { colors } = useTheme();
   const { selectedBlockExplorer } = useSettings();
   const route = useRoute<RouteProps>();
-  const { amount, fee, amountUnit = BitcoinUnit.BTC, invoiceDescription = '', txid } = route.params || {};
+  const { amount, fee, amountUnit = BitcoinUnit.BTC, invoiceDescription = '', txid, walletID, walletType } = route.params || {};
   const stylesHook = StyleSheet.create({
     root: {
       backgroundColor: colors.elevated,
@@ -35,6 +35,36 @@ const Success = () => {
   });
 
   const onDonePressed = () => {
+    if (walletID && walletType) {
+      if (navigationRef.isReady()) {
+        navigationRef.dispatch(
+          CommonActions.reset({
+            index: 0,
+            routes: [
+              {
+                name: 'DrawerRoot',
+                state: {
+                  routes: [
+                    {
+                      name: 'DetailViewStackScreensStack',
+                      state: {
+                        routes: [
+                          {
+                            name: 'WalletTransactions',
+                            params: { walletID, walletType },
+                          },
+                        ],
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+          }),
+        );
+        return;
+      }
+    }
     // @ts-ignore idk
     popToTop();
   };
