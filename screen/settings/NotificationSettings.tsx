@@ -207,9 +207,9 @@ const NotificationSettings: React.FC = () => {
         </SettingsCard>
 
         <SettingsListItem
-          title="hashcash.club"
+          title="hashcash.network"
           iconName="github"
-          onPress={() => Linking.openURL('https://hashcash.club')}
+          onPress={() => Linking.openURL('https://hashcash.network')}
           chevron
           position="single"
           spacingTop

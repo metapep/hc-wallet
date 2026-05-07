@@ -29,7 +29,7 @@ class ElectrumClient {
         
         // Default list of Electrum servers to try
         val hardcodedPeers = listOf(
-            ElectrumServer("electrum.hcash-dev.network", 50002, true),
+            ElectrumServer("electrum.hashcash-test.network", 50002, true),
             ElectrumServer("127.0.0.1", 50002, true)
         )
     }

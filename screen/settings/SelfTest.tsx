@@ -357,7 +357,7 @@ export default class SelfTest extends Component {
       //
 
       if (typeof navigator !== 'undefined' && navigator.product === 'ReactNative') {
-        assertStrictEqual(await Linking.canOpenURL('https://hashcash.club/'), true, 'Linking can not open https url');
+        assertStrictEqual(await Linking.canOpenURL('https://hashcash.network/'), true, 'Linking can not open https url');
       } else {
         // skipping RN-specific test'
       }

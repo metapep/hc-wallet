@@ -24,9 +24,9 @@ const PROFILE_ENDPOINTS: Record<HcashProfile, { explorer: string; explorerApiBas
     electrum: { host: '127.0.0.1', ssl: 50002, tcp: 50001 },
   },
   dev: {
-    explorer: 'https://explorer.hcash-dev.network',
-    explorerApiBase: 'https://explorer.hcash-dev.network/api',
-    electrum: { host: 'electrum.hcash-dev.network', ssl: 50002, tcp: 50001 },
+    explorer: 'https://explorer.hashcash-test.network',
+    explorerApiBase: 'https://explorer.hashcash-test.network/api',
+    electrum: { host: 'electrum.hashcash-test.network', ssl: 50002, tcp: 50001 },
   },
 };
 

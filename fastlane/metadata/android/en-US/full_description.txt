@@ -2,7 +2,7 @@ HashCash Wallet is a self-custodial mobile wallet for HCASH, built for native hc
 
 Keep your keys on-device and manage sending, receiving, and transaction monitoring with clear controls.
 
-Website: https://hashcash.club
-Support: support@hashcash.club
-Privacy: https://hashcash.club/privacy
-Terms: https://hashcash.club/terms
+Website: https://hashcash.network
+Support: support@hashcash.network
+Privacy: https://hashcash.network/privacy
+Terms: https://hashcash.network/terms

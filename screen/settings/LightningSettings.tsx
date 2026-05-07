@@ -107,7 +107,7 @@ const LightningSettings: React.FC = () => {
   }, [params?.onBarScanned, setParams]);
 
   const handleOpenGithub = () => {
-    Linking.openURL('https://hashcash.club');
+    Linking.openURL('https://hashcash.network');
   };
 
   return (
@@ -123,7 +123,7 @@ const LightningSettings: React.FC = () => {
       <SettingsSection compact horizontalInset={false}>
         <SettingsListItem
           title={loc.settings.lndhub_github}
-          subtitle="hashcash.club"
+          subtitle="hashcash.network"
           onPress={handleOpenGithub}
           iconName="github"
           position="single"

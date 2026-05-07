@@ -356,7 +356,7 @@ class AppDelegate: RCTAppDelegate, UNUserNotificationCenterDelegate {
 
     func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
         let userInfo = response.notification.request.content.userInfo
-        let blockExplorer = userDefaultsGroup?.string(forKey: "blockExplorer") ?? "https://explorer.hcash-dev.network"
+        let blockExplorer = userDefaultsGroup?.string(forKey: "blockExplorer") ?? "https://explorer.hashcash-test.network"
 
         if let data = userInfo["data"] as? [String: Any] {
             if response.actionIdentifier == "VIEW_ADDRESS_TRANSACTIONS", let address = data["address"] as? String {
@@ -480,7 +480,7 @@ class AppDelegate: RCTAppDelegate, UNUserNotificationCenterDelegate {
     }
     
     @objc func showHelp(_ sender: Any) {
-        if let url = URL(string: "https://hashcash.club") {
+        if let url = URL(string: "https://hashcash.network") {
             UIApplication.shared.open(url, options: [:], completionHandler: nil)
         }
     }

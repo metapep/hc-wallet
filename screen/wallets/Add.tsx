@@ -468,7 +468,7 @@ const WalletsAdd: React.FC = () => {
   };
 
   const onLearnMorePressed = () => {
-    Linking.openURL('https://hashcash.club');
+    Linking.openURL('https://hashcash.network');
   };
 
   const LightningButtonMemo = useMemo(

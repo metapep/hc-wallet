@@ -23,7 +23,7 @@ let hardcodedPeers = DefaultElectrumPeers.map { settings in
 }
 
 let DefaultElectrumPeers = [
-    UserDefaultsElectrumSettings(host: "electrum.hcash-dev.network", port: 50001, sslPort: 50002),
+    UserDefaultsElectrumSettings(host: "electrum.hashcash-test.network", port: 50001, sslPort: 50002),
     UserDefaultsElectrumSettings(host: "127.0.0.1", port: 50001, sslPort: 50002),
 ]
 

@@ -24,7 +24,7 @@ class MarketWidget : AppWidgetProvider() {
         private const val KEY_LAST_ONLINE_STATUS = "market_widget_last_online_status"
 
         private val hardcodedPeers = listOf(
-            ElectrumServer("electrum.hcash-dev.network", 50002, true),
+            ElectrumServer("electrum.hashcash-test.network", 50002, true),
             ElectrumServer("127.0.0.1", 50002, true)
         )
 

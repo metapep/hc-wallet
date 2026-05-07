@@ -240,7 +240,7 @@ class DeeplinkSchemaMatch {
   }
 
   /**
-   * Extracts server from a deeplink like `hcash:setelectrumserver?server=electrum1.hcash.network%3A50002%3As`
+   * Extracts server from a deeplink like `hcash:setelectrumserver?server=electrum1.hashcash.network%3A50002%3As`
    * returns FALSE if none found
    *
    * @param url {string}

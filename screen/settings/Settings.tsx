@@ -20,7 +20,7 @@ const Settings = () => {
   }, [setOptions, language, colors, settingsScreenBackgroundColor, dark]); // Include language to trigger re-render when language changes
 
   const handleDonatePress = useCallback(() => {
-    Linking.openURL('https://hashcash.club');
+    Linking.openURL('https://hashcash.network');
   }, []);
 
   const donateIcon = useMemo(

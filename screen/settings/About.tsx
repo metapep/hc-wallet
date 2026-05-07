@@ -53,27 +53,27 @@ const About: React.FC = () => {
   }, [navigate]);
 
   const handleOnWebsitePress = useCallback(() => {
-    Linking.openURL('https://hashcash.club');
+    Linking.openURL('https://hashcash.network');
   }, []);
 
   const handleOnSupportPress = useCallback(() => {
-    Linking.openURL('mailto:support@hashcash.club');
+    Linking.openURL('mailto:support@hashcash.network');
   }, []);
 
   const handleOnPrivacyPress = useCallback(() => {
-    Linking.openURL('https://hashcash.club/privacy');
+    Linking.openURL('https://hashcash.network/privacy');
   }, []);
 
   const handleOnTermsPress = useCallback(() => {
-    Linking.openURL('https://hashcash.club/terms');
+    Linking.openURL('https://hashcash.network/terms');
   }, []);
 
   const handleOnRatePress = useCallback(async () => {
     try {
       if (Platform.OS === 'ios') {
-        await Linking.openURL('https://hashcash.club');
+        await Linking.openURL('https://hashcash.network');
       } else {
-        await Linking.openURL('https://hashcash.club');
+        await Linking.openURL('https://hashcash.network');
       }
     } catch (error: any) {
       console.error('Rate app failed:', error.message);
@@ -124,14 +124,14 @@ const About: React.FC = () => {
       },
       {
         id: 'website',
-        title: 'hashcash.club',
+        title: 'hashcash.network',
         iconName: 'network',
         onPress: handleOnWebsitePress,
         section: 2,
       },
       {
         id: 'support',
-        title: 'support@hashcash.club',
+        title: 'support@hashcash.network',
         iconName: 'about',
         onPress: handleOnSupportPress,
         section: 2,
