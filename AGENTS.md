@@ -2,7 +2,7 @@
 
 This file provides guidance to Codex (Codex.ai/code) when working with code in this repository.
 
-## Project Overview
+## Project Overvieww
 
 BlueWallet is a Bitcoin & Lightning Network wallet built with React Native and Electrum. Cross-platform mobile app (iOS/Android/macOS via Catalyst).
 
