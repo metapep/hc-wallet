@@ -4,6 +4,7 @@ import { CoinSelectReturnInput } from 'coinselect';
 
 import * as BlueElectrum from '../../blue_modules/BlueElectrum';
 import { AbstractHDElectrumWallet } from './abstract-hd-electrum-wallet';
+import { HASHCASH_TESTNET_BIP44_DERIVATION_PATH } from '../../blue_modules/hashcash';
 import { hexToUint8Array } from '../../blue_modules/uint8array-extras';
 
 /**
@@ -18,7 +19,7 @@ export class HDLegacyP2PKHWallet extends AbstractHDElectrumWallet {
   public readonly type = HDLegacyP2PKHWallet.type;
   // @ts-ignore: override
   public readonly typeReadable = HDLegacyP2PKHWallet.typeReadable;
-  static readonly derivationPath = "m/44'/0'/0'";
+  static readonly derivationPath = HASHCASH_TESTNET_BIP44_DERIVATION_PATH;
 
   allowSend() {
     return true;

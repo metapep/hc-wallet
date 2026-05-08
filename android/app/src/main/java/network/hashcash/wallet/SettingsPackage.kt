@@ -1,4 +1,4 @@
-package network.hcash.wallet
+package network.hashcash.wallet
 
 import com.facebook.react.TurboReactPackage
 import com.facebook.react.bridge.NativeModule

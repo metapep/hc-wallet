@@ -1,4 +1,4 @@
-package network.hcash.wallet
+package network.hashcash.wallet
 
 import android.content.BroadcastReceiver
 import android.content.Context

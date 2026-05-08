@@ -44,9 +44,9 @@ export interface ToolTipMenuProps {
 }
 
 export enum HandOffActivityType {
-  ReceiveOnchain = 'network.hcash.wallet.receiveonchain',
-  Xpub = 'network.hcash.wallet.xpub',
-  ViewInBlockExplorer = 'network.hcash.wallet.blockexplorer',
+  ReceiveOnchain = 'network.hashcash.wallet.receiveonchain',
+  Xpub = 'network.hashcash.wallet.xpub',
+  ViewInBlockExplorer = 'network.hashcash.wallet.blockexplorer',
 }
 
 export interface HandOffComponentProps {

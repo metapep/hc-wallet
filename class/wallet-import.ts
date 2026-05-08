@@ -26,18 +26,19 @@ import {
 import bip39WalletFormatsElectrum from './bip39_wallet_formats.json'; // https://github.com/spesmilo/electrum/blob/master/electrum/bip39_wallet_formats.json
 import bip39WalletFormatsBlueWallet from './bip39_wallet_formats_bluewallet.json';
 import type { TWallet } from './wallets/types';
-import { LIGHTNING_ENABLED } from '../blue_modules/hashcash';
+import { HASHCASH_TESTNET_BIP86_DERIVATION_PATH, HASHCASH_TESTNET_DERIVATION_PATH, LIGHTNING_ENABLED } from '../blue_modules/hashcash';
 
 // https://github.com/bitcoinjs/bip32/blob/master/ts-src/bip32.ts#L43
 export const validateBip32 = (path: string) => path.match(/^(m\/)?(\d+'?\/)*\d+'?$/) !== null;
 const EXTENDED_PRIVATE_KEY_PREFIXES = new Set(['xprv', 'yprv', 'zprv', 'tprv', 'uprv', 'vprv']);
 export const isExtendedPrivateKey = (text: string) => EXTENDED_PRIVATE_KEY_PREFIXES.has(text.trim().substring(0, 4).toLowerCase());
 export const isTestnetExtendedPrivateKey = (text: string) => ['tprv', 'uprv', 'vprv'].includes(text.trim().substring(0, 4).toLowerCase());
+const toHashcashTestnetDerivationPath = (path: string) => path.replace(/^m\/(\d+)'\/0'\//, "m/$1'/1'/");
 
 // because original file bip39WalletFormatsElectrum is from Electrum X and doesn't contain p2tr wallets, we need to add it
 bip39WalletFormatsElectrum.push({
   description: 'Standard BIP86 native taproot',
-  derivation_path: "m/86'/0'/0'",
+  derivation_path: HASHCASH_TESTNET_BIP86_DERIVATION_PATH,
   script_type: 'p2tr',
   iterate_accounts: true,
 });
@@ -245,24 +246,19 @@ const startImport = (
     hd2.setSecret(text);
     const isValidBip39 = hd2.validateMnemonic();
     const isHdXprv = isExtendedPrivateKey(text);
-    const isTestnetXprv = isHdXprv && isTestnetExtendedPrivateKey(text);
     if (password && isValidBip39) {
       hd2.setPassphrase(password);
     }
     if (isValidBip39 || isHdXprv) {
-      if (isTestnetXprv) {
-        hd2.setDerivationPath("m/84'/1'/0'");
-      }
+      hd2.setDerivationPath(HASHCASH_TESTNET_DERIVATION_PATH);
 
       let walletFound = false;
       // by default we don't try all the paths and options
       const sourcePaths = searchAccounts ? bip39WalletFormatsElectrum : bip39WalletFormatsBlueWallet;
-      const searchPaths = isTestnetXprv
-        ? sourcePaths.map(path => ({
-            ...path,
-            derivation_path: path.derivation_path.replace(/^m\/(\d+)'\/0'\//, "m/$1'/1'/"),
-          }))
-        : sourcePaths;
+      const searchPaths = sourcePaths.map(path => ({
+        ...path,
+        derivation_path: toHashcashTestnetDerivationPath(path.derivation_path),
+      }));
       for (const i of searchPaths) {
         // we need to skip m/0' p2pkh from default scan list. It could be a BRD wallet and will be handled later
         if (i.derivation_path === "m/0'" && i.script_type === 'p2pkh') continue;

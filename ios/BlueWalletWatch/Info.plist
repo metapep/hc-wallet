@@ -51,7 +51,7 @@
 	<key>WKApplication</key>
 	<true/>
 	<key>WKCompanionAppBundleIdentifier</key>
-	<string>network.hcash.wallet</string>
+	<string>network.hashcash.wallet</string>
 	<key>bugsnag</key>
 	<dict>
 		<key>apiKey</key>

@@ -306,7 +306,7 @@ class AppDelegate: RCTAppDelegate, UNUserNotificationCenterDelegate {
 
         userDefaultsGroup?.setValue(userActivityData, forKey: "onUserActivityOpen")
 
-        if ["network.hcash.wallet.receiveonchain", "network.hcash.wallet.xpub", "network.hcash.wallet.blockexplorer"].contains(activityType) {
+        if ["network.hashcash.wallet.receiveonchain", "network.hashcash.wallet.xpub", "network.hashcash.wallet.blockexplorer"].contains(activityType) {
           EventEmitter.shared().sendUserActivity(userActivityData)
             return true
         }

@@ -1,4 +1,4 @@
-package network.hcash.wallet
+package network.hashcash.wallet
 
 /**
  * Exception thrown when an API rate limit is encountered

@@ -27,7 +27,7 @@ class EventEmitter: RCTEventEmitter, NativeEventEmitterSpec {
     
     @objc func getMostRecentUserActivity(_ resolve: @escaping RCTPromiseResolveBlock,
                                            rejecter reject: RCTPromiseRejectBlock) {
-        if let defaults = UserDefaults(suiteName: "group.network.hcash.wallet") {
+        if let defaults = UserDefaults(suiteName: "group.network.hashcash.wallet") {
             resolve(defaults.value(forKey: "onUserActivityOpen"))
         } else {
             resolve(nil)

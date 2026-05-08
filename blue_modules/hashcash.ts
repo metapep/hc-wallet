@@ -7,7 +7,7 @@ export const DONATE_ENABLED = false;
 export const CURRENCY_SETTINGS_ENABLED = false;
 export const CLIPBOARD_AUTO_READ_ENABLED = false;
 
-export type HcashProfile = 'local' | 'dev';
+export type HcashProfile = 'local' | 'testnet';
 
 export type HcashElectrumPeer = {
   host: string;
@@ -17,13 +17,25 @@ export type HcashElectrumPeer = {
 
 const IS_DEV_BUILD = typeof __DEV__ === 'boolean' && __DEV__;
 
-const PROFILE_ENDPOINTS: Record<HcashProfile, { explorer: string; explorerApiBase: string; electrum: HcashElectrumPeer }> = {
+export const HASHCASH_TESTNET_DERIVATION_PATH = "m/84'/1'/0'";
+export const HASHCASH_TESTNET_BIP44_DERIVATION_PATH = "m/44'/1'/0'";
+export const HASHCASH_TESTNET_BIP49_DERIVATION_PATH = "m/49'/1'/0'";
+export const HASHCASH_TESTNET_BIP86_DERIVATION_PATH = "m/86'/1'/0'";
+
+const PROFILE_ENDPOINTS: Record<
+  HcashProfile,
+  { name: string; explorerName: string; explorer: string; explorerApiBase: string; electrum: HcashElectrumPeer }
+> = {
   local: {
+    name: 'HashCash Local Testnet',
+    explorerName: 'HashCash Explorer (Local Testnet)',
     explorer: 'http://127.0.0.1:18080',
     explorerApiBase: 'http://127.0.0.1:18080/api',
     electrum: { host: '127.0.0.1', ssl: 50002, tcp: 50001 },
   },
-  dev: {
+  testnet: {
+    name: 'HashCash Testnet',
+    explorerName: 'HashCash Explorer (Testnet)',
     explorer: 'https://explorer.hashcash-test.network',
     explorerApiBase: 'https://explorer.hashcash-test.network/api',
     electrum: { host: 'electrum.hashcash-test.network', ssl: 50002, tcp: 50001 },
@@ -31,34 +43,42 @@ const PROFILE_ENDPOINTS: Record<HcashProfile, { explorer: string; explorerApiBas
 };
 
 const resolveProfile = (): HcashProfile => {
-  if (!IS_DEV_BUILD) return 'dev';
+  if (!IS_DEV_BUILD) return 'testnet';
   const runtimeProcess = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process;
   const raw = (runtimeProcess?.env?.HCASH_WALLET_PROFILE || '').toLowerCase();
   if (raw === 'local') return 'local';
-  return 'dev';
+  if (raw === 'dev' || raw === 'testnet') return 'testnet';
+  return 'testnet';
 };
 
 export const ACTIVE_HCASH_PROFILE: HcashProfile = resolveProfile();
+export const ACTIVE_HCASH_PROFILE_NAME = PROFILE_ENDPOINTS[ACTIVE_HCASH_PROFILE].name;
+export const DEFAULT_BLOCK_EXPLORER_NAME = PROFILE_ENDPOINTS[ACTIVE_HCASH_PROFILE].explorerName;
 export const DEFAULT_BLOCK_EXPLORER_URL = PROFILE_ENDPOINTS[ACTIVE_HCASH_PROFILE].explorer;
 export const DEFAULT_BLOCK_EXPLORER_API_BASE = PROFILE_ENDPOINTS[ACTIVE_HCASH_PROFILE].explorerApiBase;
 
 export const BLOCK_EXPLORER_PROFILES: Record<HcashProfile, string> = {
-  dev: PROFILE_ENDPOINTS.dev.explorer,
+  testnet: PROFILE_ENDPOINTS.testnet.explorer,
   local: PROFILE_ENDPOINTS.local.explorer,
 };
 
-export const AVAILABLE_HCASH_PROFILES: HcashProfile[] = IS_DEV_BUILD ? ['dev', 'local'] : ['dev'];
+export const BLOCK_EXPLORER_PROFILE_NAMES: Record<HcashProfile, string> = {
+  testnet: PROFILE_ENDPOINTS.testnet.explorerName,
+  local: PROFILE_ENDPOINTS.local.explorerName,
+};
+
+export const AVAILABLE_HCASH_PROFILES: HcashProfile[] = IS_DEV_BUILD ? ['testnet', 'local'] : ['testnet'];
 
 export const DEFAULT_ELECTRUM_PEER: HcashElectrumPeer = PROFILE_ENDPOINTS[ACTIVE_HCASH_PROFILE].electrum;
 
 const electrumPeersByProfile: Record<HcashProfile, HcashElectrumPeer[]> = {
   local: [PROFILE_ENDPOINTS.local.electrum],
-  dev: [PROFILE_ENDPOINTS.dev.electrum],
+  testnet: [PROFILE_ENDPOINTS.testnet.electrum],
 };
 
 const suggestedElectrumPeers: HcashElectrumPeer[] = IS_DEV_BUILD
-  ? [PROFILE_ENDPOINTS.dev.electrum, PROFILE_ENDPOINTS.local.electrum]
-  : [PROFILE_ENDPOINTS.dev.electrum];
+  ? [PROFILE_ENDPOINTS.testnet.electrum, PROFILE_ENDPOINTS.local.electrum]
+  : [PROFILE_ENDPOINTS.testnet.electrum];
 
 // Keep unique peers while preserving deterministic order.
 const dedupePeerKey = (peer: HcashElectrumPeer): string => `${peer.host}:${peer.ssl ?? peer.tcp ?? ''}`;

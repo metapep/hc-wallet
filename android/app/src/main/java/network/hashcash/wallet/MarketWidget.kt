@@ -1,4 +1,4 @@
-package network.hcash.wallet
+package network.hashcash.wallet
 
 import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
@@ -13,13 +13,13 @@ import androidx.work.WorkManager
 import kotlinx.coroutines.delay
 import org.json.JSONObject
 import java.util.concurrent.TimeUnit
-import network.hcash.wallet.ElectrumClient.ElectrumServer
+import network.hashcash.wallet.ElectrumClient.ElectrumServer
 
 class MarketWidget : AppWidgetProvider() {
 
     companion object {
         private const val TAG = "MarketWidget"
-        private const val SHARED_PREF_NAME = "group.network.hcash.wallet"
+        private const val SHARED_PREF_NAME = "group.network.hashcash.wallet"
         private const val DEFAULT_CURRENCY = "USD"
         private const val KEY_LAST_ONLINE_STATUS = "market_widget_last_online_status"
 

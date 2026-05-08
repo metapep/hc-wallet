@@ -1,4 +1,4 @@
-package network.hcash.wallet.components.segmentedcontrol
+package network.hashcash.wallet.components.segmentedcontrol
 
 import com.facebook.react.bridge.ReadableArray
 import com.facebook.react.common.MapBuilder

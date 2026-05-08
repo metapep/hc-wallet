@@ -1,4 +1,5 @@
 import { AbstractHDElectrumWallet } from './abstract-hd-electrum-wallet';
+import { HASHCASH_TESTNET_DERIVATION_PATH } from '../../blue_modules/hashcash';
 
 /**
  * HD Wallet (BIP39).
@@ -13,7 +14,7 @@ export class HDSegwitBech32Wallet extends AbstractHDElectrumWallet {
   // @ts-ignore: override
   public readonly typeReadable = HDSegwitBech32Wallet.typeReadable;
   public readonly segwitType = 'p2wpkh';
-  static readonly derivationPath = "m/84'/0'/0'";
+  static readonly derivationPath = HASHCASH_TESTNET_DERIVATION_PATH;
 
   allowSend() {
     return true;

@@ -5,7 +5,13 @@ import wif from 'wif';
 import { BitcoinUnit, Chain } from '../../models/bitcoinUnits';
 import { CreateTransactionResult, CreateTransactionUtxo, Transaction, Utxo } from './types';
 import { hexToUint8Array, concatUint8Arrays, uint8ArrayToHex } from '../../blue_modules/uint8array-extras';
-import { HASHCASH_URI_SCHEME, HASHCASH_ADDRESS_PREFIX } from '../../blue_modules/hashcash';
+import {
+  HASHCASH_URI_SCHEME,
+  HASHCASH_ADDRESS_PREFIX,
+  HASHCASH_TESTNET_BIP44_DERIVATION_PATH,
+  HASHCASH_TESTNET_BIP49_DERIVATION_PATH,
+  HASHCASH_TESTNET_DERIVATION_PATH,
+} from '../../blue_modules/hashcash';
 
 type WalletWithPassphrase = AbstractWallet & { getPassphrase: () => string };
 type UtxoMetadata = {
@@ -307,12 +313,18 @@ export class AbstractWallet {
       }
       this.secret = m[2];
 
-      if (derivationPath.startsWith("m/84'/0'/") && this.secret.toLowerCase().startsWith('xpub')) {
+      if (
+        (derivationPath.startsWith("m/84'/0'/") || derivationPath.startsWith("m/84'/1'/")) &&
+        this.secret.toLowerCase().startsWith('xpub')
+      ) {
         // need to convert xpub to zpub
         this.secret = this._xpubToZpub(this.secret.split('/')[0]);
       }
 
-      if (derivationPath.startsWith("m/49'/0'/") && this.secret.toLowerCase().startsWith('xpub')) {
+      if (
+        (derivationPath.startsWith("m/49'/0'/") || derivationPath.startsWith("m/49'/1'/")) &&
+        this.secret.toLowerCase().startsWith('xpub')
+      ) {
         // need to convert xpub to ypub
         this.secret = this._xpubToYpub(this.secret);
       }
@@ -366,11 +378,11 @@ export class AbstractWallet {
 
     if (!this._derivationPath) {
       if (this.secret.startsWith('xpub')) {
-        this._derivationPath = "m/44'/0'/0'"; // Assume default BIP44 path for legacy wallets
+        this._derivationPath = HASHCASH_TESTNET_BIP44_DERIVATION_PATH; // Assume default HashCash testnet BIP44 path for legacy wallets
       } else if (this.secret.startsWith('ypub')) {
-        this._derivationPath = "m/49'/0'/0'"; // Assume default BIP49 path for segwit wrapped wallets
+        this._derivationPath = HASHCASH_TESTNET_BIP49_DERIVATION_PATH; // Assume default HashCash testnet BIP49 path for segwit wrapped wallets
       } else if (this.secret.startsWith('zpub')) {
-        this._derivationPath = "m/84'/0'/0'"; // Assume default BIP84 for native segwit wallets
+        this._derivationPath = HASHCASH_TESTNET_DERIVATION_PATH; // Assume default HashCash testnet BIP84 for native segwit wallets
       }
     }
 

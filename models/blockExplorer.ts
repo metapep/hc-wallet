@@ -1,6 +1,12 @@
 // blockExplorer.ts
 import DefaultPreference from 'react-native-default-preference';
-import { AVAILABLE_HCASH_PROFILES, BLOCK_EXPLORER_PROFILES, DEFAULT_BLOCK_EXPLORER_URL } from '../blue_modules/hashcash';
+import {
+  AVAILABLE_HCASH_PROFILES,
+  BLOCK_EXPLORER_PROFILE_NAMES,
+  BLOCK_EXPLORER_PROFILES,
+  DEFAULT_BLOCK_EXPLORER_NAME,
+  DEFAULT_BLOCK_EXPLORER_URL,
+} from '../blue_modules/hashcash';
 
 export interface BlockExplorer {
   key: string;
@@ -9,12 +15,12 @@ export interface BlockExplorer {
 }
 
 export const BLOCK_EXPLORERS: { [key: string]: BlockExplorer } = {
-  default: { key: 'default', name: 'HashCash Explorer (Dev)', url: DEFAULT_BLOCK_EXPLORER_URL },
-  ...(AVAILABLE_HCASH_PROFILES.includes('dev')
-    ? { hcashDev: { key: 'hcashDev', name: 'HashCash Explorer (Dev)', url: BLOCK_EXPLORER_PROFILES.dev } }
+  default: { key: 'default', name: DEFAULT_BLOCK_EXPLORER_NAME, url: DEFAULT_BLOCK_EXPLORER_URL },
+  ...(AVAILABLE_HCASH_PROFILES.includes('testnet')
+    ? { hcashTestnet: { key: 'hcashTestnet', name: BLOCK_EXPLORER_PROFILE_NAMES.testnet, url: BLOCK_EXPLORER_PROFILES.testnet } }
     : {}),
   ...(AVAILABLE_HCASH_PROFILES.includes('local')
-    ? { hcashLocal: { key: 'hcashLocal', name: 'HashCash Explorer (Local)', url: BLOCK_EXPLORER_PROFILES.local } }
+    ? { hcashLocal: { key: 'hcashLocal', name: BLOCK_EXPLORER_PROFILE_NAMES.local, url: BLOCK_EXPLORER_PROFILES.local } }
     : {}),
   custom: { key: 'custom', name: 'Custom', url: '' }, // Custom URL will be handled separately
 };

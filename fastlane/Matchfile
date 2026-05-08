@@ -9,11 +9,11 @@ type(ENV["MATCH_TYPE"] || "appstore")
 
 # App identifiers for all BlueWallet apps
 app_identifier([
-  "network.hcash.wallet", 
-  "network.hcash.wallet.watch", 
-  "network.hcash.wallet.watch.extension", 
-  "network.hcash.wallet.Stickers", 
-  "network.hcash.wallet.MarketWidget"
+  "network.hashcash.wallet", 
+  "network.hashcash.wallet.watch", 
+  "network.hashcash.wallet.watch.extension", 
+  "network.hashcash.wallet.Stickers", 
+  "network.hashcash.wallet.MarketWidget"
 ])
 
 # Your Apple Developer account email address

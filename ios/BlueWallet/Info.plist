@@ -4,7 +4,7 @@
 <dict>
 	<key>BGTaskSchedulerPermittedIdentifiers</key>
 	<array>
-		<string>network.hcash.wallet.fetchTxsForWallet</string>
+		<string>network.hashcash.wallet.fetchTxsForWallet</string>
 	</array>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
@@ -25,7 +25,7 @@
 			<string>Owner</string>
 			<key>LSItemContentTypes</key>
 			<array>
-				<string>network.hcash.wallet.psbt</string>
+				<string>network.hashcash.wallet.psbt</string>
 			</array>
 		</dict>
 		<dict>
@@ -54,7 +54,7 @@
 			<string>Owner</string>
 			<key>LSItemContentTypes</key>
 			<array>
-				<string>network.hcash.wallet.psbt.txn</string>
+				<string>network.hashcash.wallet.psbt.txn</string>
 			</array>
 		</dict>
 		<dict>
@@ -68,7 +68,7 @@
 			<string>Owner</string>
 			<key>LSItemContentTypes</key>
 			<array>
-				<string>network.hcash.wallet.backup</string>
+				<string>network.hashcash.wallet.backup</string>
 			</array>
 		</dict>
 		<dict>
@@ -82,7 +82,7 @@
 			<string>Owner</string>
 			<key>LSItemContentTypes</key>
 			<array>
-				<string>network.hcash.wallet.bwcosigner</string>
+				<string>network.hashcash.wallet.bwcosigner</string>
 			</array>
 		</dict>
 	</array>
@@ -188,8 +188,8 @@
 	<string>In order to import an image for scanning, we need your permission to access your photo library.</string>
 	<key>NSUserActivityTypes</key>
 	<array>
-		<string>network.hcash.wallet.receiveonchain</string>
-		<string>network.hcash.wallet.xpub</string>
+		<string>network.hashcash.wallet.receiveonchain</string>
+		<string>network.hashcash.wallet.xpub</string>
 	</array>
 	<key>RCTNewArchEnabled</key>
 	<true/>
@@ -252,7 +252,7 @@
 			<key>UTTypeDescription</key>
 			<string>Partially Signed HashCash Transaction</string>
 			<key>UTTypeIdentifier</key>
-			<string>network.hcash.wallet.psbt</string>
+			<string>network.hashcash.wallet.psbt</string>
 			<key>UTTypeTagSpecification</key>
 			<dict>
 				<key>public.filename-extension</key>
@@ -265,7 +265,7 @@
 			<key>UTTypeDescription</key>
 			<string>BW COSIGNER</string>
 			<key>UTTypeIdentifier</key>
-			<string>network.hcash.wallet.bwcosigner</string>
+			<string>network.hashcash.wallet.bwcosigner</string>
 			<key>UTTypeTagSpecification</key>
 			<dict>
 				<key>public.filename-extension</key>
@@ -282,7 +282,7 @@
 			<key>UTTypeDescription</key>
 			<string>HashCash Transaction</string>
 			<key>UTTypeIdentifier</key>
-			<string>network.hcash.wallet.psbt.txn</string>
+			<string>network.hashcash.wallet.psbt.txn</string>
 			<key>UTTypeTagSpecification</key>
 			<dict>
 				<key>public.filename-extension</key>
@@ -299,7 +299,7 @@
 			<key>UTTypeDescription</key>
 			<string>Electrum Backup</string>
 			<key>UTTypeIdentifier</key>
-			<string>network.hcash.wallet.backup</string>
+			<string>network.hashcash.wallet.backup</string>
 			<key>UTTypeTagSpecification</key>
 			<dict>
 				<key>public.filename-extension</key>
@@ -336,7 +336,7 @@
 		</dict>
 	</array>
 	<key>WKCompanionAppBundleIdentifier</key>
-	<string>network.hcash.wallet</string>
+	<string>network.hashcash.wallet</string>
 	<key>bugsnag</key>
 	<dict>
 		<key>apiKey</key>

@@ -1,4 +1,4 @@
-package network.hcash.wallet
+package network.hashcash.wallet
 
 import android.content.Context
 import android.content.SharedPreferences
@@ -7,13 +7,13 @@ import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactMethod
 import com.facebook.react.bridge.Promise
 import com.facebook.react.module.annotations.ReactModule
-import network.hcash.wallet.NativeSettingsModuleSpec
+import network.hashcash.wallet.NativeSettingsModuleSpec
 
 @ReactModule(name = SettingsModule.NAME)
 class SettingsModule(reactContext: ReactApplicationContext) : NativeSettingsModuleSpec(reactContext) {
 
     private val sharedPref: SharedPreferences = reactContext.getSharedPreferences(
-        "group.network.hcash.wallet",
+        "group.network.hashcash.wallet",
         Context.MODE_PRIVATE
     )
     

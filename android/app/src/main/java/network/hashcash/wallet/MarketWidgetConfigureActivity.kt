@@ -1,4 +1,4 @@
-package network.hcash.wallet
+package network.hashcash.wallet
 
 import android.appwidget.AppWidgetManager
 import android.content.Intent

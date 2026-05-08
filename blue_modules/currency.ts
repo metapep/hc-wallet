@@ -8,7 +8,7 @@ const PREFERRED_CURRENCY_STORAGE_KEY = 'preferredCurrency';
 const PREFERRED_CURRENCY_LOCALE_STORAGE_KEY = 'preferredCurrencyLocale';
 const EXCHANGE_RATES_STORAGE_KEY = 'exchangeRates';
 const LAST_UPDATED = 'LAST_UPDATED';
-export const GROUP_IO_BLUEWALLET = 'group.network.hcash.wallet';
+export const GROUP_IO_BLUEWALLET = 'group.network.hashcash.wallet';
 const BTC_PREFIX = 'BTC_';
 
 export interface CurrencyRate {

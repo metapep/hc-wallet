@@ -1,4 +1,4 @@
-package network.hcash.wallet
+package network.hashcash.wallet
 
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
@@ -13,7 +13,7 @@ class BitcoinPriceWidget : AppWidgetProvider() {
 
     companion object {
         private const val TAG = "BitcoinPriceWidget"
-        private const val SHARED_PREF_NAME = "group.network.hcash.wallet"
+        private const val SHARED_PREF_NAME = "group.network.hashcash.wallet"
         
         fun updateNetworkStatus(context: Context, appWidgetIds: IntArray) {
             val isNetworkAvailable = NetworkUtils.isNetworkAvailable(context)

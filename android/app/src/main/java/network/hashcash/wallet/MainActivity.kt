@@ -1,4 +1,4 @@
-package network.hcash.wallet
+package network.hashcash.wallet
 
 import android.content.Context
 import android.content.pm.ActivityInfo
@@ -42,7 +42,7 @@ class MainActivity : ReactActivity() {
     }
     
     private fun checkAndShowCacheClearedAlert() {
-        val sharedPref = getSharedPreferences("group.network.hcash.wallet", Context.MODE_PRIVATE)
+        val sharedPref = getSharedPreferences("group.network.hashcash.wallet", Context.MODE_PRIVATE)
         val shouldShowAlert = sharedPref.getBoolean("shouldShowCacheClearedAlert", false)
         
         if (shouldShowAlert) {

@@ -18,16 +18,16 @@
       <string>export</string>
       <key>provisioningProfiles</key>
       <dict>
-          <key>network.hcash.wallet</key>
-          <string>match AppStore network.hcash.wallet</string>
-          <key>network.hcash.wallet.watch</key>
-          <string>match AppStore network.hcash.wallet.watch</string>
-          <key>network.hcash.wallet.watch.extension</key>
-          <string>match AppStore network.hcash.wallet.watch.extension</string>
-          <key>network.hcash.wallet.Stickers</key>
-          <string>match AppStore network.hcash.wallet.Stickers</string>
-          <key>network.hcash.wallet.MarketWidget</key>
-          <string>match AppStore network.hcash.wallet.MarketWidget</string>
+          <key>network.hashcash.wallet</key>
+          <string>match AppStore network.hashcash.wallet</string>
+          <key>network.hashcash.wallet.watch</key>
+          <string>match AppStore network.hashcash.wallet.watch</string>
+          <key>network.hashcash.wallet.watch.extension</key>
+          <string>match AppStore network.hashcash.wallet.watch.extension</string>
+          <key>network.hashcash.wallet.Stickers</key>
+          <string>match AppStore network.hashcash.wallet.Stickers</string>
+          <key>network.hashcash.wallet.MarketWidget</key>
+          <string>match AppStore network.hashcash.wallet.MarketWidget</string>
       </dict>
   </dict>
 </plist>

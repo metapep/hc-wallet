@@ -4,7 +4,7 @@ import ecc from '../../blue_modules/noble_ecc';
 import * as bitcoin from 'bitcoinjs-lib';
 import { Psbt } from 'bitcoinjs-lib';
 import { CoinSelectReturnInput } from 'coinselect';
-import { HASHCASH_NETWORK } from '../../blue_modules/hashcash';
+import { HASHCASH_NETWORK, HASHCASH_TESTNET_BIP86_DERIVATION_PATH } from '../../blue_modules/hashcash';
 
 const bip32 = BIP32Factory(ecc);
 
@@ -19,7 +19,7 @@ export class HDTaprootWallet extends AbstractHDElectrumWallet {
   // @ts-ignore: override
   public readonly typeReadable = HDTaprootWallet.typeReadable;
   public readonly segwitType = 'p2tr';
-  static readonly derivationPath = "m/86'/0'/0'";
+  static readonly derivationPath = HASHCASH_TESTNET_BIP86_DERIVATION_PATH;
 
   getXpub() {
     if (this._xpub) {

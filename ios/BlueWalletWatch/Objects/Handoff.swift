@@ -9,9 +9,9 @@
 import Foundation
 
 enum HandoffIdentifier: String {
-  case ReceiveOnchain = "network.hcash.wallet.receiveonchain"
-  case Xpub = "network.hcash.wallet.xpub"
-  case ViewInBlockExplorer = "network.hcash.wallet.blockexplorer"
+  case ReceiveOnchain = "network.hashcash.wallet.receiveonchain"
+  case Xpub = "network.hashcash.wallet.xpub"
+  case ViewInBlockExplorer = "network.hashcash.wallet.blockexplorer"
 }
 
 enum HandOffUserInfoKey: String {

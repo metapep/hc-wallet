@@ -1,4 +1,4 @@
-package network.hcash.wallet
+package network.hashcash.wallet
 
 import android.app.Application
 import android.content.Context
@@ -15,7 +15,7 @@ import com.facebook.react.ReactNativeApplicationEntryPoint.loadReactNative
 import com.facebook.react.defaults.DefaultReactHost.getDefaultReactHost
 import com.facebook.react.defaults.DefaultReactNativeHost
 import com.facebook.react.modules.i18nmanager.I18nUtil
-import network.hcash.wallet.components.segmentedcontrol.CustomSegmentedControlPackage
+import network.hashcash.wallet.components.segmentedcontrol.CustomSegmentedControlPackage
 
 class MainApplication : Application(), ReactApplication {
 
@@ -85,7 +85,7 @@ class MainApplication : Application(), ReactApplication {
 
     override fun onCreate() {
         super.onCreate()
-        sharedPref = getSharedPreferences("group.network.hcash.wallet", Context.MODE_PRIVATE)
+        sharedPref = getSharedPreferences("group.network.hashcash.wallet", Context.MODE_PRIVATE)
         
         // Handle clearFilesOnLaunch before registering listeners
         clearFilesIfNeeded()

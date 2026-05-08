@@ -23,7 +23,7 @@ module.exports = {
     type: 'all',
     jsSrcsDir: './codegen',
     android: {
-      javaPackageName: 'network.hcash.wallet',
+      javaPackageName: 'network.hashcash.wallet',
     },
   },
 };

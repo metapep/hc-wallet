@@ -4,6 +4,7 @@ import { Psbt } from 'bitcoinjs-lib';
 import b58 from 'bs58check';
 import { CoinSelectReturnInput } from 'coinselect';
 
+import { HASHCASH_TESTNET_BIP49_DERIVATION_PATH } from '../../blue_modules/hashcash';
 import { concatUint8Arrays, hexToUint8Array } from '../../blue_modules/uint8array-extras';
 import { AbstractHDElectrumWallet } from './abstract-hd-electrum-wallet';
 
@@ -20,7 +21,7 @@ export class HDSegwitP2SHWallet extends AbstractHDElectrumWallet {
   // @ts-ignore: override
   public readonly typeReadable = HDSegwitP2SHWallet.typeReadable;
   public readonly segwitType = 'p2sh(p2wpkh)';
-  static readonly derivationPath = "m/49'/0'/0'";
+  static readonly derivationPath = HASHCASH_TESTNET_BIP49_DERIVATION_PATH;
 
   allowSend() {
     return true;

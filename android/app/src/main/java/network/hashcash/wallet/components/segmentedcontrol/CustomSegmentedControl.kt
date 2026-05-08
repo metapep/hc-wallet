@@ -1,4 +1,4 @@
-package network.hcash.wallet.components.segmentedcontrol
+package network.hashcash.wallet.components.segmentedcontrol
 
 import android.content.Context
 import android.content.res.ColorStateList
@@ -13,7 +13,7 @@ import com.facebook.react.uimanager.events.Event
 import com.facebook.react.uimanager.UIManagerHelper
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.button.MaterialButtonToggleGroup
-import network.hcash.wallet.R
+import network.hashcash.wallet.R
 
 class CustomSegmentedControl @JvmOverloads constructor(
     context: Context,
