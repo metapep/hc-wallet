@@ -112,9 +112,9 @@ jobs:
           BRANCH_NAME=$(echo "$BRANCH_NAME" | sed 's/[^a-zA-Z0-9_-]/_/g')
 
           if [ -n "$BRANCH_NAME" ] && [ "$BRANCH_NAME" != "master" ]; then
-            EXPECTED_FILENAME="BlueWallet-${VERSION_NAME}-${BUILD_NUMBER}-${BRANCH_NAME}.apk"
+            EXPECTED_FILENAME="hcWallet-${VERSION_NAME}-${BUILD_NUMBER}-${BRANCH_NAME}.apk"
           else
-            EXPECTED_FILENAME="BlueWallet-${VERSION_NAME}-${BUILD_NUMBER}.apk"
+            EXPECTED_FILENAME="hcWallet-${VERSION_NAME}-${BUILD_NUMBER}.apk"
           fi
       
           APK_PATH="android/app/build/outputs/apk/release/${EXPECTED_FILENAME}"

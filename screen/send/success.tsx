@@ -149,7 +149,7 @@ export const SuccessView = ({ amount, amountUnit, fee, invoiceDescription, shoul
       <View style={styles.ready}>
         <LottieView
           style={styles.lottie}
-          source={require('../../img/bluenice.json')}
+          source={require('../../img/success-spark.json')}
           autoPlay={shouldAnimate}
           loop={false}
           progress={shouldAnimate ? 0 : 1}

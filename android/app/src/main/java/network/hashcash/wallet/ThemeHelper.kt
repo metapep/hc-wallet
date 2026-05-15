@@ -35,17 +35,13 @@ object ThemeHelper {
             .edit()
             .putBoolean(KEY_FORCE_DARK_MODE, forceDarkMode)
             .apply()
-            
-        // Apply theme setting immediately
+
         AppCompatDelegate.setDefaultNightMode(
-            if (forceDarkMode) AppCompatDelegate.MODE_NIGHT_YES 
+            if (forceDarkMode) AppCompatDelegate.MODE_NIGHT_YES
             else AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
         )
-        
-        // Update widgets with new theme
-        updateAllWidgets(context)
     }
-    
+
     /**
      * Get whether force dark mode is enabled
      * @param context Application context
@@ -54,23 +50,5 @@ object ThemeHelper {
     fun isForceDarkModeEnabled(context: Context): Boolean {
         return context.getSharedPreferences(SHARED_PREF_NAME, Context.MODE_PRIVATE)
             .getBoolean(KEY_FORCE_DARK_MODE, false)
-    }
-    
-    /**
-     * Update all widgets to reflect current theme
-     * @param context Application context
-     */
-    fun updateAllWidgets(context: Context) {
-        // Update Bitcoin Price Widgets
-        val bitcoinPriceWidgetIds = AppWidgetUtils.getBitcoinPriceWidgetIds(context)
-        if (bitcoinPriceWidgetIds.isNotEmpty()) {
-            BitcoinPriceWidget.updateNetworkStatus(context, bitcoinPriceWidgetIds)
-        }
-        
-        // Update Market Widgets
-        val marketWidgetIds = MarketWidget.getAllWidgetIds(context)
-        if (marketWidgetIds.isNotEmpty()) {
-            MarketWidget.refreshAllWidgetsImmediately(context)
-        }
     }
 }

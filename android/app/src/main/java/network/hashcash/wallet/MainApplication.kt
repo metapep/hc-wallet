@@ -2,8 +2,6 @@ package network.hashcash.wallet
 
 import android.app.Application
 import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
 import android.content.SharedPreferences
 import android.util.Log
 import com.bugsnag.android.Bugsnag
@@ -20,20 +18,8 @@ import network.hashcash.wallet.components.segmentedcontrol.CustomSegmentedContro
 class MainApplication : Application(), ReactApplication {
 
     private lateinit var sharedPref: SharedPreferences
-    private val themeChangeReceiver = ThemeChangeReceiver()
     private val preferenceChangeListener = SharedPreferences.OnSharedPreferenceChangeListener { prefs, key ->
-        if (key == "preferredCurrency") {
-            prefs.edit().remove("previous_price").apply()
-            
-            // Update BitcoinPrice widgets
-            WidgetUpdateWorker.scheduleWork(this)
-            
-            // Immediately refresh Market widgets
-            MarketWidget.refreshAllWidgetsImmediately(this)
-        } else if (key == "force_dark_mode") {
-            // Theme setting changed, update all widgets
-            ThemeHelper.updateAllWidgets(this)
-        } else if (key == "donottrack") {
+        if (key == "donottrack") {
             // Handle Do Not Track changes similar to iOS
             val isEnabled = prefs.getString("donottrack", "0") == "1"
             Log.d("MainApplication", "Do Not Track changed to: $isEnabled")
@@ -91,10 +77,7 @@ class MainApplication : Application(), ReactApplication {
         clearFilesIfNeeded()
         
         sharedPref.registerOnSharedPreferenceChangeListener(preferenceChangeListener)
-        
-        // Register the theme change receiver
-        registerReceiver(themeChangeReceiver, IntentFilter(Intent.ACTION_CONFIGURATION_CHANGED))
-        
+
         val sharedI18nUtilInstance = I18nUtil.getInstance()
         sharedI18nUtilInstance.allowRTL(applicationContext, true)
         loadReactNative(this)
@@ -106,13 +89,6 @@ class MainApplication : Application(), ReactApplication {
     override fun onTerminate() {
         super.onTerminate()
         sharedPref.unregisterOnSharedPreferenceChangeListener(preferenceChangeListener)
-        
-        // Unregister the theme change receiver
-        try {
-            unregisterReceiver(themeChangeReceiver)
-        } catch (e: Exception) {
-            Log.e("MainApplication", "Error unregistering theme receiver", e)
-        }
     }
 
     private fun initializeBugsnag() {

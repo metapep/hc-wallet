@@ -1,133 +1,94 @@
-# BlueWallet - A Bitcoin & Lightning Wallet
+# HashCash Wallet (hc-wallet)
 
-[![GitHub tag](https://img.shields.io/badge/dynamic/json.svg?url=https://raw.githubusercontent.com/BlueWallet/BlueWallet/master/package.json&query=$.version&label=Version)](https://github.com/BlueWallet/BlueWallet)
-[![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=flat-square)](https://github.com/prettier/prettier)
-![](https://img.shields.io/github/license/BlueWallet/BlueWallet.svg)
-
-Thin Bitcoin Wallet.
-Built with React Native and Electrum.
-
-[![Appstore](https://bluewallet.io/uploads/app-store-badge-blue.svg)](https://itunes.apple.com/us/app/bluewallet-bitcoin-wallet/id1376878040?l=ru&ls=1&mt=8)
-[![Playstore](https://bluewallet.io/uploads/play-store-badge-blue.svg)](https://play.google.com/store/apps/details?id=network.hashcash.wallet)
-
-Website: [bluewallet.io](https://bluewallet.io)
-
-Community: [telegram group](https://t.me/bluewallet)
+A self-custodial HashCash testnet wallet for iOS and Android, built with React Native and Electrum.
 
 * Private keys never leave your device
-* Lightning Network supported
-* SegWit-first. Replace-By-Fee support
-* Encryption. Plausible deniability
-* And many more [features...](https://bluewallet.io/features)
+* HD wallets with BIP39 mnemonic backup
+* BIP44 / BIP49 / BIP84 / BIP86 (Taproot) support
+* Watch-only and multisig wallets
+* Local encryption with plausible-deniability buckets
+* Biometric protection and screen-capture protection on sensitive screens
 
+> **Status:** Testnet only. This build connects to `electrum.hashcash-test.network` and uses SLIP44 coin type `1'`. A mainnet release will follow as an update once HashCash mainnet is live.
 
-<img src="https://i.imgur.com/hHYJnMj.png" width="100%">
+This codebase began as a fork of [BlueWallet](https://github.com/BlueWallet/BlueWallet) 8.x and is being adapted into a HashCash-native wallet. Bitcoin-only features (Lightning, marketplace, BTC widgets) are disabled or removed.
 
+## Build & run
 
-## BUILD & RUN IT
-
-Please refer to the engines field in package.json file for the minimum required versions of Node and npm. It is preferred that you use an even-numbered version of Node as these are LTS versions.
-
-To view the version of Node and npm in your environment, run the following in your console:
-
-```
-node --version && npm --version
-```
-
-* In your console:
+Refer to the `engines` field in `package.json` for the minimum required Node version. Use an even-numbered LTS Node release.
 
 ```
-git clone https://github.com/BlueWallet/BlueWallet.git
-cd BlueWallet
+git clone <hc-wallet repo url>
+cd hc-wallet
 npm install
 ```
 
-Please make sure that your console is running the most stable versions of npm and node (even-numbered versions).
+### Android
 
-* To run on Android:
-
-You will now need to either connect an Android device to your computer or run an emulated Android device using AVD Manager which comes shipped with Android Studio. To run an emulator using AVD Manager:
-
-1. Download and run Android Studio
-2. Click on "Open an existing Android Studio Project"
-3. Open `build.gradle` file under `BlueWallet/android/` folder
-4. Android Studio will take some time to set things up. Once everything is set up, go to `Tools` -> `AVD Manager`.
-    * 📝 This option [may take some time to appear in the menu](https://stackoverflow.com/questions/47173708/why-avd-manager-options-are-not-showing-in-android-studio) if you're opening the project in a freshly-installed version of Android Studio.
-5. Click on "Create Virtual Device..." and go through the steps to create a virtual device
-6. Launch your newly created virtual device by clicking the `Play` button under `Actions` column
-
-Once you connected an Android device or launched an emulator, run this:
+1. Install Android Studio and create or attach an emulator via AVD Manager (open `android/build.gradle` to import the project).
+2. Run the app:
 
 ```
-npx react-native run-android
+npm run android
 ```
 
-The above command will build the app and install it. Once you launch the app it will take some time for all of the dependencies to load. Once everything loads up, you should have the built app running.
-
-* To run on iOS:
+### iOS
 
 ```
 npx pod-install
 npm start
 ```
 
-In another terminal window within the BlueWallet folder:
-```
-npx react-native run-ios
-```
-**To debug BlueWallet on the iOS Simulator, you must choose a Rosetta-compatible iOS Simulator. This can be done by navigating to the Product menu in Xcode, selecting Destination Architectures, and then opting for "Show Both." This action will reveal the simulators that support Rosetta.
-**
+In another terminal:
 
-* To run on macOS using Mac Catalyst:
+```
+npm run ios
+```
+
+When using the iOS Simulator on Apple silicon, choose a Rosetta-compatible simulator via **Product → Destination → Destination Architectures → Show Both** in Xcode.
+
+### macOS (Mac Catalyst)
 
 ```
 npx pod-install
 npm start
 ```
 
-Open ios/BlueWallet.xcworkspace. Once the project loads, select the scheme/target BlueWallet. Click Run.
+Open `ios/<scheme>.xcworkspace`, select the macOS scheme, and Run.
 
-## TESTS
+### Profiles
 
-```bash
-npm run test
+A development build can target either the public testnet or a local node by setting `HCASH_WALLET_PROFILE`:
+
+- `HCASH_WALLET_PROFILE=testnet` — `electrum.hashcash-test.network` (default)
+- `HCASH_WALLET_PROFILE=local` — `127.0.0.1` (Electrum 50001/50002, explorer 18080)
+
+Release builds always use `testnet`. See [blue_modules/hashcash.ts](blue_modules/hashcash.ts).
+
+## Tests
+
+```
+npm test            # lint + unit + integration
+npm run lint        # ESLint + tsc + unused-loc check
+npm run unit        # Jest unit tests
+npm run integration # Jest integration tests (requires network + test mnemonics)
 ```
 
+E2E (Detox) tests run on Android in CI:
 
-## LICENSE
+```
+npm run e2e:debug
+npm run e2e:release-test
+```
 
-MIT
+## License
 
-## WANT TO CONTRIBUTE?
+MIT. See [LICENSE](LICENSE).
 
-Grab an issue from [the backlog](https://github.com/BlueWallet/BlueWallet/issues), try to start or submit a PR, any doubts we will try to guide you. Contributors have a private telegram group, request access by email bluewallet@bluewallet.io
+## Responsible disclosure
 
-## Translations
+Security issues: `security@hashcash.network`. Please do not file public issues for vulnerabilities.
 
-We accept translations via [Transifex](https://explore.transifex.com/bluewallet/bluewallet/)
+## Contributing
 
-To participate you need to:
-1. Sign up to Transifex
-2. Find BlueWallet project
-3. Send join request
-4. After we accept your request you will be able to start translating! That's it!
-
-Please note the values in curly braces should not be translated. These are the names of the variables that will be inserted into the translated string. For example, the original string `"{number} of {total}"` in Russian will be `"{number} из {total}"`.
-
-Transifex automatically creates Pull Request when language reaches 100% translation. We also trigger this by hand before each release, so don't worry if you can't translate everything, every word counts.
-
-## Q&A
-
-Builds automated and tested with BrowserStack
-
-<a href="https://www.browserstack.com/"><img src="https://i.imgur.com/syscHCN.png" width="160px"></a>
-
-Bugs reported via BugSnag
-
-<a href="https://www.bugsnag.com"><img src="https://images.typeform.com/images/QKuaAssrFCq7/image/default" width="160px"></a>
-
-
-## RESPONSIBLE DISCLOSURE
-
-Found critical bugs/vulnerabilities? Please email them bluewallet@bluewallet.io
-Thanks!
+See [CONTRIBUTING.md](CONTRIBUTING.md).

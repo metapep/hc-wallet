@@ -1,24 +1,27 @@
 # FAQ
 
-## Too much nodejs dependencies! Who audits all of that?
+## What network does this wallet connect to?
 
-We do. Really, when we bump deps we glance over the diff, and all versions are 
-pinned. Also, we use paid audit solution https://snyk.io which is specifically 
-designed to keep an eye on deps.
+The testnet build connects to `electrum.hashcash-test.network` (Electrum on ports 50001/50002) and the testnet block explorer at `explorer.hashcash-test.network`. Development builds can also target a local node by setting `HCASH_WALLET_PROFILE=local`. See [blue_modules/hashcash.ts](blue_modules/hashcash.ts).
 
-And yes, we have too many of them, and PRs cutting deps are welcome 
-(see https://github.com/BlueWallet/BlueWallet/blob/master/CONTRIBUTING.md)
+## Where are my keys stored?
 
-Also, really risky dependencies (like, from not-reputable/anonymous maintainers)
-we fork and use under our organization, and when we update them from upstream (rarely)
-we do review the code
+On the device only. Mnemonics and private keys are kept in the OS-provided secure store (`react-native-secure-key-store` / `react-native-keychain`) under the `WHEN_UNLOCKED_THIS_DEVICE_ONLY` accessibility class. They never leave the device.
 
-## Does BlueWallet download the Bitcoin Headers? I see no place you call blockchain.block.headers so I'm wondering how do you guys deal with the headers? How can you make sure you follow the correct chain in order to make sure you're spending a confirmed UTXO?
+## Why so many Node dependencies? Who audits them?
 
-The idea is that by default BW doesn’t use public electrum servers, only
-ones hosted by BlueWallet, so they are kinda trusted. And end-user has an
-option to change Electrum server to something he provides, so he knows what
-he is doing and trusts his own electrum server.
+This codebase inherits its dependency tree from BlueWallet. Versions are pinned, and risky or anonymously maintained packages are forked under a controlled namespace. PRs that remove dependencies are particularly welcome — see [CONTRIBUTING.md](CONTRIBUTING.md).
 
-We would definitely need proper SPV verification if we used random
-electrum server every time from a pool of public servers.
+## Does hc-wallet download block headers?
+
+No. The wallet trusts the Electrum server it is connected to. By default that is a HashCash-operated testnet server. Users can configure a custom Electrum server in **Settings → Network → Electrum** (in development builds) if they prefer to trust their own infrastructure.
+
+Proper SPV verification would be required for a "random server from a public pool" model. That is not the current design.
+
+## Is Lightning supported?
+
+No. Lightning code paths are gated off (`LIGHTNING_ENABLED = false` in `blue_modules/hashcash.ts`) and are unreachable from the UI.
+
+## When mainnet?
+
+Mainnet support will ship as an update once HashCash mainnet is live. Wallets created in the testnet build are tied to SLIP44 coin type `1'` (testnet) and will continue to work on testnet after the update; mainnet wallets will be a separate slot in the same install.

@@ -21,7 +21,11 @@ function bitcoinjs_crypto_sha256(buffer /*: Buffer */) /*: Buffer */ {
   return Buffer.from(_sha256(Uint8Array.from(buffer)));
 }
 
-describe('ElectrumClient', () => {
+// TODO(hc-wallet): rewrite against HashCash testnet Electrum servers with
+// stable known testnet addresses. The case below hits BlueWallet's Bitcoin-
+// mainnet infrastructure and checks Bitcoin mainnet balances, neither of
+// which applies to hc-wallet.
+describe.skip('ElectrumClient (BlueWallet/Bitcoin-mainnet, awaiting HashCash rewrite)', () => {
   it('can connect and query', async () => {
     for (const peer of hardcodedPeers) {
       const mainClient = new ElectrumClient(net, tls, peer.ssl || peer.tcp, peer.host, peer.ssl ? 'tls' : 'tcp');

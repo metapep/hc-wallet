@@ -44,8 +44,8 @@ module AndroidHelpers
 
   def keystore_paths
     {
-      hex: File.join(project_root, 'bluewallet-release-key.keystore.hex'),
-      file: File.join(project_root, 'android', 'bluewallet-release-key.keystore'),
+      hex: File.join(project_root, 'hcwallet-release-key.keystore.hex'),
+      file: File.join(project_root, 'android', 'hcwallet-release-key.keystore'),
     }
   end
 
@@ -73,7 +73,7 @@ module AndroidHelpers
   end
 
   def apk_name(version_name, build_number, branch)
-    branch != 'master' ? "BlueWallet-#{version_name}-#{build_number}-#{branch}.apk" : "BlueWallet-#{version_name}-#{build_number}.apk"
+    branch != 'master' ? "hcWallet-#{version_name}-#{build_number}-#{branch}.apk" : "hcWallet-#{version_name}-#{build_number}.apk"
   end
 
   def apksigner_path
@@ -125,15 +125,15 @@ module AndroidHelpers
   def ensure_temp_credentials!(auto: false)
     return unless auto
 
-    temp_dir = Dir.mktmpdir('bw-temp-keystore')
+    temp_dir = Dir.mktmpdir('hcw-temp-keystore')
     keystore_path = File.join(temp_dir, 'temp.keystore')
     password = "temp#{SecureRandom.hex(6)}"
-    alias_name = "bluewallet-temp"
+    alias_name = "hcwallet-temp"
 
     Actions.sh(
       "keytool -genkeypair -v -keystore #{keystore_path} -storepass #{password} -keypass #{password} " \
       "-alias #{alias_name} -keyalg RSA -keysize 2048 -validity 10000 " \
-      "-dname \"CN=Temp,O=BlueWallet,OU=CI,L=NY,ST=NY,C=US\""
+      "-dname \"CN=Temp,O=hc-wallet,OU=CI,L=NY,ST=NY,C=US\""
     ) do |status|
       UI.user_error!("Failed to create temporary keystore with keytool") unless status.success?
     end

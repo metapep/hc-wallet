@@ -385,7 +385,7 @@
     "watchOnlyWarningTitle": "Security warning",
     "watchOnlyWarningDescription": "Be cautious of scammers who often use “watch-only” wallets to deceive users. These wallets do not allow you to control or send funds; they only let you view the balance.",
     "custom_fee_warning_title": "Warning",
-    "custom_fee_warning_description": "Fees below 1 sat/vB are valid, but may not be relayed due to node policies."
+    "custom_fee_warning_description": "Fees below 1 jat/vByte are valid, but may not be relayed due to node policies."
   },
   "wallets": {
     "add_bitcoin": "HashCash",
@@ -420,7 +420,7 @@
     "details_are_you_sure": "Are you sure?",
     "details_connected_to": "Connected to",
     "details_del_wb_err": "The provided balance amount does not match this wallet’s balance. Please try again.",
-    "details_del_wb_q": "This wallet has a balance. Before proceeding, please be aware that you will not be able to recover the funds without this wallet’s seed phrase. In order to avoid accidental removal, please enter your wallet’s balance of {balance} satoshis.",
+    "details_del_wb_q": "This wallet has a balance. Before proceeding, please be aware that you will not be able to recover the funds without this wallet’s seed phrase. In order to avoid accidental removal, please enter your wallet’s balance of {balance} jats.",
     "details_delete": "Delete",
     "details_delete_wallet": "Delete Wallet",
     "details_derivation_path": "derivation path",

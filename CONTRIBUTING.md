@@ -1,33 +1,35 @@
 ## Commits
 
 All commits should have one of the following prefixes: REL, FIX, ADD, REF, TST, OPS, DOC. For example `"ADD: new feature"`.
-Adding new feature is ADD, fixing a bug is FIX, something related to infrastructure is OPS etc. REL is for releases,  REF is for 
-refactoring, DOC is for changing documentation (like this file).
+Adding a new feature is ADD, fixing a bug is FIX, infrastructure changes are OPS, REL is for releases, REF is for refactoring, DOC is for documentation, TST is for tests.
 
-Commits should be atomic: one commit - one feature, one commit - one bugfix etc.
+Commits should be atomic: one commit per feature, one commit per bugfix.
 
 ## Releases
 
 When you tag a new release, use the following example:
-`git tag -m "REL v1.4.0: 157c9c2" v1.4.0 -s`
-You may get the commit hash from git log. Don't forget to push tags `git push origin --tags`
+`git tag -m "REL vX.Y.Z: <commit hash>" vX.Y.Z -s`
+You may get the commit hash from `git log`. Don't forget to push tags: `git push origin --tags`.
 
-Alternative way to tag: `git tag -a v6.0.0 2e1a00609d5a0dbc91bcda2421df0f61bdfc6b10 -m "v6.0.0" -s`
+Alternative: `git tag -a vX.Y.Z <commit hash> -m "vX.Y.Z" -s`
 
-When tagging a new release, make sure to increment version in package.json and other files (we have a script for that: `./scripts/edit-version-number.sh`)  
-In the commit where you up version you can have the commit message as
-`"REL vX.X.X: Summary message"`.
+When tagging a new release, increment the version in `package.json` and the corresponding native fields. There is a helper script: `./scripts/edit-version-number.sh`.
+In the commit that bumps the version, use a commit message like `"REL vX.Y.Z: Summary message"`.
+
+See [RELEASE.md](RELEASE.md) for the full release process.
 
 ## Guidelines
 
-Do *not* add new dependencies. Bonus points if you manage to actually remove a dependency.
+Do not add new dependencies. Bonus points if you remove a dependency.
 
-All new files must be in typescript. Bonus points if you convert some of the existing files to typescript.
+All new files must be TypeScript. Bonus points if you convert existing JS files to TypeScript.
 
-New components must go in `components/`. Bonus points if you refactor some of old components in `BlueComponents.js` to separate files.
+New components must go in `components/`. Bonus points if you refactor old components in `BlueComponents.tsx` to separate files.
 
-Don't forget to add tests. Bonus points for e2e tests.
+Don't forget to add tests. Bonus points for E2E tests.
 
-# PRs
+Avoid introducing new occurrences of `BlueWallet` / `Bitcoin` / `BTC` in identifiers, file paths, or user-visible strings. Inherited references are being phased out, not propagated.
 
-When submitting PR, it must include screenshot (from the emulator or the device) how the proposed change looks, even better - a video; and a short description of why (it was implemented) and how (it works under the hood).
+## PRs
+
+When submitting a PR, include a screenshot (from an emulator or device) showing the proposed change. A short video is even better. Describe **why** the change is being made and **how** it works under the hood.
